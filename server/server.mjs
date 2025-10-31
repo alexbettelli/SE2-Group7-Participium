@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import http from 'http';
 
 const app = express();
 
@@ -20,8 +19,6 @@ app.use('/public', express.static('public'));
 
 const PORT = 3001;
 
-const server = http.createServer(app);
-
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
 });
