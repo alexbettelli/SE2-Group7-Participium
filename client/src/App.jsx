@@ -1,10 +1,11 @@
 import './App.css'
-import {Routes, Route} from 'react-router';
+import {Routes, Route, Navigate} from 'react-router';
 import { useEffect, useState } from 'react'
 import API from './api/API.mjs'
 import AuthenticateForm from './components/Authentication';
 import NotFound from './components/NotFound';
 import DefaultLayout from './components/DefaultLayout';
+import HomePage from './components/HomePage';
 
 
 function App() {
@@ -40,7 +41,8 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout />}>     
-        <Route path="/" index element={<AuthenticateForm handleLogin={handleLogin} />}/>                 
+        <Route path="/" index element={loggedIn? <Navigate to="/home" replace/> : <AuthenticateForm handleLogin={handleLogin} />}/> 
+        <Route path="/home" element={<HomePage user={user}/>} />                
         <Route path="*" element={<NotFound />}/>
       </Route>
     </Routes>
