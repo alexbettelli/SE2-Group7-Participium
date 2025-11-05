@@ -18,6 +18,7 @@ Defines the type of users in the system (Citizen, Admin, MunicipalOfficer, Techn
 Stores all registered users of the platform, including citizens and municipal staff.
   - **`id`** (INTEGER, PK, AUTOINCREMENT): Unique identifier for the user.
   - **`username`** (TEXT, UNIQUE): Chosen username for login and identification.
+  - **`password`**(TEXT): Hashed password.
   - **`email`** (TEXT, UNIQUE): User's email address.
   - **`firstName`** (TEXT): User's first name.
   - **`lastName`** (TEXT): User's last name.
@@ -127,10 +128,31 @@ Lists all possible statuses of a report throughout its lifecycle.
 -->
 
 ## API Server
-<!--
-- **GET** `API URL`
+- **POST** `/user`
 
-  **Description**: ........
+  **Description**: Create a new user account
+
+  **Request body**:
+    ```
+    [
+      {
+        "username": "marioRossi",
+        "password": "Password123!",  
+        "email": "mario.rossi@example.com",
+        "firstName": "Mario",
+        "lastName": "Rossi",
+        "typeId": 1
+      }
+    ]
+    ```
+  
+  **Response**: `201 OK` (success), `409 Conflict` (username already exists), or `503 Service unavailable` (Saving error).
+
+  
+<!--
+- **POST** `/user`
+
+  **Description**: Create a new user account
 
   **Request body**:..... JSON 
   **Query parameters**:........... JSON
@@ -148,11 +170,9 @@ Lists all possible statuses of a report throughout its lifecycle.
 -->
 
 ## Main React Components
-<!-- This is an example
-- `ComponentName` (in `ComponentName.js`):  
-  - **Scope**: ..................
-  - **Main functionalities**: 
-    - 
--->
+
+- `AuthenticateForm` (in `Authentication.js`):  
+  - **Scope**: Manage log in and registration of users
+
 
 
