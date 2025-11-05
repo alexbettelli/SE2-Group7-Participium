@@ -2,6 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 
+import session from "express-session";
+import passport from "passport";
+import LocalStrategy from "passport-local";
+import bcrypt from 'bcrypt';
+
+import DAO from './dao/DAO.mjs';
+
+
 const app = express();
 
 app.use(express.json());
@@ -21,4 +29,69 @@ const PORT = 3001;
 
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
+});
+
+app.use(session({
+  secret: 'Participium!',
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(
+  new LocalStrategy(async (username, password, cb) => {
+
+    const userInfo = await DAO.getUserByUsername(username);
+  
+    if (!userInfo) return cb(null, false, 'Username incorrect or not found');
+
+    const match = await bcrypt.compare(password, userInfo.password);
+    if (!match) return cb(null, false, 'Password incorrect');
+    
+    return cb(null, userInfo.user);    
+  })  
+);
+passport.serializeUser( function( user, cb){
+  cb(null, user);
+});
+passport.deserializeUser( function( user, cb){
+  cb(null, user);
+});
+app.use(passport.authenticate('session'));
+app.post("/user", async (req, res) => {
+  try {
+    const data = req.body;
+
+    const user = await DAO.getUserByUsername(data.username);  
+    if (user) return res.status(409).json({ message: "This username already exist" });    
+    
+    const hashedPassword = await bcrypt.hash(data.password, 8);
+    data.password = hashedPassword
+    const newUserId = await DAO.addNewUser(data);
+
+    return res.status(201).json(newUserId);
+    
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({error: 'Error: user not saved'});
+  }
+  
+  
+});
+app.post('/session', passport.authenticate('local'), function (req, res){  
+  return res.status(201).json(req.user);
+});
+app.get('/session/current', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json(req.user);
+  } else{
+    res.status(401).json({error : 'Not authenticate!'});
+  }
+})
+app.delete('/sessions/current', (req, res) => {
+  req.logout(() => {
+    res.end();
+  });
 });
