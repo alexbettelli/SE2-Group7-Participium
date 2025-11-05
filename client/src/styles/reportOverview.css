@@ -1,0 +1,244 @@
+.report-overview-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.success-banner {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3);
+}
+
+.success-icon {
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  line-height: 60px;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.success-title {
+  font-size: 1.8rem;
+  margin: 0.5rem 0;
+}
+
+.success-subtitle {
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.overview-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  position: relative;
+}
+
+.report-id-badge {
+  position: absolute;
+  top: -12px;
+  right: 2rem;
+  background: #3498db;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #ecf0f1;
+  margin-top: 1rem;
+}
+
+.report-title {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin: 0;
+  flex: 1;
+  padding-right: 1rem;
+}
+
+.status-badge {
+  background: #f39c12;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.overview-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-label {
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-field {
+  color: #34495e;
+  line-height: 1.6;
+  font-size: 1rem;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.report-description {
+  color: #34495e;
+  line-height: 1.6;
+  font-size: 1rem;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  margin: 0;
+}
+
+.location-info {
+  background: #f8f9fa;
+  padding: 0.8rem;
+  border-radius: 8px;
+  color: #2c3e50;
+}
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.photo-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.photo-item:hover {
+  transform: scale(1.02);
+}
+
+.photo-item img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.overview-footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ecf0f1;
+}
+
+.report-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.author-info {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.author-info.anonymous {
+  color: #e74c3c;
+  font-style: italic;
+}
+
+.timestamp-info {
+  color: #95a5a6;
+  font-size: 0.85rem;
+}
+
+.overview-actions {
+  display: flex;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+@media (max-width: 768px) {
+  .report-overview-container {
+    padding: 0.5rem;
+  }
+
+  .success-banner {
+    padding: 1.5rem;
+  }
+
+  .overview-card {
+    padding: 1rem;
+  }
+
+  .report-id-badge {
+    position: static;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .overview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .photo-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
