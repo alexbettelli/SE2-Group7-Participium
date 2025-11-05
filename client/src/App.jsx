@@ -6,6 +6,7 @@ import AuthenticateForm from './components/Authentication';
 import NotFound from './components/NotFound';
 import DefaultLayout from './components/DefaultLayout';
 import HomePage from './components/HomePage';
+import { ReportOverviewPage } from './pages/ReportOverviewPage.jsx';
 
 
 function App() {
