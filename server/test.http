@@ -1,0 +1,25 @@
+### Registration
+POST http://localhost:3001/user
+Content-Type: application/json
+
+{
+  "username": "marioRossi",
+  "password": "Password123!",  
+  "email": "mario.rossi@example.com",
+  "firstName": "Mario",
+  "lastName": "Rossi",
+  "typeId": 1
+}
+
+###
+
+### Login
+POST http://localhost:3001/session
+Content-Type: application/json
+
+{
+  "username": "marioRossi",
+  "password": "Password123!"
+}
+
+###
