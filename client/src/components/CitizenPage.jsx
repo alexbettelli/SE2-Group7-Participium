@@ -19,8 +19,8 @@ export default function CitizenPage() {
       status: "Pending Approval"
     };
     
-    navigate('/report-overview', { state: { report: mockReport } });
-  }; // ← Chiudi la funzione handleTestReportOverview QUI
+    navigate('/report-overview', { state: { report: mockReport } }); //pass here report data
+  }; 
 
   return (
     <>
