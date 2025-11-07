@@ -10,5 +10,21 @@ function User(id, username, email, firstName, lastName, typeId, allowEmailNotifi
     this.imageUrl = imageUrl;
 }
 
+function Report({title, description, latitude, longitude, address, userId, catId, images, id=null, officeId=null, createdAt=null, updatedAt=null, rejectReason = null, statusId = null}){
+    this.id = id;
+    this.title = title;
+    this.description = description;
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.address = address;
+    this.userId = userId;
+    this.catId = catId;
+    this.statusId = statusId;
+    this.officeId = officeId;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.rejectReason = rejectReason;
+    this.images = images;
+}
 
-export {User}
+export {User, Report}

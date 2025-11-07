@@ -1,19 +1,26 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-
 import session from "express-session";
 import passport from "passport";
 import LocalStrategy from "passport-local";
 import bcrypt from 'bcrypt';
-
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import DAO from './dao/DAO.mjs';
+import { Report } from './model/model.mjs';
 
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(morgan('dev'));
+app.use('/images', express.static(path.join(__dirname, 'uploads')));
 
 const corsOptions = {
   origin: "http://localhost:5173",
@@ -26,6 +33,9 @@ app.use(cors(corsOptions));
 app.use('/public', express.static('public'));
 
 const PORT = 3001;
+
+const upload = multer();
+const upload_dir = 'uploads';
 
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
@@ -53,12 +63,15 @@ passport.use(
     return cb(null, userInfo.user);    
   })  
 );
+
 passport.serializeUser( function( user, cb){
   cb(null, user);
 });
+
 passport.deserializeUser( function( user, cb){
   cb(null, user);
 });
+
 app.use(passport.authenticate('session'));
 app.post("/user", async (req, res) => {
   try {
@@ -80,9 +93,11 @@ app.post("/user", async (req, res) => {
   
   
 });
+
 app.post('/session', passport.authenticate('local'), function (req, res){  
   return res.status(201).json(req.user);
 });
+
 app.get('/session/current', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user);
@@ -90,8 +105,50 @@ app.get('/session/current', (req, res) => {
     res.status(401).json({error : 'Not authenticate!'});
   }
 })
+
 app.delete('/sessions/current', (req, res) => {
   req.logout(() => {
     res.end();
   });
+});
+
+// REPORTS
+
+app.post('/reports', upload.array('images', 3), async (req, res) => {
+  console.log(req.body);
+  const images = req.files;
+  
+  if(images.length == 0) return res.status(400).json({ "message": "Number of images not valid." });
+  const uuids = images.map(image => {
+    const extension = image.originalname.split('.').at(-1);
+    return `${uuidv4()}.${extension}`
+  })
+
+  const report = new Report({
+      title: req.body.title,
+      description: req.body.description,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      address: req.body.address,
+      userId: req.body.userId,
+      catId: req.body.catId,
+      images: uuids,
+  });
+
+  
+
+  try{
+    const received = await DAO.addNewReport(report);
+    console.log(images);
+    for(const idx in images){
+      const directory = `${upload_dir}/reports/${received.id}`;
+      if(!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
+      fs.writeFileSync(path.join(__dirname, directory, uuids[idx]), images[idx].buffer);
+    }
+    return res.status(201).json({ reportId: received.id });
+  }catch(e){
+    console.log(e)
+    return res.status(500).end();
+  }
+      
 });
