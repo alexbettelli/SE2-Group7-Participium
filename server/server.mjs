@@ -73,6 +73,13 @@ passport.deserializeUser( function( user, cb){
 });
 
 app.use(passport.authenticate('session'));
+
+const isLogged = (req, res, next) => {
+  if(req.isAuthenticated()) return next();
+  else return res.status(401).json({ "message": "Not authenticated" });
+}
+
+
 app.post("/user", async (req, res) => {
   try {
     const data = req.body;
@@ -114,7 +121,7 @@ app.delete('/sessions/current', (req, res) => {
 
 // REPORTS
 
-app.post('/reports', upload.array('images', 3), async (req, res) => {
+app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
   console.log(req.body);
   const images = req.files;
   
@@ -130,7 +137,7 @@ app.post('/reports', upload.array('images', 3), async (req, res) => {
       latitude: req.body.latitude,
       longitude: req.body.longitude,
       address: req.body.address,
-      userId: req.body.userId,
+      userId: req.user.id,
       catId: req.body.catId,
       images: uuids,
   });
