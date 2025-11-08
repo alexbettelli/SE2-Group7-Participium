@@ -1,4 +1,5 @@
 import CitizenPage from './CitizenPage';
+import AdminPage from './AdminPage';
 import NotFound from './NotFound';
 import {Navigate} from 'react-router';
 
@@ -8,7 +9,8 @@ export default function  HomePage (props) {
   switch (props.user.typeId) {
     case 1:
       return <CitizenPage />;
-    //ADD here you're specific user type cases
+    case 2:
+      return <AdminPage />;
     default:
       return <NotFound />;
   }
