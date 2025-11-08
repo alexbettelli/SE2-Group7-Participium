@@ -11,9 +11,7 @@ export default function CitizenPage() {
       category: "Roads and Urban Furnishings",
       latitude: 45.0703,
       longitude: 7.6869,
-      photos: ["https://picsum.photos/400/300?random=1",
-        "https://picsum.photos/400/300?random=2",
-        "https://picsum.photos/400/300?random=3" ],
+      photos: [],
       isAnonymous: false,
       author: "Mario Rossi",
       status: "Pending Approval"

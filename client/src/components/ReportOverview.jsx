@@ -39,7 +39,13 @@ const ReportOverview = ({ report, onBackToHome }) => {
                     <div className="photo-gallery">
                         {report.photos.map((photo, index) => (
                             <div key={index} className="photo-item">
-                                <img src={photo} alt={`Photo ${index + 1}`} />
+                                <img 
+                                    src={photo.imageUrl || photo} 
+                                    alt={`Report photo ${index + 1}`}
+                                    onError={(e) => {
+                                        e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                                    }}
+                                />
                             </div>
                         ))}
                     </div>
