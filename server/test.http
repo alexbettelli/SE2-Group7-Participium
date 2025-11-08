@@ -22,7 +22,8 @@ Content-Type: application/json
   "password": "Password123!"
 }
 
-###
+### Get current user
+GET http://localhost:3001/session/current
 
 
 ### Create a new Report
