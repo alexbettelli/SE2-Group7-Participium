@@ -11,6 +11,7 @@ import DAO from './dao/DAO.mjs';
 
 
 const app = express();
+const PORT = 3001;
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -25,11 +26,6 @@ app.use(cors(corsOptions));
 
 app.use('/public', express.static('public'));
 
-const PORT = 3001;
-
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
-});
 
 app.use(session({
   secret: 'Participium!',
@@ -59,7 +55,8 @@ passport.serializeUser( function( user, cb){
 passport.deserializeUser( function( user, cb){
   cb(null, user);
 });
-app.use(passport.authenticate('session'));
+
+
 app.post("/user", async (req, res) => {
   try {
     const data = req.body;
@@ -77,9 +74,46 @@ app.post("/user", async (req, res) => {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json({error: 'Error: user not saved'});
   }
-  
-  
 });
+
+app.post('/employees', async (req, res) => {
+  try {
+    // verify the request is authenticated
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const employeeData = req.body;
+    const hashedPassword = await bcrypt.hash(employeeData.password, 8);
+    employeeData.password = hashedPassword; 
+    const created = await DAO.addNewEmployee(employeeData);
+
+    return res.status(201).json(created);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error creating employee' });
+  }
+});
+
+app.get('/employees/unassigned', async (req, res) => {
+  try {
+    // verify the request is authenticated
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const employees = await DAO.getUnassignedEmployees();
+    return res.status(200).json(employees);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching employees' });
+  }
+});
+
 app.post('/session', passport.authenticate('local'), function (req, res){  
   return res.status(201).json(req.user);
 });
@@ -94,4 +128,9 @@ app.delete('/sessions/current', (req, res) => {
   req.logout(() => {
     res.end();
   });
+});
+
+
+app.listen(PORT, () => {
+  console.log(`Server listening at http://localhost:${PORT}`);
 });

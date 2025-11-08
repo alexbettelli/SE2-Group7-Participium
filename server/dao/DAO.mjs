@@ -23,7 +23,45 @@ const addNewUser = (data) => {
     });    
 }
 
+const addNewEmployee = (data) => {
+    return new Promise((resolve, reject) => {
+        const insertEmployeeSql = `
+        INSERT INTO user (username, password, email, firstName, lastName, typeId) 
+        VALUES ( ?, ?, ?, ?, ?, ?)
+        `;
 
+        db.run(insertEmployeeSql, 
+            [data.username, data.password, data.email, data.firstName, data.lastName, 6],  // typeId 6 = unassigned employee
+            function (err) {
+                if (err) return reject(err);
+                resolve(this.lastID);
+            }
+        );
+    });
+}
+
+const getUnassignedEmployees = () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM user WHERE typeId = 6`; // typeId 6 = unassigned employee
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const employees = rows.map(row => new User(
+                row.id,
+                row.username,
+                row.email,
+                row.firstName,
+                row.lastName,
+                row.typeId,
+                row.allowEmailNotification,
+                row.telegramUsername,
+                row.imageUrl
+            ));
+            resolve(employees);
+        });
+    });
+}
 
 const getUserByUsername = (username) => {
     return new Promise((res, rej) => {
@@ -56,6 +94,6 @@ const getUserByUsername = (username) => {
     });
 }
 
-const DAO = {getUserByUsername, addNewUser}
+const DAO = {getUserByUsername, getUnassignedEmployees, addNewUser, addNewEmployee};
 
 export default DAO

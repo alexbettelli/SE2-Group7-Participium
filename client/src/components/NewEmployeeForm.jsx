@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 import API from '../api/API.mjs';
 
-function NewEmployeeForm() {
+function NewEmployeeForm({ onSuccess }) {
   const [form, setForm] = useState({
     username: '',
     password: '',
@@ -10,7 +10,6 @@ function NewEmployeeForm() {
     firstName: '',
     lastName: ''
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -34,7 +33,6 @@ function NewEmployeeForm() {
       return;
     }
 
-    setLoading(true);
     try {
       const data = {
         username: form.username,
@@ -45,15 +43,14 @@ function NewEmployeeForm() {
         typeId: 6
       };
 
-      await API.registrate(data);
-      setSuccess('Utente creato con successo.');
+      await API.createNewEmployee(data);
+      setSuccess('Employee created successfully.');
       setForm({ username: '', password: '', email: '', firstName: '', lastName: '' });
+      if (onSuccess) await onSuccess();
       
     } catch (err) {
-      setError(err?.message || String(err) || 'Errore durante la creazione dell\'utente.');
-    } finally {
-      setLoading(false);
-    }
+      setError(err?.message || String(err) || 'Error: employee not created.');
+    } 
   };
 
   return (
@@ -119,8 +116,8 @@ function NewEmployeeForm() {
         </Form.Group>
 
         <Form.Group>
-          <Button type="submit" disabled={loading} className="me-2">
-            {loading ? <><Spinner animation="border" size="sm" /> Creazione...</> : 'Crea utente'}
+          <Button type="submit" className="me-2">
+            Crea utente
           </Button>
         </Form.Group>
       </Form>
