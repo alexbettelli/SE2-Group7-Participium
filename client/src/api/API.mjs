@@ -50,5 +50,34 @@ const logOut = async() => {
   if (response.ok)
     return null;
 };
-const API = {login, registrate, getUserInfo, logOut }
+
+const submitReport = async(reportData) => {
+  const formData = new FormData();
+  formData.append('title', reportData.title);
+  formData.append('description', reportData.description);
+  formData.append('latitude', reportData.latitude);
+  formData.append('longitude', reportData.longitude);
+  formData.append('address', reportData.address);
+  formData.append('catId', reportData.catId);
+  
+  reportData.images.forEach(image => {
+    formData.append('images', image);
+  });
+
+  const res = await fetch(SERVER_URL + '/reports', {
+    method: 'POST',
+    credentials: 'include',
+    body: formData
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    return data;
+  } else {
+    const errDetails = await res.json();
+    throw new Error(errDetails.message || 'Error submitting report');
+  }
+};
+
+const API = {login, registrate, getUserInfo, logOut, submitReport }
 export default API;
