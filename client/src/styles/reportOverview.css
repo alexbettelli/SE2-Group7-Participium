@@ -58,21 +58,32 @@
 }
 
 .overview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #ecf0f1;
-  margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 1.5rem;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
 }
 
 .report-title {
-  font-size: 1.5rem;
-  color: #2c3e50;
-  margin: 0;
-  flex: 1;
-  padding-right: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.report-id {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
 }
 
 .status-badge {
@@ -108,15 +119,22 @@
   margin: 0;
 }
 
-.report-description {
-  color: #34495e;
-  line-height: 1.6;
-  font-size: 1rem;
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  border-left: 4px solid #3498db;
-  margin: 0;
+
+.report-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.timestamp-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.no-photos-message {
+    text-align: center;
+    color: #9ca3af;
+    padding: 2rem;
 }
 
 .location-info {

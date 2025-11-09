@@ -14,6 +14,7 @@ const ReportOverview = ({ report, onBackToHome }) => {
 
                 <div className="overview-header">
                     <h3 className="report-title">{report.title}</h3>
+                     <span className="report-id">Report #{report.id}</span>
                     <span className="status-badge">{report.status}</span>
                 </div>
 
@@ -24,8 +25,15 @@ const ReportOverview = ({ report, onBackToHome }) => {
 
                 <div className="overview-section">
                     <h4 className="section-label">Description</h4>
-                    <p className="report-description">{report.description}</p>
+                    <p className="report-field">{report.description}</p>
                 </div>  
+                
+            {report.address && (
+                    <div className="overview-section">
+                        <h4 className="section-label">Address</h4>
+                        <p className="report-field">{report.address}</p>
+                    </div>
+                )}
                 
                 <div className="overview-section">
                     <h4 className="section-label">Location</h4>
@@ -34,22 +42,28 @@ const ReportOverview = ({ report, onBackToHome }) => {
                     </div>
                 </div>
 
-                <div className="overview-section">
-                    <h4 className="section-label">Attached Photos ({report.photos.length})</h4>
-                    <div className="photo-gallery">
-                        {report.photos.map((photo, index) => (
-                            <div key={index} className="photo-item">
-                                <img 
-                                    src={photo.imageUrl || photo} 
-                                    alt={`Report photo ${index + 1}`}
-                                    onError={(e) => {
-                                        e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
-                                    }}
-                                />
-                            </div>
-                        ))}
+                {report.photos && report.photos.length > 0 ? (
+                    <div className="overview-section">
+                        <h4 className="section-label">Attached Photos ({report.photos.length})</h4>
+                        <div className="photo-gallery">
+                            {report.photos.map((photo, index) => (
+                                <div key={index} className="photo-item">
+                                    <img 
+                                        src={photo.imageUrl || photo} 
+                                        alt={`Report photo ${index + 1}`}
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="overview-section">
+                        <p className="no-photos-message">No photos attached</p>
+                    </div>
+                )}
 
                 <div className="overview-footer">
                     <div className="report-meta">
@@ -61,6 +75,12 @@ const ReportOverview = ({ report, onBackToHome }) => {
                         {report.isAnonymous && (
                             <span className="author-info anonymous">
                                 Anonymous Report
+                            </span>
+                        )}
+
+                 {report.createdAt && (
+                 <span className="timestamp-info">
+                        Submitted on: {new Date(report.createdAt).toLocaleString('it-IT')}
                             </span>
                         )}
                     </div>

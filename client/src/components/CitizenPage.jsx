@@ -11,10 +11,12 @@ export default function CitizenPage() {
       category: "Roads and Urban Furnishings",
       latitude: 45.0703,
       longitude: 7.6869,
+      address: "Via Roma, 10, Turin, Italy",  // ← Aggiungi address
       photos: [],
       isAnonymous: false,
       author: "Mario Rossi",
-      status: "Pending Approval"
+      status: "Pending Approval",
+      createdAt: new Date().toISOString()
     };
     
     navigate('/report-overview', { state: { report: mockReport } }); //pass here report data
