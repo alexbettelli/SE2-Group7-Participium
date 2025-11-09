@@ -1,4 +1,5 @@
 import sqlite from 'sqlite3'
+import dayjs from 'dayjs';
 import { User } from '../model/model.mjs';
 
 const db = new sqlite.Database('./database.db', (err) => {
@@ -81,6 +82,49 @@ const getUserByUsername = (username) => {
     });
 }
 
+<<<<<<< HEAD
 const DAO = {getUserByUsername, getUnassignedEmployees, addNewUser};
+=======
+// REPORT
+
+const addNewReport = (report) => {
+    return new Promise((resolve, reject) => {
+        db.run('BEGIN TRANSACTION');
+
+        const now = dayjs().toString();
+
+        const query1 = 'INSERT INTO Report (title, description, latitude, longitude, address, userId, catId, statusId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)' 
+        const params1 = [ report.title, report.description, report.latitude, report.longitude, report.address, report.userId, report.catId, 1, now  ]
+        db.run(query1, params1, function(err){
+            if(err){
+                reject(err);
+                db.run('ROLLBACK');
+            }
+            report.id = this.lastID;
+    
+            for(let i=0; i<report.images.length; i++){
+                const query2 = 'INSERT INTO report_image (reportId, imageUrl, uploadedAt) VALUES (?, ?, ?)'
+                const params2 = [ report.id, `http://localhost:3001/images/reports/${report.id}/${report.images[i]}`, now ]
+                db.run(query2, params2, function(err){
+                    if(err){
+                        db.run('ROLLBACK');
+                        reject(err);
+                    }
+
+                    db.run('COMMIT', function(err){
+                        if(err) reject(err);
+                        resolve(report);
+                    });
+                })
+            }
+        });
+
+
+    });
+
+}
+
+const DAO = {getUserByUsername, addNewUser, addNewReport}
+>>>>>>> a6218d6278a4586f7d0914ec18348f101171586c
 
 export default DAO
