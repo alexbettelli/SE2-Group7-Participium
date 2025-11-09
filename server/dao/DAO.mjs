@@ -51,6 +51,61 @@ const getUnassignedEmployees = () => {
     });
 }
 
+const getOffices = () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM office`;
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(rows);
+        });
+    });
+}
+
+const getRoles = () => {
+  return new Promise((resolve,reject) => {
+      const query = `SELECT * FROM user_type 
+      Where id IN (3,4)`; //  3 = public relations, 4 = technician
+      db.all(query, [], (err, rows) => {
+          if (err) {
+              return reject(err);
+          }
+          console.log(rows);
+          resolve(rows);
+      });
+  });
+}
+
+const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
+    return new Promise((resolve, reject) => {
+        const updateUser = `
+        UPDATE user
+        SET typeId = ? 
+        WHERE id = ?
+        `;
+        db.run(updateUser, [roleId, employeeId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            else if (roleId == 4) { 
+              const insertEmployeeOffice = `
+              INSERT INTO office_employee (officeId, userId)
+              VALUES (?, ?)
+              `;
+              db.run(insertEmployeeOffice, [officeId, employeeId], function (err) {
+                  if (err) { 
+                      return reject(err);
+                  }
+                  resolve();
+              });
+            } else {
+              resolve();
+            }
+        });
+    });
+}
+
 const getUserByUsername = (username) => {
     return new Promise((res, rej) => {
         
@@ -82,9 +137,7 @@ const getUserByUsername = (username) => {
     });
 }
 
-<<<<<<< HEAD
-const DAO = {getUserByUsername, getUnassignedEmployees, addNewUser};
-=======
+
 // REPORT
 
 const addNewReport = (report) => {
@@ -118,13 +171,10 @@ const addNewReport = (report) => {
                 })
             }
         });
-
-
     });
 
 }
 
-const DAO = {getUserByUsername, addNewUser, addNewReport}
->>>>>>> a6218d6278a4586f7d0914ec18348f101171586c
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport}
 
 export default DAO

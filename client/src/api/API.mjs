@@ -77,6 +77,52 @@ const getUnassignedEmployees = async() => {
     }
 };
 
+const getOffices = async() => {
+    const res = await fetch(SERVER_URL + '/offices', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const offices = await res.json();
+        return offices;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching offices');
+    }
+};
+
+const getRoles = async() => {
+    const res = await fetch(SERVER_URL + '/roles', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const roles = await res.json();
+        return roles;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching roles');
+    }
+};  
+
+const assignEmployeeToOffice = async (employeeId, officeId, roleId) => {
+    const res = await fetch(SERVER_URL + '/employees/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ employeeId, officeId, roleId })
+    });
+
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error assigning employee to office');
+    }
+};
+
 const logOut = async() => {
   const response = await fetch(SERVER_URL + '/sessions/current', {
     method: 'DELETE',
@@ -85,6 +131,6 @@ const logOut = async() => {
   if (response.ok)
     return null;
 };
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getUserInfo, logOut }
-export { login, registrate, createNewEmployee, getUnassignedEmployees, getUserInfo, logOut };
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, logOut }
+export { login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, logOut };
 export default API;

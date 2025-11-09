@@ -101,14 +101,9 @@ app.post("/user", async (req, res) => {
   
 });
 
-});
 
-app.post('/employees', async (req, res) => {
+app.post('/employees', isLogged,async (req, res) => {
   try {
-    // verify the request is authenticated
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
 
     if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
       return res.status(403).json({ error: 'Forbidden' });
@@ -128,18 +123,46 @@ app.post('/employees', async (req, res) => {
   }
 });
 
-app.get('/employees/unassigned', async (req, res) => {
+app.get('/employees/unassigned', isLogged,async (req, res) => {
   try {
-    // verify the request is authenticated
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
 
     const employees = await DAO.getUnassignedEmployees();
     return res.status(200).json(employees);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json({ error: 'Error fetching employees' });
+  }
+});
+
+app.post('/employees/assign', isLogged, async (req, res) => {
+  try {
+    const { employeeId, officeId, roleId } = req.body;
+    console.log(`Assigning employee ${employeeId} to office ${officeId} with role ${roleId}`);
+    await DAO.assignEmployeeToOffice(employeeId, officeId, roleId);
+    return res.status(200).json({ message: 'Employee assigned successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error assigning employee' });
+  }
+});
+
+app.get('/offices', isLogged, async (req, res) => {
+  try {
+    const offices = await DAO.getOffices();
+    return res.status(200).json(offices);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching offices' });
+  }
+});
+
+app.get('/roles', isLogged, async (req, res) => {
+  try {
+    const roles = await DAO.getRoles();
+    return res.status(200).json(roles);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching roles' });
   }
 });
 
