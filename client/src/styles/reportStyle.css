@@ -46,11 +46,14 @@
 
 
 .map-container {
-    height: 600px;
-    flex: 0 0 65%;
-    border-radius: 12px;
+    height: 500px; /* ← Da 650px a 500px */
+    flex: 0 0 60%; /* ← Da 65% a 60% */
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 6px 12px rgba(0, 0, 0, 0.08);
+    border: 3px solid #e5e7eb; 
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .sidebar-container {
