@@ -1,6 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import '../styles/reportStyle.css';
 import API from '../api/API.mjs';
 
 const categories = [
@@ -15,7 +17,8 @@ const categories = [
     {id: 9, name: 'Other'}
 ];
 
-export default function CitizenPage(){
+export default function CitizenPage({user}){
+    const navigate = useNavigate();
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
@@ -146,23 +149,25 @@ export default function CitizenPage(){
                 images: images
             };
 
-            await API.submitReport(reportData);
-            setSubmitMessage('Report submitted successfully!');
+            const result = await API.submitReport(reportData);
 
-            setTitle('');
-            setDescription('');
-            setCatId('');
-            setImages([]);
-            imagePreviews.forEach(url => URL.revokeObjectURL(url));
-            setImagePreviews([]);
+            const reportForOverview = {
+                id: result.reportId,
+                title: reportData.title,
+                description: reportData.description,
+                category: categories.find(c => c.id === reportData.catId)?.name || 'Unknown',
+                latitude: reportData.latitude,
+                longitude: reportData.longitude,
+                address: reportData.address,
+                photos: result.images || [], 
+                author: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
+                isAnonymous: !user,
+                status: 'Pending Approval',
+                createdAt: result.createdAt || new Date().toISOString()
+            };   
 
-            setTimeout(() => {
-                clearSelection();
-            }, 2000);
-
-            setTimeout(() => {
-                setSubmitMessage('');
-            }, 7000);
+            navigate('/report-overview', { state: { report: reportForOverview } });
+            
         } catch (error) {
             setSubmitMessage(error.message || 'Error submitting report');
         } finally {
@@ -183,61 +188,65 @@ export default function CitizenPage(){
         setLoadingAddress(false);
     };
 
-    return(
-        <>
-            <h2>Welcome to Participium - City of Turin</h2>
-            <p>Report issues in your city and help make Turin a better place for everyone.</p>
-            <p>Click on the map to select the location for your report.</p>
+    return (
+        <div className="citizen-page-container">
+            <div className="citizen-page-header">
+                <h2>Welcome to Participium - City of Turin</h2>
+                <p>Report issues in your city and help make Turin a better place for everyone.</p>
+                <p>Click on the map to select the location for your report.</p>
+            </div>
 
             {submitMessage && submitMessage.includes('success') && (
-                <div>
+                <div className="success-message">
                     {submitMessage}
                 </div>
             )}
 
-            <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
-                <div ref={mapRef} style={{ height: '600px', flex: '0 0 70%' }} />
+            <div className="citizen-page-content">
+                <div ref={mapRef} className="map-container" />
 
-                <div style={{ flex: '1', padding: '10px' }}>
+                <div className="sidebar-container">
                     {selectedLocation ? (
                         <>
-                            <div style={{padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px'}}>
-                                <strong>Selected Location:</strong>
-                                <p>Coordinates: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
-                                <p>Address: {loadingAddress ? 'Fetching address...' : address}</p>
-                                <button onClick={clearSelection}>Reset Location</button>
+                            <div className="location-info-box">
+                                <strong>Selected Location</strong>
+                                <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                                <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
+                                <button className="reset-button" onClick={clearSelection}>
+                                    Reset Location
+                                </button>
                             </div>
 
-                            <form onSubmit={handleSubmit}>
+                            <form className="report-form" onSubmit={handleSubmit}>
                                 <h3>Report Details</h3>
 
-                                <div style={{marginBottom: '15px'}}>
-                                    <label>Title *</label>
+                                <div className="form-group">
+                                    <label>Title <span>*</span></label>
                                     <input
                                         type="text"
+                                        className="form-input"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        style={{width: '100%'}}
                                         required
                                     />
                                 </div>
 
-                                <div style={{marginBottom: '15px'}}>
-                                    <label>Description *</label>
+                                <div className="form-group">
+                                    <label>Description <span>*</span></label>
                                     <textarea
+                                        className="form-textarea"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        style={{width: '100%'}}
                                         required
                                     />
                                 </div>
 
-                                <div style={{marginBottom: '15px'}}>
-                                    <label>Category *</label>
+                                <div className="form-group">
+                                    <label>Category <span>*</span></label>
                                     <select
+                                        className="form-select"
                                         value={catId}
                                         onChange={(e) => setCatId(e.target.value)}
-                                        style={{width: '100%'}}
                                         required
                                     >
                                         <option value="">Select a category</option>
@@ -247,30 +256,24 @@ export default function CitizenPage(){
                                     </select>
                                 </div>
 
-                                <div style={{marginBottom: '15px'}}>
-                                    <label>Photos (1-3 required) *</label>
+                                <div className="form-group">
+                                    <label>Photos (1-3 required) <span>*</span></label>
                                     <input
                                         type="file"
+                                        className="file-input"
                                         accept="image/*"
                                         multiple
                                         onChange={handleImageChange}
                                     />
                                     {imagePreviews.length > 0 && (
-                                        <div
-                                            style={{marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
+                                        <div className="image-previews">
                                             {imagePreviews.map((preview, index) => (
-                                                <div key={index} style={{position: 'relative'}}>
-                                                    <img src={preview} alt={`Preview ${index + 1}`}
-                                                         style={{width: '80px', height: '80px', objectFit: 'cover'}}/>
+                                                <div key={index} className="preview-item">
+                                                    <img src={preview} alt={`Preview ${index + 1}`} />
                                                     <button
                                                         type="button"
+                                                        className="remove-image-button"
                                                         onClick={() => removeImage(index)}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: '-5px',
-                                                            right: '-5px',
-                                                            cursor: 'pointer'
-                                                        }}
                                                     >
                                                         ×
                                                     </button>
@@ -281,27 +284,27 @@ export default function CitizenPage(){
                                 </div>
 
                                 {submitMessage && !submitMessage.includes('success') && (
-                                    <div>
+                                    <div className="error-message">
                                         {submitMessage}
                                     </div>
                                 )}
 
                                 <button
                                     type="submit"
+                                    className="submit-button"
                                     disabled={submitting}
-                                    style={{cursor: submitting ? 'not-allowed' : 'pointer'}}
                                 >
                                     {submitting ? 'Submitting...' : 'Submit Report'}
                                 </button>
                             </form>
                         </>
                     ) : (
-                        <div style={{ padding: '10px', color: '#666' }}>
-                            <p>Select a location on the map</p>
+                        <div className="location-placeholder">
+                            <p> 📍 Select a location on the map </p>
                         </div>
                     )}
                 </div>
             </div>
-        </>
-    )
+        </div>
+    );
 }

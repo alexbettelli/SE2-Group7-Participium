@@ -159,7 +159,7 @@ app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
       if(!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(path.join(__dirname, directory, uuids[idx]), images[idx].buffer);
     }
-    return res.status(201).json({ reportId: received.id });
+    return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `http://localhost:3001/images/reports/${received.id}/${filename}`})) });
   }catch(e){
     console.log(e)
     return res.status(500).json(new errors.InternalServerError());
