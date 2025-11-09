@@ -156,17 +156,22 @@
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
+  background-color: #f8f9fa; 
 }
 
 .photo-item:hover {
   transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .photo-item img {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: auto; 
+  min-height: 200px; 
+  max-height: 400px;
+  object-fit: contain; 
   display: block;
+  margin: 0 auto; 
 }
 
 .overview-footer {
