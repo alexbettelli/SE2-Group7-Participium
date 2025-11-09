@@ -6,6 +6,7 @@ import AuthenticateForm from './components/Authentication';
 import NotFound from './components/NotFound';
 import DefaultLayout from './components/DefaultLayout';
 import HomePage from './components/HomePage';
+import { ReportOverviewPage } from './components/ReportOverviewPage.jsx';
 
 
 function App() {
@@ -42,11 +43,12 @@ function App() {
     <Routes>
       <Route element={<DefaultLayout />}>     
         <Route path="/" index element={loggedIn? <Navigate to="/home" replace/> : <AuthenticateForm handleLogin={handleLogin} />}/> 
-        <Route path="/home" element={<HomePage user={user}/>} />                
+        <Route path="/home" element={<HomePage user={user}/>} />  
+       <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />              
         <Route path="*" element={<NotFound />}/>
       </Route>
     </Routes>
   )
 }
 
-export default App
+export default App;
