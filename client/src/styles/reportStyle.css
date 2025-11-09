@@ -1,3 +1,5 @@
+@import './commonStyle.css';
+
 .citizen-page-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -280,10 +282,11 @@
 }
 
 
-.submit-button {
+.citizen-page-container .submit-button,
+.report-form .submit-button {
     padding: 0.875rem 1.5rem;
-    background-color: #3b82f6;
-    color: white;
+    background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%);
+    color: var(--color-cream);
     border: none;
     border-radius: 8px;
     font-size: 1rem;
@@ -293,17 +296,20 @@
     margin-top: 0.5rem;
 }
 
-.submit-button:hover:not(:disabled) {
-    background-color: #2563eb;
+.citizen-page-container .submit-button:hover:not(:disabled),
+.report-form .submit-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--color-wine-light) 0%, var(--color-wine-dark) 100%);
     transform: translateY(-1px);
 }
 
-.submit-button:active:not(:disabled) {
+.citizen-page-container .submit-button:active:not(:disabled),
+.report-form .submit-button:active:not(:disabled) {
     transform: translateY(0);
 }
 
-.submit-button:disabled {
-    background-color: #9ca3af;
+.citizen-page-container .submit-button:disabled,
+.report-form .submit-button:disabled {
+    background: var(--color-green);
     cursor: not-allowed;
     opacity: 0.6;
 }
