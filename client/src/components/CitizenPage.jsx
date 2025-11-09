@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/reportStyle.css';
