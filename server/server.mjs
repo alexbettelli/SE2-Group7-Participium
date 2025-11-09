@@ -89,8 +89,10 @@ app.post('/employees', async (req, res) => {
 
     const employeeData = req.body;
     const hashedPassword = await bcrypt.hash(employeeData.password, 8);
-    employeeData.password = hashedPassword; 
-    const created = await DAO.addNewEmployee(employeeData);
+    employeeData.password = hashedPassword;
+    employeeData.typeId = 5; // typeId 5 = unassigned employee
+    console.log("Creating new employee with data:", employeeData);
+    const created = await DAO.addNewUser(employeeData);
 
     return res.status(201).json(created);
   } catch (error) {

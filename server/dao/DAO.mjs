@@ -13,6 +13,8 @@ const addNewUser = (data) => {
         VALUES ( ?, ?, ?, ?, ?, ?)
         `;
         
+        console.log(data);
+        console.log("Adding new user to the database...");
         db.run(insertUsertSql, 
             [data.username, data.password, data.email, data.firstName, data.lastName, data.typeId], 
             function (err) {
@@ -23,26 +25,11 @@ const addNewUser = (data) => {
     });    
 }
 
-const addNewEmployee = (data) => {
-    return new Promise((resolve, reject) => {
-        const insertEmployeeSql = `
-        INSERT INTO user (username, password, email, firstName, lastName, typeId) 
-        VALUES ( ?, ?, ?, ?, ?, ?)
-        `;
 
-        db.run(insertEmployeeSql, 
-            [data.username, data.password, data.email, data.firstName, data.lastName, 6],  // typeId 6 = unassigned employee
-            function (err) {
-                if (err) return reject(err);
-                resolve(this.lastID);
-            }
-        );
-    });
-}
 
 const getUnassignedEmployees = () => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM user WHERE typeId = 6`; // typeId 6 = unassigned employee
+        const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
         db.all(query, [], (err, rows) => {
             if (err) {
                 return reject(err);
@@ -94,6 +81,6 @@ const getUserByUsername = (username) => {
     });
 }
 
-const DAO = {getUserByUsername, getUnassignedEmployees, addNewUser, addNewEmployee};
+const DAO = {getUserByUsername, getUnassignedEmployees, addNewUser};
 
 export default DAO
