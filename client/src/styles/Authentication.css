@@ -1,4 +1,5 @@
 /* Authentication Form Styles - Participium */
+@import './commonStyle.css';
 
 /* Main container */
 .auth-container {
@@ -110,13 +111,18 @@
 .auth-button-group {
     margin-top: 1.8rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Primary button */
-.auth-btn-primary {
-    background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%);
-    border: none;
-    color: var(--color-cream);
+/* Primary button - more specific selector to override Bootstrap */
+.auth-form .auth-btn-primary,
+.auth-btn-primary.auth-btn-primary {
+    background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%) !important;
+    border: none !important;
+    color: var(--color-cream) !important;
     font-weight: 600;
     font-size: 1rem;
     letter-spacing: 0.5px;
@@ -128,22 +134,27 @@
     cursor: pointer;
 }
 
-/* Link button */
-.auth-btn-link {
-    color: var(--color-wine-light);
+/* Link button - more specific selector to override Bootstrap */
+.auth-form .auth-btn-link,
+.auth-btn-link.auth-btn-link {
+    color: var(--color-wine-light) !important;
     font-weight: 500;
     font-size: 0.95rem;
-    text-decoration: none;
-    border: none;
-    background: none;
+    text-decoration: none !important;
+    border: none !important;
+    background: none !important;
     padding: 0.5rem;
     transition: all 0.3s ease;
+    display: block;
+    width: auto;
+    text-align: center;
 }
 
-.auth-btn-link:hover {
-    color: var(--color-wine-light);
-    text-decoration: underline;
-    background: none;
+.auth-form .auth-btn-link:hover,
+.auth-btn-link.auth-btn-link:hover {
+    color: var(--color-wine-light) !important;
+    text-decoration: underline !important;
+    background: none !important;
 }
 
 /* Responsive design */
