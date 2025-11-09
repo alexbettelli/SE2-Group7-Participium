@@ -1,6 +1,7 @@
 import { Button, Form } from "react-bootstrap";
 import {useState, useActionState } from 'react'
 import API from '../api/API.mjs'
+import "../styles/Authentication.css";
 
 function AuthenticateForm(props){
 
@@ -11,8 +12,8 @@ function AuthenticateForm(props){
     };    
 
     return (               
-        <div >
-            <div>
+        <div className="auth-container">
+            <div className="auth-form-wrapper">
                 {isLogin 
                 ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle}/> 
                 : <RegistrationForm handleToggle={handleToggle}/>}                           
@@ -42,23 +43,23 @@ function LogInForm(props){
         }
     }
     return (
-        <>
-            <h2>Log In</h2>
-            <Form  action={formAction}>
-                <Form.Group controlId='username' >
-                    <Form.Label>Username</Form.Label>
-                    <Form.Control type='text' name='username' required />
+        <div className="auth-form login-form">
+            <h2 className="auth-title">Log In</h2>
+            <Form action={formAction} className="auth-form-element">
+                <Form.Group controlId='username' className="auth-form-group">
+                    <Form.Label className="auth-label">Username</Form.Label>
+                    <Form.Control type='text' name='username' required className="auth-input" />
                 </Form.Group>   
-                <Form.Group controlId='password' >
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control type='password' name='password' required minLength={6}/>
+                <Form.Group controlId='password' className="auth-form-group">
+                    <Form.Label className="auth-label">Password</Form.Label>
+                    <Form.Control type='password' name='password' required minLength={6} className="auth-input"/>
                 </Form.Group>  
-                <Form.Group >                            
-                    <Button className='mx-2 my-2' type='submit'>Log In</Button>
-                    <Button className='mx-2 my-2'  variant="link" type="button" onClick={props.handleToggle}>Create new account</Button>
+                <Form.Group className="auth-button-group">                            
+                    <Button className='auth-btn-primary' type='submit'>Log In</Button>
+                    <Button className='auth-btn-link' variant="link" type="button" onClick={props.handleToggle}>Create new account</Button>
                 </Form.Group>  
             </Form>
-        </> 
+        </div> 
     )
 }
 
@@ -88,35 +89,35 @@ function RegistrationForm(props){
     }
 
     return (
-        <>                
-            <h2>Create new account</h2>
-            <Form action={formAction}>
-                <Form.Group controlId='username' className='mb-3'>
-                    <Form.Label>Username</Form.Label>
-                    <Form.Control type='text' name='username' required />
+        <div className="auth-form register-form">              
+            <h2 className="auth-title">Create new account</h2>
+            <Form action={formAction} className="auth-form-element">
+                <Form.Group controlId='username' className='auth-form-group'>
+                    <Form.Label className="auth-label">Username</Form.Label>
+                    <Form.Control type='text' name='username' required className="auth-input" />
                 </Form.Group>  
-                <Form.Group controlId='password' >
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control type='password' name='password' required minLength={6}/>
+                <Form.Group controlId='password' className="auth-form-group">
+                    <Form.Label className="auth-label">Password</Form.Label>
+                    <Form.Control type='password' name='password' required minLength={6} className="auth-input"/>
                 </Form.Group>    
-                <Form.Group controlId='email' className='mb-3'>
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control type='email' name='email' required />
+                <Form.Group controlId='email' className='auth-form-group'>
+                    <Form.Label className="auth-label">Email</Form.Label>
+                    <Form.Control type='email' name='email' required className="auth-input" />
                 </Form.Group>    
-                <Form.Group controlId='firstName' className='mb-3'>
-                    <Form.Label>First name</Form.Label>
-                    <Form.Control type='text' name='firstName' required />
+                <Form.Group controlId='firstName' className='auth-form-group'>
+                    <Form.Label className="auth-label">First name</Form.Label>
+                    <Form.Control type='text' name='firstName' required className="auth-input" />
                 </Form.Group>    
-                <Form.Group controlId='lastName' className='mb-3'>
-                    <Form.Label>Last name</Form.Label>
-                    <Form.Control type='text' name='lastName' required />
+                <Form.Group controlId='lastName' className='auth-form-group'>
+                    <Form.Label className="auth-label">Last name</Form.Label>
+                    <Form.Control type='text' name='lastName' required className="auth-input" />
                 </Form.Group>    
-                <Form.Group >                            
-                    <Button className='mx-2 my-2' type='submit'>Create</Button>
-                    <Button variant="link" type="button" onClick={props.handleToggle}>Have you an account yet?</Button>
+                <Form.Group className="auth-button-group">                            
+                    <Button className='auth-btn-primary' type='submit'>Create</Button>
+                    <Button className="auth-btn-link" variant="link" type="button" onClick={props.handleToggle}>Have you an account yet?</Button>
                 </Form.Group> 
             </Form>   
-        </>
+        </div>
     )
 }
 
