@@ -9,17 +9,24 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
+import { Validator, ValidationError } from 'express-json-validator-middleware';
 import { fileURLToPath } from 'url';
 import DAO from './dao/DAO.mjs';
 import { Report } from './model/model.mjs';
+import * as errors from './model/error.mjs';
 
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const swaggerDocument = JSON.parse(fs.readFileSync('./swagger.json', 'utf-8'));
+const { validate } = new Validator({ allErrors: true });
+const schemas = swaggerDocument.components.schemas;
 
 app.use(express.json());
 app.use(morgan('dev'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/images', express.static(path.join(__dirname, 'uploads')));
 
 const corsOptions = {
@@ -39,6 +46,7 @@ const upload_dir = 'uploads';
 
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
+  console.log(`Swagger documentation is available at http://localhost:${PORT}/api-docs`);
 });
 
 app.use(session({
@@ -76,7 +84,7 @@ app.use(passport.authenticate('session'));
 
 const isLogged = (req, res, next) => {
   if(req.isAuthenticated()) return next();
-  else return res.status(401).json({ "message": "Not authenticated" });
+  else return res.status(401).json(new errors.UnauthorizedError());
 }
 
 
@@ -85,7 +93,7 @@ app.post("/user", async (req, res) => {
     const data = req.body;
 
     const user = await DAO.getUserByUsername(data.username);  
-    if (user) return res.status(409).json({ message: "This username already exist" });    
+    if (user) return res.status(409).json(new errors.ConflictError("This username already exists."));    
     
     const hashedPassword = await bcrypt.hash(data.password, 8);
     data.password = hashedPassword
@@ -95,7 +103,7 @@ app.post("/user", async (req, res) => {
     
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({error: 'Error: user not saved'});
+    res.status(503).json(new errors.ServiceUnvailableError("Unable to save the user."));
   }
   
   
@@ -174,7 +182,7 @@ app.get('/session/current', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user);
   } else{
-    res.status(401).json({error : 'Not authenticate!'});
+    res.status(401).json(new errors.UnauthorizedError());
   }
 })
 
@@ -190,7 +198,6 @@ app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
   console.log(req.body);
   const images = req.files;
   
-  if(images.length == 0) return res.status(400).json({ "message": "Number of images not valid." });
   const uuids = images.map(image => {
     const extension = image.originalname.split('.').at(-1);
     return `${uuidv4()}.${extension}`
@@ -220,7 +227,15 @@ app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
     return res.status(201).json({ reportId: received.id });
   }catch(e){
     console.log(e)
-    return res.status(500).end();
+    return res.status(500).json(new errors.InternalServerError());
   }
       
 });
+
+
+app.use((err, req, res, next) => {
+  if(err instanceof ValidationError){
+    res.status(400).json(new errors.BadRequestError());
+  }
+  next(err);
+})
