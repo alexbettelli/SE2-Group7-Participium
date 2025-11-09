@@ -2,16 +2,18 @@ import { Outlet } from "react-router";
 import DefaultFooter from './Footer';
 import NavHeader from './NavBar';
 import { Container } from "react-bootstrap";
+import "../styles/commonStyle.css";
 
-function DefaultLayout(){
+function DefaultLayout(props){
+    const { user, handleLogout } = props;
     return (
-        <>
-            <NavHeader />            
-            <Container fluid>
+        <div className="main-layout">
+            <NavHeader user={user} handleLogout={handleLogout} />            
+            <Container fluid className="main-content">
                 <Outlet />
             </Container>
             <DefaultFooter/>      
-        </>
+        </div>
     );
 }
 

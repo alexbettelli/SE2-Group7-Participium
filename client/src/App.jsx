@@ -35,14 +35,15 @@ function App() {
   }
   const handleLogout = async () => {
     await API.logOut();
-    setLoggedIn(false); 
+    setLoggedIn(false);
+    setUser(null);
   };
 
   return (
     <Routes>
-      <Route element={<DefaultLayout />}>     
-        <Route path="/" index element={loggedIn? <Navigate to="/home" replace/> : <AuthenticateForm handleLogin={handleLogin} />}/> 
-        <Route path="/home" element={<HomePage user={user}/>} />                
+      <Route element={<DefaultLayout user={user} handleLogout={handleLogout} />}>     
+        <Route path="/" index element={loggedIn ? <HomePage user={user}/> : <AuthenticateForm handleLogin={handleLogin} />}/> 
+        <Route path="/home" element={loggedIn ? <HomePage user={user}/> : <Navigate to="/" replace />} />                
         <Route path="*" element={<NotFound />}/>
       </Route>
     </Routes>
