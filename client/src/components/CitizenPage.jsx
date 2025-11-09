@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import API from '../api/API.mjs';
@@ -15,7 +16,8 @@ const categories = [
     {id: 9, name: 'Other'}
 ];
 
-export default function CitizenPage(){
+export default function CitizenPage({user}){
+    const navigate = useNavigate();
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
@@ -146,23 +148,25 @@ export default function CitizenPage(){
                 images: images
             };
 
-            await API.submitReport(reportData);
-            setSubmitMessage('Report submitted successfully!');
+            const result = await API.submitReport(reportData);
 
-            setTitle('');
-            setDescription('');
-            setCatId('');
-            setImages([]);
-            imagePreviews.forEach(url => URL.revokeObjectURL(url));
-            setImagePreviews([]);
+            const reportForOverview = {
+                id: result.reportId,
+                title: reportData.title,
+                description: reportData.description,
+                category: categories.find(c => c.id === reportData.catId)?.name || 'Unknown',
+                latitude: reportData.latitude,
+                longitude: reportData.longitude,
+                address: reportData.address,
+                photos: result.images || [], 
+                author: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
+                isAnonymous: !user,
+                status: 'Pending Approval',
+                createdAt: result.createdAt || new Date().toISOString()
+            };   
 
-            setTimeout(() => {
-                clearSelection();
-            }, 2000);
-
-            setTimeout(() => {
-                setSubmitMessage('');
-            }, 7000);
+            navigate('/report-overview', { state: { report: reportForOverview } });
+            
         } catch (error) {
             setSubmitMessage(error.message || 'Error submitting report');
         } finally {
