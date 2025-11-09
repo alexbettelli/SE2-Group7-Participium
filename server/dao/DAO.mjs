@@ -14,6 +14,8 @@ const addNewUser = (data) => {
         VALUES ( ?, ?, ?, ?, ?, ?)
         `;
         
+        console.log(data);
+        console.log("Adding new user to the database...");
         db.run(insertUsertSql, 
             [data.username, data.password, data.email, data.firstName, data.lastName, data.typeId], 
             function (err) {
@@ -25,6 +27,84 @@ const addNewUser = (data) => {
 }
 
 
+
+const getUnassignedEmployees = () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const employees = rows.map(row => new User(
+                row.id,
+                row.username,
+                row.email,
+                row.firstName,
+                row.lastName,
+                row.typeId,
+                row.allowEmailNotification,
+                row.telegramUsername,
+                row.imageUrl
+            ));
+            resolve(employees);
+        });
+    });
+}
+
+const getOffices = () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM office`;
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(rows);
+        });
+    });
+}
+
+const getRoles = () => {
+  return new Promise((resolve,reject) => {
+      const query = `SELECT * FROM user_type 
+      Where id IN (3,4)`; //  3 = public relations, 4 = technician
+      db.all(query, [], (err, rows) => {
+          if (err) {
+              return reject(err);
+          }
+          console.log(rows);
+          resolve(rows);
+      });
+  });
+}
+
+const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
+    return new Promise((resolve, reject) => {
+        const updateUser = `
+        UPDATE user
+        SET typeId = ? 
+        WHERE id = ?
+        `;
+        db.run(updateUser, [roleId, employeeId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            else if (roleId == 4) { 
+              const insertEmployeeOffice = `
+              INSERT INTO office_employee (officeId, userId)
+              VALUES (?, ?)
+              `;
+              db.run(insertEmployeeOffice, [officeId, employeeId], function (err) {
+                  if (err) { 
+                      return reject(err);
+                  }
+                  resolve();
+              });
+            } else {
+              resolve();
+            }
+        });
+    });
+}
 
 const getUserByUsername = (username) => {
     return new Promise((res, rej) => {
@@ -56,6 +136,7 @@ const getUserByUsername = (username) => {
         });
     });
 }
+
 
 // REPORT
 
@@ -90,12 +171,10 @@ const addNewReport = (report) => {
                 })
             }
         });
-
-
     });
 
 }
 
-const DAO = {getUserByUsername, addNewUser, addNewReport}
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport}
 
 export default DAO

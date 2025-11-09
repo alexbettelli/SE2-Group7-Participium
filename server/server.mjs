@@ -109,6 +109,71 @@ app.post("/user", async (req, res) => {
   
 });
 
+
+app.post('/employees', isLogged,async (req, res) => {
+  try {
+
+    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const employeeData = req.body;
+    const hashedPassword = await bcrypt.hash(employeeData.password, 8);
+    employeeData.password = hashedPassword;
+    employeeData.typeId = 5; // typeId 5 = unassigned employee
+    console.log("Creating new employee with data:", employeeData);
+    const created = await DAO.addNewUser(employeeData);
+
+    return res.status(201).json(created);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error creating employee' });
+  }
+});
+
+app.get('/employees/unassigned', isLogged,async (req, res) => {
+  try {
+
+    const employees = await DAO.getUnassignedEmployees();
+    return res.status(200).json(employees);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching employees' });
+  }
+});
+
+app.post('/employees/assign', isLogged, async (req, res) => {
+  try {
+    const { employeeId, officeId, roleId } = req.body;
+    console.log(`Assigning employee ${employeeId} to office ${officeId} with role ${roleId}`);
+    await DAO.assignEmployeeToOffice(employeeId, officeId, roleId);
+    return res.status(200).json({ message: 'Employee assigned successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error assigning employee' });
+  }
+});
+
+app.get('/offices', isLogged, async (req, res) => {
+  try {
+    const offices = await DAO.getOffices();
+    return res.status(200).json(offices);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching offices' });
+  }
+});
+
+app.get('/roles', isLogged, async (req, res) => {
+  try {
+    const roles = await DAO.getRoles();
+    return res.status(200).json(roles);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching roles' });
+  }
+});
+
 app.post('/session', passport.authenticate('local'), function (req, res){  
   return res.status(201).json(req.user);
 });
