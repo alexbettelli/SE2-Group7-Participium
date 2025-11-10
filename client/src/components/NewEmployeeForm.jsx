@@ -1,6 +1,8 @@
+
 import { useState } from 'react';
-import { Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import API from '../api/API.mjs';
+import '../styles/NewEmployeeForm.css';
 
 function NewEmployeeForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -12,6 +14,7 @@ function NewEmployeeForm({ onSuccess }) {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showForm, setShowForm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,73 +57,97 @@ function NewEmployeeForm({ onSuccess }) {
   };
 
   return (
-    <div>
-      {error && <Alert variant="danger">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
+    <div className="new-employee-form-container">
+      <div
+        className="new-employee-form-title"
+        style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        onClick={() => setShowForm((v) => !v)}
+        aria-expanded={showForm}
+        tabIndex={0}
+      >
+        <span>Crea nuovo dipendente</span>
+        <span style={{ fontSize: '1.5rem', marginLeft: '1rem', transition: 'transform 0.2s', transform: showForm ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+          ▶
+        </span>
+      </div>
+      {showForm && (
+        <div>
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
-      <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="username" className="mb-3">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group controlId="username" className="form-group">
+              <Form.Label>Username <span>*</span></Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
 
-        <Form.Group controlId="password" className="mb-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            minLength={6}
-          />
-        </Form.Group>
+            <Form.Group controlId="password" className="form-group">
+              <Form.Label>Password <span>*</span></Form.Label>
+              <Form.Control
+                className="form-control"
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                minLength={6}
+              />
+            </Form.Group>
 
-        <Form.Group controlId="email" className="mb-3">
-          <Form.Label>Email</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
+            <Form.Group controlId="email" className="form-group">
+              <Form.Label>Email <span>*</span></Form.Label>
+              <Form.Control
+                className="form-control"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
 
-        <Form.Group controlId="firstName" className="mb-3">
-          <Form.Label>First name</Form.Label>
-          <Form.Control
-            type="text"
-            name="firstName"
-            value={form.firstName}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
+            <Form.Group controlId="firstName" className="form-group">
+              <Form.Label>Nome <span>*</span></Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
 
-        <Form.Group controlId="lastName" className="mb-3">
-          <Form.Label>Last name</Form.Label>
-          <Form.Control
-            type="text"
-            name="lastName"
-            value={form.lastName}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
+            <Form.Group controlId="lastName" className="form-group">
+              <Form.Label>Cognome <span>*</span></Form.Label>
+              <Form.Control
+                className="form-control"
+                type="text"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
 
-        <Form.Group>
-          <Button type="submit" className="me-2">
-            Crea utente
-          </Button>
-        </Form.Group>
-      </Form>
+            <div className="form-buttons-row">
+              <button type="submit" className="submit-button">
+                Crea utente
+              </button>
+              <Button variant="outline-secondary" onClick={() => setShowForm(false)} style={{ height: '48px', fontWeight: 600, borderRadius: '12px' }}>
+                Chiudi
+              </Button>
+            </div>
+          </Form>
+        </div>
+      )}
     </div>
   );
 }
