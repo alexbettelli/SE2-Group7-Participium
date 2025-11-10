@@ -1,6 +1,8 @@
 import CitizenPage from './CitizenPage';
 import NotFound from './NotFound';
 import {Navigate} from 'react-router';
+import '../styles/commonStyle.css';
+
 
 export default function  HomePage (props) {
   if (!props.user) return <Navigate to="/" replace />; //back to login
