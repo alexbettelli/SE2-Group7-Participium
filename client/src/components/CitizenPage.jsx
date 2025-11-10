@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import '../styles/reportStyle.css';
+import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
 
 const categories = [
@@ -186,6 +186,11 @@ export default function CitizenPage({user}){
         setSelectedLocation(null);
         setAddress('');
         setLoadingAddress(false);
+        
+        // Scroll to map
+        if (mapRef.current) {
+            mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
 
     return (
@@ -193,7 +198,9 @@ export default function CitizenPage({user}){
             <div className="citizen-page-header">
                 <h2>Welcome to Participium - City of Turin</h2>
                 <p>Report issues in your city and help make Turin a better place for everyone.</p>
-                <p>Click on the map to select the location for your report.</p>
+                {!selectedLocation && (
+                    <p className="location-instruction">📍 Click on the map to select the location for your report.</p>
+                )}
             </div>
 
             {submitMessage && submitMessage.includes('success') && (
@@ -203,10 +210,22 @@ export default function CitizenPage({user}){
             )}
 
             <div className="citizen-page-content">
-                <div ref={mapRef} className="map-container" />
+                <div className="map-section">
+                    <div className="map-container-wrapper">
+                        <div ref={mapRef} className="map-container" />
+                        {selectedLocation && (
+                            <div className="map-overlay">
+                                <div className="map-overlay-content">
+                                    <p>Location set successfully!</p>
+                                    <p>Scroll down to complete your report</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <div className="sidebar-container">
-                    {selectedLocation ? (
+                    {selectedLocation && (
                         <>
                             <div className="location-info-box">
                                 <strong>Selected Location</strong>
@@ -247,6 +266,7 @@ export default function CitizenPage({user}){
                                         className="form-select"
                                         value={catId}
                                         onChange={(e) => setCatId(e.target.value)}
+                                        size="1"
                                         required
                                     >
                                         <option value="">Select a category</option>
@@ -298,10 +318,6 @@ export default function CitizenPage({user}){
                                 </button>
                             </form>
                         </>
-                    ) : (
-                        <div className="location-placeholder">
-                            <p> 📍 Select a location on the map </p>
-                        </div>
                     )}
                 </div>
             </div>
