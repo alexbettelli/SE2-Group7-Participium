@@ -43,6 +43,7 @@
     font-weight: 800;
     font-size: 2rem;
     letter-spacing: 2px;
+    margin-top: 1rem;
     margin-bottom: 0.3rem;
     text-shadow: 2px 2px 4px rgba(8, 7, 5, 0.3);
 }

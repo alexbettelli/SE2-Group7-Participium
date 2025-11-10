@@ -10,9 +10,9 @@ export default function  HomePage (props) {
 
   switch (props.user.typeId) {
     case 1:
-      return <CitizenPage />;
+      return <CitizenPage user={props.user}/>;
     case 2:
-      return <AdminPage />;
+      return <AdminPage user={props.user}/>;
     default:
       return <NotFound />;
   }

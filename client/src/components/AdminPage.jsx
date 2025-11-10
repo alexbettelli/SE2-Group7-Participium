@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import API from "../api/API.mjs";
 import NewEmployeeForm from './NewEmployeeForm.jsx';
 import UnassignedEmployeeList from './EmployeeList.jsx';
+import '../styles/AdminPage.css';
 
-export default function AdminPage() {
+export default function AdminPage({user}) {
   const [employees, setEmployees] = useState([]);
   const [offices, setOffices] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -63,14 +64,16 @@ export default function AdminPage() {
 
   
   return (
-      <>
-          <h1>Admin Page</h1>
-          <p>Welcome, Admin! Here you can manage the system.</p>
-          <section className="my-4">
-              <h2>Crea nuovo utente</h2>
-              <NewEmployeeForm onSuccess={() => updateEmployeeList()} />
-          </section>
-          <UnassignedEmployeeList employees={employees} roles={roles} offices={offices} onAssign={assignEmployeeToOffice}/>
-      </>
+    <div className="admin-page-container">
+    <h2 className="admin-page-title">Admin Page</h2>
+    <p className="admin-page-description">Welcome {user.username}! Here you can manage users and assignments.</p>
+    <hr className="admin-page-divider" />
+      <section className="admin-page-section">
+        <NewEmployeeForm onSuccess={() => updateEmployeeList()} />
+      </section>
+      <section className="admin-page-section">
+        <UnassignedEmployeeList employees={employees} roles={roles} offices={offices} onAssign={assignEmployeeToOffice}/>
+      </section>
+    </div>
   );
 }

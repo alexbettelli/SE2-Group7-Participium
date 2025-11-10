@@ -1,0 +1,279 @@
+/* Bordo sfumato per select non selezionati */
+.employee-select-unselected {
+	padding: 0.6rem 1rem;
+	border: 2px solid rgba(145, 47, 63, 0) !important;
+	border-radius: 10px;
+	background: var(--color-cream);
+	color: #912F40;
+	font-weight: 600;
+	transition: all 0.3s ease;
+	font-family: inherit;
+}
+.employee-list-table th:nth-child(1),
+.employee-list-table td:nth-child(1) {
+	width: 140px;
+	border-right: none;
+}
+.employee-list-table th:nth-child(2),
+.employee-list-table td:nth-child(2) {
+	width: 140px;
+	border-right: none;
+}
+.employee-list-table th:nth-child(3),
+.employee-list-table td:nth-child(3) {
+	width: 140px;
+	border-right: none;
+}
+.employee-list-table th:nth-child(4),
+.employee-list-table td:nth-child(4) {
+	width: 260px;
+	border-right: none;
+}
+.employee-list-table th:nth-child(5),
+.employee-list-table td:nth-child(5) {
+	width: 260px;
+	border-right: none;
+}
+.employee-list-table th:nth-child(6),
+.employee-list-table td:nth-child(6) {
+	width: 70px;
+	border-right: none;
+}
+/* EmployeeList - Bordeaux Theme */
+.employee-list-container {
+	max-width: 1400px;
+	margin: 2rem auto;
+	padding: 2.5rem 3.5rem;
+	background: rgba(255,255,250,0.97);
+	border-radius: 24px;
+	box-shadow: 0 12px 40px rgba(112,38,50,0.13), 0 4px 18px rgba(83,153,135,0.09);
+	border: 2px solid rgba(112,38,50,0.12);
+	position: relative;
+}
+
+.employee-list-title {
+	font-size: 2rem;
+	font-weight: 700;
+	color: var(--color-wine-dark);
+	margin-bottom: 2.5rem;
+	letter-spacing: 0.5px;
+	text-shadow: 1px 1px 2px rgba(112,38,50,0.10);
+	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.7rem;
+}
+
+.employee-list-table td {
+	color: var(--color-dark);
+	padding: 0.9rem 0.5rem;
+	border: none;
+	background: rgba(255,255,250,0.98);
+	vertical-align: middle;
+	word-break: break-word;
+	white-space: normal;
+}
+.employee-list-table td:nth-child(1),
+.employee-list-table td:nth-child(2),
+.employee-list-table td:nth-child(3) {
+	font-size: 1rem;
+	color: #912F40;
+	text-align: center;
+}
+.employee-list-table td:nth-child(4),
+.employee-list-table td:nth-child(5) {
+	font-size: 0.78rem;
+}
+
+.employee-list-table th {
+	background: linear-gradient(135deg, var(--color-wine-light) 0%, var(--color-wine-dark) 100%);
+	color: var(--color-cream);
+	font-weight: 700;
+	font-size: 1.08rem;
+	padding: 1rem 0.5rem;
+	border: none;
+	letter-spacing: 0.2px;
+}
+
+.employee-list-table tr {
+	border-bottom: 1px solid rgba(112,38,50,0.08);
+	transition: background 0.2s;
+}
+.employee-list-table tr:nth-child(even) {
+	background: rgba(145,47,64,0.03);
+}
+.employee-list-table tr:hover {
+	background: rgba(145,47,64,0.09);
+}
+
+.employee-select {
+	padding: 0.6rem 1rem;
+	border: 2px solid #912F40 !important;
+	border-radius: 10px;
+	font-size: 0.78rem;
+	background: var(--color-cream);
+	color: #912F40;
+	font-weight: 600;
+	transition: all 0.3s ease;
+	font-family: inherit;
+}
+.employee-select:focus {
+	outline: none;
+	border-color: var(--color-wine-light);
+	box-shadow: 0 0 0 2px rgba(145,47,64,0.12);
+	background: var(--color-cream);
+}
+.employee-select option {
+	color: #912F40;
+	background: var(--color-cream);
+	font-weight: 500;
+}
+
+.assign-button {
+	padding: 0.7rem 1.5rem;
+	background: linear-gradient(135deg, var(--color-green) 0%, rgba(83,153,135,0.9) 100%) !important;
+	color: var(--color-cream) !important;
+	border: none;
+	border-radius: 10px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	letter-spacing: 0.3px;
+	box-shadow: 0 4px 15px rgba(83,153,135,0.18);
+	min-width: 100px;
+}
+.assign-button:hover:enabled {
+	background: linear-gradient(135deg, rgba(83,153,135,0.9) 0%, var(--color-green) 100%) !important;
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(83,153,135,0.22);
+}
+.assign-button:disabled {
+	background: linear-gradient(135deg, var(--color-green) 0%, rgba(83,153,135,0.7) 100%) !important;
+	cursor: not-allowed;
+	opacity: 0.7;
+	transform: none;
+}
+.assign-button:hover:enabled {
+	background: linear-gradient(135deg, rgba(83,153,135,0.9) 0%, var(--color-green) 100%);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(83,153,135,0.22);
+}
+.assign-button:disabled {
+	background: linear-gradient(135deg, var(--color-green) 0%, rgba(83,153,135,0.7) 100%);
+	cursor: not-allowed;
+	opacity: 0.7;
+	transform: none;
+}
+
+.no-office-badge {
+	display: inline-block;
+	padding: 0.5rem 1.2rem;
+	background: linear-gradient(135deg, #ffe066 0%, #ffd700 100%);
+	color: #912F40;
+	border-radius: 10px;
+	font-weight: 600;
+	font-size: 0.98rem;
+	text-align: center;
+	box-shadow: 0 2px 8px rgba(255,224,102,0.18);
+}
+
+@media (max-width: 900px) {
+	.employee-list-container {
+		padding: 1.2rem 0.5rem;
+	}
+	.employee-list-title {
+		font-size: 1.3rem;
+	}
+	.employee-list-table th, .employee-list-table td {
+		font-size: 0.95rem;
+		padding: 0.6rem 0.2rem;
+	}
+}
+
+@import './commonStyle.css';
+
+.employee-list-title {
+	font-size: 1.7rem;
+	font-weight: 700;
+	color: var(--color-wine-dark);
+	margin-bottom: 2rem;
+	letter-spacing: 0.5px;
+	text-shadow: 1px 1px 2px rgba(112,38,50,0.08);
+	text-align: center;
+}
+
+.employee-list-table td {
+	color: var(--color-dark);
+	padding: 0.9rem 0.5rem;
+	border-right: 2px solid #912F40;
+	background: rgba(255,255,250,0.98);
+	vertical-align: middle;
+	word-break: break-word;
+	white-space: normal;
+	box-sizing: border-box;
+}
+
+
+.employee-list-table tr {
+	border-bottom: 1px solid rgba(112,38,50,0.08);
+	transition: background 0.2s;
+}
+
+.employee-list-table tr:hover {
+	background: rgba(145,47,64,0.04);
+}
+
+.employee-select {
+	padding: 0.6rem 1rem;
+	border: 2px solid #912F40;
+	border-radius: 10px;
+	font-size: 1rem;
+	background: var(--color-cream);
+	color: #912F40;
+	font-weight: 600;
+	transition: all 0.3s ease;
+	font-family: inherit;
+}
+
+.employee-select:focus {
+	outline: none;
+	border-color: var(--color-wine-light);
+	box-shadow: 0 0 0 2px rgba(145,47,64,0.12);
+	background: var(--color-cream);
+}
+
+.employee-select option {
+	color: #912F40;
+	background: var(--color-cream);
+	font-weight: 500;
+}
+
+.assign-button {
+	padding: 0.7rem 1.5rem;
+	background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%);
+	color: var(--color-cream);
+	border: none;
+	border-radius: 10px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	letter-spacing: 0.3px;
+	box-shadow: 0 4px 15px rgba(112,38,50,0.18);
+	min-width: 100px;
+}
+
+.assign-button:hover:not(:disabled) {
+	background: linear-gradient(135deg, var(--color-wine-light) 0%, var(--color-wine-dark) 100%);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(112,38,50,0.22);
+}
+
+.assign-button:disabled {
+	background: var(--color-green);
+	cursor: not-allowed;
+	opacity: 0.7;
+	transform: none;
+}

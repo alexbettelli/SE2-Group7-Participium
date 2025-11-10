@@ -1,0 +1,68 @@
+@import './commonStyle.css';
+
+.admin-page-container {
+	max-width: 1400px;
+	margin: 0 auto 2rem;
+	padding: 2rem;
+	background: linear-gradient(135deg, rgba(112,38,50,0.02) 0%, rgba(83,153,135,0.02) 50%, rgba(145,47,64,0.02) 100%);
+	min-height: 100vh;
+}
+
+
+.admin-page-title {
+	font-size: 2.2rem;
+	font-weight: 700;
+	color: var(--color-wine-dark);
+	margin-bottom: 0.2rem;
+	letter-spacing: 1px;
+	text-shadow: 1px 1px 2px rgba(112,38,50,0.1);
+	text-align: center;
+}
+.admin-page-description {
+	font-size: 1.1rem;
+	color: var(--color-wine-light);
+	margin: 0.5rem 0 0.5rem 0;
+	line-height: 1.6;
+	text-align: center;
+}
+.admin-page-divider {
+	border: none;
+	border-top: 3px solid var(--color-wine-light);
+	margin: 1rem auto 4rem auto;
+	width: 60%;
+	opacity: 0.5;
+	display: block;
+}
+
+.admin-page-section {
+	margin-bottom: 2.5rem;
+	margin-top: 2.5rem;
+}
+
+@media (max-width: 1024px) {
+	.admin-page-header h2 {
+		font-size: 1.8rem;
+	}
+}
+
+@media (max-width: 768px) {
+	.admin-page-container {
+		padding: 1.5rem;
+	}
+	.admin-page-header {
+		padding: 1.5rem;
+		margin-bottom: 2rem;
+	}
+	.admin-page-header h2 {
+		font-size: 1.6rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.admin-page-container {
+		padding: 1rem;
+	}
+	.admin-page-header h2 {
+		font-size: 1.4rem;
+	}
+}

@@ -65,7 +65,7 @@ function NewEmployeeForm({ onSuccess }) {
         aria-expanded={showForm}
         tabIndex={0}
       >
-        <span>Crea nuovo dipendente</span>
+        <span>Create an employee account</span>
         <span style={{ fontSize: '1.5rem', marginLeft: '1rem', transition: 'transform 0.2s', transform: showForm ? 'rotate(90deg)' : 'rotate(0deg)' }}>
           ▶
         </span>
@@ -114,7 +114,7 @@ function NewEmployeeForm({ onSuccess }) {
             </Form.Group>
 
             <Form.Group controlId="firstName" className="form-group">
-              <Form.Label>Nome <span>*</span></Form.Label>
+              <Form.Label>First name <span>*</span></Form.Label>
               <Form.Control
                 className="form-control"
                 type="text"
@@ -126,7 +126,7 @@ function NewEmployeeForm({ onSuccess }) {
             </Form.Group>
 
             <Form.Group controlId="lastName" className="form-group">
-              <Form.Label>Cognome <span>*</span></Form.Label>
+              <Form.Label>Last name <span>*</span></Form.Label>
               <Form.Control
                 className="form-control"
                 type="text"
@@ -139,10 +139,10 @@ function NewEmployeeForm({ onSuccess }) {
 
             <div className="form-buttons-row">
               <button type="submit" className="submit-button">
-                Crea utente
+                Create account
               </button>
               <Button variant="outline-secondary" onClick={() => setShowForm(false)} style={{ height: '48px', fontWeight: 600, borderRadius: '12px' }}>
-                Chiudi
+                Cancel
               </Button>
             </div>
           </Form>
