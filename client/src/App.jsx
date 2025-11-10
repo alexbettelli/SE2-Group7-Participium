@@ -43,8 +43,7 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout user={user} handleLogout={handleLogout} />}>     
-        <Route path="/" index element={loggedIn ? <Navigate to="/home" replace/> : <AuthenticateForm handleLogin={handleLogin} />}/> 
-        <Route path="/home" element={<HomePage user={user}/>} />
+        <Route path="/" index element={loggedIn ? <HomePage user={user}/> : <AuthenticateForm handleLogin={handleLogin} />}/> 
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />
         <Route path="*" element={<NotFound />}/>
       </Route>
