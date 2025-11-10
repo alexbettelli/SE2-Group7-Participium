@@ -15,14 +15,19 @@ import { fileURLToPath } from 'url';
 import DAO from './dao/DAO.mjs';
 import { Report } from './model/model.mjs';
 import * as errors from './model/error.mjs';
-
+import addFormats from 'ajv-formats'
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const swaggerDocument = JSON.parse(fs.readFileSync('./swagger.json', 'utf-8'));
-const { validate } = new Validator({ allErrors: true });
+const validator = new Validator({ allErrors: true });
 const schemas = swaggerDocument.components.schemas;
+validator.ajv.addSchema(schemas.user, 'user');
+validator.ajv.addSchema(schemas.report, 'report');
+validator.ajv.addSchema(schemas.notification, 'notification');
+addFormats(validator.ajv);
+const validate = validator.validate;
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -212,8 +217,7 @@ app.delete('/sessions/current', (req, res) => {
 
 // REPORTS
 
-app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
-  console.log(req.body);
+app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   
   const uuids = images.map(image => {
@@ -231,8 +235,6 @@ app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
       catId: req.body.catId,
       images: uuids,
   });
-
-  
 
   try{
     const received = await DAO.addNewReport(report);
@@ -253,6 +255,7 @@ app.post('/reports', isLogged, upload.array('images', 3), async (req, res) => {
 
 app.use((err, req, res, next) => {
   if(err instanceof ValidationError){
+    console.log(err.validationErrors);
     res.status(400).json(new errors.BadRequestError());
   }
   next(err);

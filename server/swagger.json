@@ -818,16 +818,41 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "id": { "type": "integer", "minimum": 0 },
+                    "id": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
                     "title": { "type": "string", "minLength": 5, "maxLength": 100 },
                     "description": { "type": "string", "minLength": 10, "maxLength": 255 },
                     "latitude": { "type": "string" },
                     "longitude": { "type": "string" },
                     "address": { "type": "string" },
-                    "userId": { "type": "integer", "minimum": 0 },
-                    "catId": { "type": "integer", "minimum": 0 },
-                    "statusId": { "type": "integer", "minimum": 0 },
-                    "officeId": { "type": "integer", "minimum": 0 },
+                    "userId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
+                    "catId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                    },
+                    "statusId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
+                    "officeId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "updatedAt": { "type": "string", "format": "date-time" },
                     "rejectReason": { "type": "string", "maxLength": 255 },
@@ -841,7 +866,7 @@
                         "maxItems": 3
                     }
                 },
-                "required": [ "title", "description", "latitude", "longitude", "catId", "statusId", "images" ]
+                "required": [ "title", "description", "latitude", "longitude", "catId" ]
             },
             "notification": {
                 "type": "object",
