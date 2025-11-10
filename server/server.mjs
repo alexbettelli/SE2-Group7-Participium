@@ -117,6 +117,9 @@ app.post('/employees', isLogged,async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    const employee = await DAO.getUserByUsername(req.body.username);  
+    if (employee) return res.status(409).json(new errors.ConflictError("This username already exists.")); 
+
     const employeeData = req.body;
     const hashedPassword = await bcrypt.hash(employeeData.password, 8);
     employeeData.password = hashedPassword;
@@ -133,6 +136,9 @@ app.post('/employees', isLogged,async (req, res) => {
 
 app.get('/employees/unassigned', isLogged,async (req, res) => {
   try {
+    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+      return res.status(403).json({ error: 'Forbidden' });
+    }
 
     const employees = await DAO.getUnassignedEmployees();
     return res.status(200).json(employees);
@@ -144,6 +150,10 @@ app.get('/employees/unassigned', isLogged,async (req, res) => {
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
+    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const { employeeId, officeId, roleId } = req.body;
     console.log(`Assigning employee ${employeeId} to office ${officeId} with role ${roleId}`);
     await DAO.assignEmployeeToOffice(employeeId, officeId, roleId);
@@ -156,6 +166,10 @@ app.post('/employees/assign', isLogged, async (req, res) => {
 
 app.get('/offices', isLogged, async (req, res) => {
   try {
+    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const offices = await DAO.getOffices();
     return res.status(200).json(offices);
   } catch (error) {
@@ -166,6 +180,10 @@ app.get('/offices', isLogged, async (req, res) => {
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
+    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
     const roles = await DAO.getRoles();
     return res.status(200).json(roles);
   } catch (error) {
