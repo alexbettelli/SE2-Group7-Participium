@@ -40,12 +40,12 @@ vi.mock('sqlite3', () => {
           const [u, password, email, firstName, lastName, typeId] = params;
           Database._users.push({
             id,
-            username: u ?? null,
-            password: password ?? null,
-            email: email ?? null,
-            firstName: firstName ?? null,
-            lastName: lastName ?? null,
-            typeId: typeId ?? null
+            username: u,
+            password: password,
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            typeId: typeId
           });
           return cb && cb.call({ lastID: id }, null);
         }
