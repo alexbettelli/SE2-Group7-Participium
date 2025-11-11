@@ -295,3 +295,8 @@ Defines all the channels able to send messages.
 
 - `UnassignedEmployeeList` (in `EmployeeList.jsx`):
   - **Scope**: Show to the admin list of all assignable employees and allow assignement
+
+## Admin user
+
+**username** : admin
+**password** : adminpassword

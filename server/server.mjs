@@ -123,7 +123,7 @@ app.post('/employees', isLogged,async (req, res) => {
     }
 
     const employee = await DAO.getUserByUsername(req.body.username);  
-    if (employee) return res.status(409).json(new errors.ConflictError("This username already exists.")); 
+    if (employee) return res.status(409).json({ error: 'This username already exists.' }); 
 
     const employeeData = req.body;
     const hashedPassword = await bcrypt.hash(employeeData.password, 8);
@@ -135,7 +135,7 @@ app.post('/employees', isLogged,async (req, res) => {
     return res.status(201).json(created);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error creating employee' });
+    res.status(503).json({ error: error.message });
   }
 });
 
