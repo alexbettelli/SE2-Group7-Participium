@@ -1,3 +1,6 @@
+@import './commonStyle.css';
+
+
 /* Bordo sfumato per select non selezionati */
 .employee-select-unselected {
 	padding: 0.6rem 1rem;
@@ -192,7 +195,6 @@
 	}
 }
 
-@import './commonStyle.css';
 
 .employee-list-title {
 	font-size: 1.7rem;

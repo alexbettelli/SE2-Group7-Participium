@@ -15,7 +15,7 @@ function AuthenticateForm(props){
         <div className="auth-container">
             <div className="auth-form-wrapper">
                 {isLogin 
-                ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle}/> 
+                ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle} loginError={props.loginError}/> 
                 : <RegistrationForm handleToggle={handleToggle}/>}                           
             </div>
         </div>               
@@ -28,20 +28,19 @@ function LogInForm(props){
         login,
         {username: '', password: ''}
     );
-    async function login(prevState, formData) {
-        
-        const credentials = {
-            username: formData.get('username'),
-            password: formData.get('password')
-        }
+        async function login(prevState, formData) {
+            const credentials = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            }
 
-        try {
-            await props.handleLogin(credentials);
-            return {success : true}
-        } catch (error) {
-            return {error: 'Access denied. Email or password incorrect!'}
+            try {
+                await props.handleLogin(credentials);
+                return {success : true}
+            } catch (error) {
+                return {error: error.message || 'Access denied. Email or password incorrect!'}
+            }
         }
-    }
     return (
         <div className="auth-form login-form">
             <h2 className="auth-title">Log In</h2>
@@ -59,6 +58,9 @@ function LogInForm(props){
                     <Button className='auth-btn-link' variant="link" type="button" onClick={props.handleToggle}>Create new account</Button>
                 </Form.Group>  
             </Form>
+            {(state?.error || props.loginError) && (
+                <div className="auth-error-message">{state?.error || props.loginError}</div>
+            )}
         </div> 
     )
 }
@@ -117,6 +119,9 @@ function RegistrationForm(props){
                     <Button className="auth-btn-link" variant="link" type="button" onClick={props.handleToggle}>Have you an account yet?</Button>
                 </Form.Group> 
             </Form>   
+            {state?.error && (
+                <div className="auth-error-message">{state.error}</div>
+            )}
         </div>
     )
 }

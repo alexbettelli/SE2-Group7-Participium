@@ -1,21 +1,25 @@
 const SERVER_URL = 'http://localhost:3001';
 
 const login = async(credentials) => {
-    const res = await fetch(SERVER_URL + '/session', {
+    const response = await fetch(SERVER_URL + '/session', {
         method : 'POST',
         headers : { 'Content-Type' : 'application/json' },
         credentials : 'include',
         body : JSON.stringify(credentials)
-    })
-
-    if (res.ok) {        
-        const user = await res.json();
+    });
+    if (!response.ok) {
+        if (response.status === 401) {
+            const errorBody = await response.json();
+            throw new Error(errorBody.error || 'Login failed due to incorrect credentials.');
+        }
+        throw new Error('Server error during login.');
+    }
+    else {
+        const user = await response.json();
         return user;
-    } else {        
-        const errDetails = await res.text();
-        throw new Error(errDetails.message || 'Username or Password incorrect!');
     }
 };
+
 const registrate = async(data) =>{
      const res = await fetch(SERVER_URL + '/user', {
         method : 'POST',
@@ -26,9 +30,16 @@ const registrate = async(data) =>{
     if (res.ok) {        
         const user = await res.json();
         return user;
-    } else {        
-        const errDetails = await res.text();
-        throw new Error(errDetails.message || 'Error:user not saved!');
+    } else {
+        let errMessage = 'Error:user not saved!';
+        try {
+            const errDetails = await res.json();
+            errMessage = errDetails.message || errMessage;
+        } catch {
+            const errText = await res.text();
+            if (errText) errMessage = errText;
+        }
+        throw new Error(errMessage);
     }
 }
 

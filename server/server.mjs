@@ -197,8 +197,17 @@ app.get('/roles', isLogged, async (req, res) => {
   }
 });
 
-app.post('/session', passport.authenticate('local'), function (req, res){  
-  return res.status(201).json(req.user);
+app.post('/session', function (req, res, next) {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) return next(err); 
+    if (!user) {
+      return res.status(401).json({ error: info }); 
+    }
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      return res.status(201).json(req.user);
+    });
+  })(req, res, next);
 });
 
 app.get('/session/current', (req, res) => {
