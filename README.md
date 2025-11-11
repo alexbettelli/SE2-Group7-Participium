@@ -291,10 +291,10 @@ Defines all the channels able to send messages.
 
 - `NewEmployeeForm` (in `NewEmployeeFrom.jsx`):
 
-  - **Scope**: Form di creazione per un nuovo employee
+  - **Scope**: Creation form for a new employee in the admin page
 
 - `UnassignedEmployeeList` (in `EmployeeList.jsx`):
-  - **Scope**: Show to the admin list of all assignable employees and allow assignement
+  - **Scope**: Shows to the admin list of all assignable employees and allow assignement
 
 ## Admin user
 
