@@ -55,7 +55,10 @@ const createNewEmployee = async(data) => {
           const employee = await res.json();
           return employee;
       } else {
-          const errDetails = await res.text();
+          const errDetails = await res.json();
+          if (errDetails.error.includes('user.email')){
+              throw new Error('This email is already in use!');
+          }
           throw new Error(errDetails.error || 'Error: employee not created!');
       }
 }

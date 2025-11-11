@@ -87,7 +87,7 @@ passport.deserializeUser( function( user, cb){
 
 app.use(passport.authenticate('session'));
 
-const isLogged = (req, res, next) => {
+export const isLogged = (req, res, next) => {
   if(req.isAuthenticated()) return next();
   else return res.status(401).json(new errors.UnauthorizedError());
 }
@@ -123,7 +123,7 @@ app.post('/employees', isLogged,async (req, res) => {
     }
 
     const employee = await DAO.getUserByUsername(req.body.username);  
-    if (employee) return res.status(409).json(new errors.ConflictError("This username already exists.")); 
+    if (employee) return res.status(409).json({ error: 'This username already exists.' }); 
 
     const employeeData = req.body;
     const hashedPassword = await bcrypt.hash(employeeData.password, 8);
@@ -135,7 +135,7 @@ app.post('/employees', isLogged,async (req, res) => {
     return res.status(201).json(created);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error creating employee' });
+    res.status(503).json({ error: error.message });
   }
 });
 
@@ -229,6 +229,8 @@ app.delete('/sessions/current', (req, res) => {
 app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   
+  if(images.length === 0) return res.status(400).json(new errors.BadRequestError());
+
   const uuids = images.map(image => {
     const extension = image.originalname.split('.').at(-1);
     return `${uuidv4()}.${extension}`
@@ -247,6 +249,7 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
 
   try{
     const received = await DAO.addNewReport(report);
+    console.log(received);
     console.log(images);
     for(const idx in images){
       const directory = `${upload_dir}/reports/${received.id}`;
@@ -269,3 +272,5 @@ app.use((err, req, res, next) => {
   }
   next(err);
 })
+
+export default app;
