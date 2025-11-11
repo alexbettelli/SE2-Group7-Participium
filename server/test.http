@@ -3,12 +3,12 @@ POST http://localhost:3001/user
 Content-Type: application/json
 
 {
-  "username": "marioRossi",
-  "password": "Password123!",  
-  "email": "mario.rossi@example.com",
-  "firstName": "Mario",
-  "lastName": "Rossi",
-  "typeId": 1
+  "username": "myadmin",
+  "password": "myadmin",  
+  "email": "myadmin@gmail.com",
+  "firstName": "Admin",
+  "lastName": "Admin",
+  "typeId": 2
 }
 
 ###

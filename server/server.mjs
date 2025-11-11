@@ -87,7 +87,7 @@ passport.deserializeUser( function( user, cb){
 
 app.use(passport.authenticate('session'));
 
-const isLogged = (req, res, next) => {
+export const isLogged = (req, res, next) => {
   if(req.isAuthenticated()) return next();
   else return res.status(401).json(new errors.UnauthorizedError());
 }
@@ -220,6 +220,8 @@ app.delete('/sessions/current', (req, res) => {
 app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   
+  if(images.length === 0) return res.status(400).json(new errors.BadRequestError());
+
   const uuids = images.map(image => {
     const extension = image.originalname.split('.').at(-1);
     return `${uuidv4()}.${extension}`
@@ -238,6 +240,7 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
 
   try{
     const received = await DAO.addNewReport(report);
+    console.log(received);
     console.log(images);
     for(const idx in images){
       const directory = `${upload_dir}/reports/${received.id}`;
@@ -260,3 +263,5 @@ app.use((err, req, res, next) => {
   }
   next(err);
 })
+
+export default app;
