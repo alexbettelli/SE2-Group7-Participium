@@ -132,12 +132,23 @@ export default function CitizenPage({user}){
             setSubmitMessage('Please select a location on the map');
             return;
         }
-        if (!title.trim()) {
+        const trimmedTitle = title.trim();
+        if (!trimmedTitle) {
             setSubmitMessage('Title is required');
             return;
         }
-        if (!description.trim()) {
+        if (trimmedTitle.length < 5 || trimmedTitle.length > 100) {
+            setSubmitMessage('Title must be between 5 and 100 characters');
+            return;
+        }
+        
+        const trimmedDescription = description.trim();
+        if (!trimmedDescription) {
             setSubmitMessage('Description is required');
+            return;
+        }
+        if (trimmedDescription.length < 10 || trimmedDescription.length > 255) {
+            setSubmitMessage('Description must be between 10 and 255 characters');
             return;
         }
         if (!catId) {
@@ -154,8 +165,8 @@ export default function CitizenPage({user}){
 
         try {
             const reportData = {
-                title: title.trim(),
-                description: description,
+                title: trimmedTitle,
+                description: trimmedDescription,
                 latitude: selectedLocation.lat,
                 longitude: selectedLocation.lng,
                 address: address,
