@@ -31,13 +31,16 @@ vi.mock('sqlite3', () => {
       const q = String(sql).toLowerCase();
 
       try {
-        //INSERT user
         if (q.includes('insert into user')) {
+          const username = params[0] ?? null;
+          if (username && Database._users.some(u => u.username === username)) { 
+            return cb && cb(new Error('SQLITE_CONSTRAINT: UNIQUE constraint failed: user.username')); //username unique
+          }
           const id = Database._nextUserId++;
-          const [username, password, email, firstName, lastName, typeId] = params;
+          const [u, password, email, firstName, lastName, typeId] = params;
           Database._users.push({
             id,
-            username: username ?? null,
+            username: u ?? null,
             password: password ?? null,
             email: email ?? null,
             firstName: firstName ?? null,
@@ -47,7 +50,7 @@ vi.mock('sqlite3', () => {
           return cb && cb.call({ lastID: id }, null);
         }
 
-        //INSERT office
+        // INSERT office
         if (q.includes('insert into office')) {
           const id = Database._nextOfficeId++;
           const name = params[0] ?? 'unknown';
@@ -55,13 +58,13 @@ vi.mock('sqlite3', () => {
           return cb && cb.call({ lastID: id }, null);
         }
 
-        //DELETE offices
+        // DELETE offices
         if (q.includes('delete from office')) {
           Database._offices = [];
           return cb && cb(null);
         }
 
-        //UPDATE user SET typeId = ? WHERE ...
+        // UPDATE user SET typeId = ? WHERE ...
         if (q.includes('update user set') && q.includes('typeid')) {
           const [newType, where] = params;
           if (typeof where === 'number') {
@@ -72,7 +75,7 @@ vi.mock('sqlite3', () => {
           return cb && cb(null);
         }
 
-        //default: success no-op
+        // default: success no-op
         return cb && cb(null);
       } catch (err) {
         return cb && cb(err);
@@ -133,7 +136,6 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  //ensure DB mock store reset between tests
   sqlite3.Database.resetStore();
 });
 
@@ -176,9 +178,16 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(fetched.user.username).toBe('newuser');
     });
 
-    it('allows insertion with missing optional fields', async () => {
-      const id = await DAO.addNewUser({ password: 'p' }); 
-      expect(typeof id).toBe('number');
+    it('throws error when inserting a user with existing username', async () => {
+      const data = {
+        username: 'existing',
+        password: 'pw',
+        email: 'e2@e',
+        firstName: 'Ex2',
+        lastName: 'Ist2',
+        typeId: 1
+      };
+      await expect(DAO.addNewUser(data)).rejects.toThrow();
     });
 
     it('propagates DB error when run fails (simulated)', async () => {
@@ -217,7 +226,6 @@ describe('DAO (server/dao/DAO.mjs)', () => {
     });
 
     it('returns empty array when no offices', async () => {
-      //remove offices from mock store
       sqlite3.Database._offices = [];
       const offices = await DAO.getOffices();
       expect(Array.isArray(offices)).toBe(true);
