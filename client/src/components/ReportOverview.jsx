@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/reportOverview.css';
+import '../styles/ReportOverview.css';
 
 const ReportOverview = ({ report, onBackToHome }) => {
 
@@ -14,8 +14,10 @@ const ReportOverview = ({ report, onBackToHome }) => {
 
                 <div className="overview-header">
                     <h3 className="report-title">{report.title}</h3>
-                     <span className="report-id">Report #{report.id}</span>
-                    <span className="status-badge">{report.status}</span>
+                    <div className="header-badges">
+                        <span className="report-id-badge">Report #{report.id}</span>
+                        <span className="status-badge">{report.status}</span>
+                    </div>
                 </div>
 
                 <div className="overview-section">

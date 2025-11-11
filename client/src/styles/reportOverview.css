@@ -1,3 +1,4 @@
+
 @import './commonStyle.css';
 
 .report-overview-container {
@@ -7,8 +8,8 @@
 }
 
 .success-banner {
-  background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%);
-  color: var(--color-cream);
+  background: var(--color-green);
+  color: #fff;
   padding: 2rem;
   border-radius: 12px;
   text-align: center;
@@ -30,6 +31,7 @@
 .success-title {
   font-size: 1.8rem;
   margin: 0.5rem 0;
+  color: #fff;
 }
 
 .success-subtitle {
@@ -46,46 +48,54 @@
   position: relative;
 }
 
+/* Badges container in header */
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .report-id-badge {
-  position: absolute;
-  top: -12px;
-  right: 2rem;
-  background: #3498db;
+  background: var(--color-wine-light);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(26, 188, 156, 0.2);
 }
 
 .overview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding-bottom: 1.5rem;
-    border-bottom: 2px solid #e5e7eb;
-    margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
 }
 
 .header-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 3;
 }
 
 .report-title {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     font-weight: 600;
-    color: #111827;
+    color: var(--color-wine-dark);
     margin: 0;
 }
 
 .report-id {
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 500;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
+  min-width: 120px;
+  flex: 1;
 }
 
 .status-badge {
@@ -111,8 +121,9 @@
   letter-spacing: 0.5px;
 }
 
+
 .report-field {
-  color: #34495e;
+  color: var(--color-wine-dark);
   line-height: 1.6;
   font-size: 1rem;
   background: #f8f9fa;
@@ -143,7 +154,7 @@
   background: #f8f9fa;
   padding: 0.8rem;
   border-radius: 8px;
-  color: #2c3e50;
+  color: var(--color-wine-dark);
 }
 
 .photo-gallery {
@@ -168,12 +179,13 @@
 
 .photo-item img {
   width: 100%;
-  height: auto; 
-  min-height: 200px; 
+  height: auto;
+  min-height: 200px;
   max-height: 400px;
-  object-fit: contain; 
+  object-fit: contain;
   display: block;
-  margin: 0 auto; 
+  margin: 0 auto;
+  padding: 16px;
 }
 
 .overview-footer {
@@ -223,45 +235,33 @@
 }
 
 .btn-primary {
-  background: #3498db;
+  background: var(--color-wine-light);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #2980b9;
+  background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 8px rgba(112, 38, 50, 0.2);
 }
 
 @media (max-width: 768px) {
   .report-overview-container {
     padding: 0.5rem;
   }
-
-  .success-banner {
-    padding: 1.5rem;
-  }
-
-  .overview-card {
-    padding: 1rem;
-  }
-
   .report-id-badge {
     position: static;
     display: block;
     margin-bottom: 1rem;
   }
-
   .overview-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-
   .photo-gallery {
     grid-template-columns: 1fr;
   }
-
   .btn {
     width: 100%;
     justify-content: center;
