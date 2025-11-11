@@ -8,7 +8,7 @@ export function ReportOverviewPage() {
   const report = location.state?.report;
 
   const handleBackToHome = () => {
-    navigate('/home');
+    navigate('/');
   };
 
   return (

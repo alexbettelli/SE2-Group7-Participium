@@ -92,15 +92,29 @@ export default function CitizenPage({user}){
     }, []);
 
     const handleImageChange = (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 3) {
-            setSubmitMessage('Maximum 3 images allowed');
+        const newFiles = Array.from(e.target.files);
+        const totalFiles = images.length + newFiles.length;
+        
+        if (totalFiles > 3) {
+            const remainingSlots = 3 - images.length;
+            if (remainingSlots > 0) {
+                const filesToAdd = newFiles.slice(0, remainingSlots);
+                const newPreviews = filesToAdd.map(file => URL.createObjectURL(file));
+                setImages([...images, ...filesToAdd]);
+                setImagePreviews([...imagePreviews, ...newPreviews]);
+                setSubmitMessage(`Added ${filesToAdd.length} image(s). Maximum 3 images allowed.`);
+            } else {
+                setSubmitMessage('Maximum 3 images already selected. Remove some images first.');
+            }
+            e.target.value = '';
             return;
         }
-        setImages(files);
-        const previews = files.map(file => URL.createObjectURL(file));
-        setImagePreviews(previews);
+        
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        setImages([...images, ...newFiles]);
+        setImagePreviews([...imagePreviews, ...newPreviews]);
         setSubmitMessage('');
+        e.target.value = '';
     };
 
     const removeImage = (index) => {
@@ -118,12 +132,23 @@ export default function CitizenPage({user}){
             setSubmitMessage('Please select a location on the map');
             return;
         }
-        if (!title.trim()) {
+        const trimmedTitle = title.trim();
+        if (!trimmedTitle) {
             setSubmitMessage('Title is required');
             return;
         }
-        if (!description.trim()) {
+        if (trimmedTitle.length < 5 || trimmedTitle.length > 100) {
+            setSubmitMessage('Title must be between 5 and 100 characters');
+            return;
+        }
+        
+        const trimmedDescription = description.trim();
+        if (!trimmedDescription) {
             setSubmitMessage('Description is required');
+            return;
+        }
+        if (trimmedDescription.length < 10 || trimmedDescription.length > 255) {
+            setSubmitMessage('Description must be between 10 and 255 characters');
             return;
         }
         if (!catId) {
@@ -140,8 +165,8 @@ export default function CitizenPage({user}){
 
         try {
             const reportData = {
-                title: title.trim(),
-                description: description,
+                title: trimmedTitle,
+                description: trimmedDescription,
                 latitude: selectedLocation.lat,
                 longitude: selectedLocation.lng,
                 address: address,
