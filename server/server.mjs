@@ -256,6 +256,7 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
       userId: req.user.id,
       catId: req.body.catId,
       images: uuids,
+      anonymous: req.body.anonymous === 'true' ? 1 : 0,
   });
 
   try{

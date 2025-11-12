@@ -76,7 +76,8 @@ current status, and responsible office.
 - **`latitude`** (REAL): Geographic latitude of the problem location.
 - **`longitude`** (REAL): Geographic longitude of the problem location.
 - **`address`** (TEXT, NULLABLE): address of the problem location. (We can get it with an API to OpenStreetMap (ChatGPT said so))
-- **`userId`** (INTEGER, FK → user.id, NULLABLE): ID of the citizen who submitted the report. NULL id mean anonymous
+- **`userId`** (INTEGER, FK → user.id): ID of the citizen who submitted the report. Always stored even for anonymous reports.
+- **`anonymous`** (INTEGER, DEFAULT 0): Flag indicating if the report is anonymous (1 = anonymous, 0 = not anonymous). When anonymous, the user's name is not visible in public reports, but the userId is still stored for internal tracking.
 - **`catId`** (INTEGER, FK → report_category.id): Type of issue reported.
 - **`statusId`** (INTEGER, FK → report_status.id): Current lifecycle status of the report.
 - **`officeId`** (INTEGER, FK → office.id, NULLABLE): Office currently handling the report.Null if report is not yet assigned
@@ -289,26 +290,6 @@ Defines all the channels able to send messages.
 ]
 ```
 
-<!--
-- **POST** `/user`
-
-  **Description**: Create a new user account
-
-  **Request body**:..... JSON
-  **Query parameters**:........... JSON
-  **Response**: `200 OK` (success), `404 Not Found` (.....), or `500 Internal Server Error` (tgeneric error).
-
-  **Response body**:
-    ```
-    [
-      {
-        ....
-      },
-      ...
-    ]
-    ```
--->
-
 ## Main React Components
 
 - `AuthenticateForm` (in `Authentication.js`):
@@ -331,20 +312,34 @@ Defines all the channels able to send messages.
 
   - **Scope**: Main interface for citizens to submit reports about city issues. This component integrates three key features:
 
-  **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city.
+- **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city.
 
-  **Location Selection**: When users click anywhere on the map, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
+- **Location Selection**: When users click anywhere on the map, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
 
-  **Submit Report Form**: Once a location is selected, a comprehensive form appears that allows users to provide details about the issue. The form includes:
+- **Submit Report Form**: Once a location is selected, a comprehensive form appears that allows users to provide details about the issue. The form includes:
 
   - A required title field (5-100 characters)
   - A required description field (10-255 characters)
   - A category dropdown with 9 predefined options (Water Supply, Architectural Barriers, Sewer System, Public Lighting, Waste, Road Signs and Traffic Lights, Roads and Urban Furnishings, Public Green Areas and Playgrounds, and Other)
   - An image upload section that accepts 1-3 photos with live previews and the ability to remove individual images before submission
+  - An anonymous checkbox option that allows citizens to submit reports without their name being visible in public reports. When checked, the report's `anonymous` flag is set to 1 in the database, but the `userId` is still stored for internal tracking purposes.
 
   The form performs client-side validation to ensure all required fields are filled correctly and that image constraints are met. Upon successful submission, users are redirected to the report overview page to see their submitted report.
 
-## Admin user
+## Users
 
-**username** : admin
-**password** : adminpassword
+- **Admin user**
+  **username** : admin
+  **password** : adminpassword
+
+<br>
+
+- **Citizen user**
+  **username** : mario.rossi
+  **password** : mariorossi
+
+<br>
+
+- **Employee user**
+  **username** : maria.bianchi
+  **password** : mariabianchi

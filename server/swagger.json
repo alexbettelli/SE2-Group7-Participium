@@ -864,6 +864,9 @@
                         },
                         "minItems": 1,
                         "maxItems": 3
+                    },
+                    "anonymous": {
+                        "type": "string"
                     }
                 },
                 "required": [ "title", "description", "latitude", "longitude", "catId" ]

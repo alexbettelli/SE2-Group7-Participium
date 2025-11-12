@@ -1,3 +1,7 @@
+/* Authentication Form Styles - Participium */
+@import './commonStyle.css';
+
+
 /* Error message styling */
 .auth-error-message {
     color: #e74c3c;
@@ -11,8 +15,6 @@
     font-weight: 600;
     box-shadow: 0 2px 8px rgba(231,76,60,0.08);
 }
-/* Authentication Form Styles - Participium */
-@import './commonStyle.css';
 
 /* Main container */
 .auth-container {
@@ -30,8 +32,23 @@
 /* Form wrapper with elegant card style */
 .auth-form-wrapper {
     width: 100%;
-    max-width: 380px;
     animation: slideInUp 0.6s ease-out;
+}
+.auth-form-wrapper.login-form-wrapper {
+    max-width: 500px;
+}
+.auth-form-wrapper.register-form-wrapper {
+    max-width: 700px;
+}
+
+/* Affianca First name e Last name nella registrazione */
+.auth-form-row {
+    display: flex;
+    gap: 1.2rem;
+}
+.auth-form-row .auth-form-group {
+    flex: 1 1 0;
+    margin-bottom: 1.3rem;
 }
 
 .auth-form {
@@ -43,7 +60,7 @@
         0 3px 15px rgba(83, 153, 135, 0.1);
     border: 1px solid rgba(112, 38, 50, 0.1);
     position: relative;
-    overflow: hidden;
+    margin-bottom: 0.6rem;
 }
 
 /* Subtle pattern overlay for forms */
@@ -51,7 +68,7 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
+    margin-bottom: 0.6rem;
     right: 0;
     bottom: 0;
     background-image: 
@@ -145,6 +162,10 @@
     width: 100%;
     margin-bottom: 1.2rem;
     cursor: pointer;
+    width: 70%;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
 }
 
 /* Link button - more specific selector to override Bootstrap */
