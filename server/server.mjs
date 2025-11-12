@@ -119,11 +119,11 @@ app.post('/employees', isLogged,async (req, res) => {
   try {
 
     if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json(new errors.ForbiddenError());
     }
 
     const employee = await DAO.getUserByUsername(req.body.username);  
-    if (employee) return res.status(409).json({ error: 'This username already exists.' }); 
+    if (employee) return res.status(409).json(new errors.ConflictError("This username already exists.")); 
 
     const employeeData = req.body;
     const hashedPassword = await bcrypt.hash(employeeData.password, 8);
@@ -135,28 +135,28 @@ app.post('/employees', isLogged,async (req, res) => {
     return res.status(201).json(created);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: error.message });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
 app.get('/employees/unassigned', isLogged,async (req, res) => {
   try {
     if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json(new errors.ForbiddenError());
     }
 
     const employees = await DAO.getUnassignedEmployees();
     return res.status(200).json(employees);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching employees' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json(new errors.ForbiddenError());
     }
 
     const { employeeId, officeId, roleId } = req.body;
@@ -165,35 +165,35 @@ app.post('/employees/assign', isLogged, async (req, res) => {
     return res.status(200).json({ message: 'Employee assigned successfully' });
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error assigning employee' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
 app.get('/offices', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json(new errors.ForbiddenError());
     }
 
     const offices = await DAO.getOffices();
     return res.status(200).json(offices);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching offices' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json(new errors.ForbiddenError());
     }
     
     const roles = await DAO.getRoles();
     return res.status(200).json(roles);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching roles' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
@@ -201,7 +201,7 @@ app.post('/session', function (req, res, next) {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err); 
     if (!user) {
-      return res.status(401).json({ error: info }); 
+      return res.status(401).json(new errors.UnauthorizedError()); 
     }
     req.logIn(user, (err) => {
       if (err) return next(err);
@@ -259,7 +259,7 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
     return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `http://localhost:3001/images/reports/${received.id}/${filename}`})) });
   }catch(e){
     console.log(e)
-    return res.status(500).json(new errors.InternalServerError());
+    return res.status(503).json(new errors.ServiceUnvailableError());
   }
       
 });
