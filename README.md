@@ -299,6 +299,21 @@ Defines all the channels able to send messages.
 - `ReportOverview` (in `ReportOverview.jsx` / `ReportOverviewPage.jsx`):
   - **Scope**: Displays the report after submission (post-submission preview).
 
+- `CitizenPage` (in `CitizenPage.jsx`):
+  - **Scope**: Main interface for citizens to submit reports about city issues. This component integrates three key features:
+  
+  **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city.
+  
+  **Location Selection**: When users click anywhere on the map, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
+  
+  **Submit Report Form**: Once a location is selected, a comprehensive form appears that allows users to provide details about the issue. The form includes:
+  - A required title field (5-100 characters)
+  - A required description field (10-255 characters)
+  - A category dropdown with 9 predefined options (Water Supply, Architectural Barriers, Sewer System, Public Lighting, Waste, Road Signs and Traffic Lights, Roads and Urban Furnishings, Public Green Areas and Playgrounds, and Other)
+  - An image upload section that accepts 1-3 photos with live previews and the ability to remove individual images before submission
+  
+  The form performs client-side validation to ensure all required fields are filled correctly and that image constraints are met. Upon successful submission, users are redirected to the report overview page to see their submitted report.
+
 ## Admin user
 
 **username** : admin
