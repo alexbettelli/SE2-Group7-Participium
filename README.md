@@ -296,6 +296,9 @@ Defines all the channels able to send messages.
 - `UnassignedEmployeeList` (in `EmployeeList.jsx`):
   - **Scope**: Shows to the admin list of all assignable employees and allow assignement
 
+- `ReportOverview` (in `ReportOverview.jsx` / `ReportOverviewPage.jsx`):
+  - **Scope**: Displays the report after submission (post-submission preview).
+
 ## Admin user
 
 **username** : admin
