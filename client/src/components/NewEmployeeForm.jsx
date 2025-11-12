@@ -35,6 +35,15 @@ function NewEmployeeForm({ onSuccess }) {
       setError('La password deve avere almeno 6 caratteri.');
       return;
     }
+    if( form.email.indexOf('@') === -1 ) {
+      setError('Inserisci un indirizzo email valido.');
+      return;
+    }
+    if( form.email.indexOf('.') === -1 ) {
+      setError('Inserisci un indirizzo email valido.');
+      return;
+    }
+    
 
     try {
       const data = {
@@ -42,8 +51,7 @@ function NewEmployeeForm({ onSuccess }) {
         password: form.password,
         email: form.email,
         firstName: form.firstName,
-        lastName: form.lastName,
-        typeId: 6
+        lastName: form.lastName
       };
 
       await API.createNewEmployee(data);
