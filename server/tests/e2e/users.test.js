@@ -1,6 +1,7 @@
 // e2e tests for /user, /session, /session/current, /sessions/current
 import request from 'supertest';
 import app from '../../server.mjs';
+import { expect } from 'vitest';
 
 describe('E2E User Routes', () => {
   test('POST /user - missing password', async () => {
@@ -20,7 +21,8 @@ describe('E2E User Routes', () => {
       password: 'e2epassword'
     });
     expect(res.statusCode).toBe(401);
-    expect(res.body).toHaveProperty('error');
+    expect(res.body).toHaveProperty('code')
+    expect(res.body.code).toBe(401);
   });
 
   test('POST /session - wrong password', async () => {
@@ -29,7 +31,8 @@ describe('E2E User Routes', () => {
       password: 'wrongpassword'
     });
     expect(res.statusCode).toBe(401);
-    expect(res.body).toHaveProperty('error');
+    expect(res.body).toHaveProperty('code')
+    expect(res.body.code).toBe(401);
   });
 
   test('POST /session - missing password', async () => {
