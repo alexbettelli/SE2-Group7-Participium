@@ -146,8 +146,8 @@ const addNewReport = (report) => {
 
         const now = dayjs().toString();
 
-        const query1 = 'INSERT INTO Report (title, description, latitude, longitude, address, userId, catId, statusId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)' 
-        const params1 = [ report.title, report.description, report.latitude, report.longitude, report.address, report.userId, report.catId, 1, now  ]
+        const query1 = 'INSERT INTO Report (title, description, latitude, longitude, address, userId, catId, statusId, createdAt, anonymous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)' 
+        const params1 = [ report.title, report.description, report.latitude, report.longitude, report.address, report.userId, report.catId, 1, now, report.anonymous || 0  ]
         db.run(query1, params1, function(err){
             if(err){
                 reject(err);

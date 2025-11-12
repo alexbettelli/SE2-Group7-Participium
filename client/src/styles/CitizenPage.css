@@ -363,6 +363,21 @@
     font-weight: 700;
 }
 
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.checkbox-input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--color-wine-light);
+}
+
 /* Form inputs with bordeaux theme */
 .form-input,
 .form-textarea,

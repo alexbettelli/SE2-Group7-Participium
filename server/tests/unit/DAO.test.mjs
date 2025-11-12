@@ -24,6 +24,12 @@ vi.mock('sqlite3', () => {
       ];
       Database._nextUserId = 10;
       Database._nextOfficeId = 10;
+
+      Database._categories = [
+        { id: 1, name: 'Plumbing' },
+        { id: 2, name: 'Electrical'},
+        { id: 3, name: 'Landscaping' }
+      ]
     }
 
     run(sql, maybeParams, maybeCb) {
@@ -97,6 +103,7 @@ vi.mock('sqlite3', () => {
           const row = Database._users.find(u => u.id === id);
           return cb && cb(null, row);
         }
+
         return cb && cb(null, undefined);
       } catch (err) {
         return cb && cb(err);
@@ -112,6 +119,11 @@ vi.mock('sqlite3', () => {
         }
         if (q.includes('from office')) {
           return cb && cb(null, Database._offices.slice());
+        }
+
+         //GET categories
+        if (q.includes('from report_category')) {
+           return cb && cb(null, Database._categories);
         }
         return cb && cb(null, []);
       } catch (err) {
@@ -232,4 +244,15 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(offices.length).toBe(0);
     });
   });
+
+  describe('getCategories', () => {
+    it('returns seeded categories', async () => {
+      const categories = await DAO.getCategories();
+      expect(Array.isArray(categories)).toBe(true);
+      expect(categories.length).toBe(3);
+      const names = categories.map(c => c.name);
+      expect(names).toEqual(expect.arrayContaining(['Plumbing', 'Electrical', 'Landscaping']));
+      }
+    )
+  })
 });
