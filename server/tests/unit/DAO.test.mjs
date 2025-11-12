@@ -24,11 +24,19 @@ vi.mock('sqlite3', () => {
       ];
       Database._nextUserId = 10;
       Database._nextOfficeId = 10;
+      Database._nextReportId = 10;
 
       Database._categories = [
         { id: 1, name: 'Plumbing' },
         { id: 2, name: 'Electrical'},
         { id: 3, name: 'Landscaping' }
+      ]
+      Database.roles = [
+        { id: 1, name: 'CItizen' },
+        { id: 2, name: 'System Administrator'},
+        { id: 3, name: 'Municipal Public Relations Officer' },
+        { id: 4, name: 'Technical Office Staff Member' },
+        { id: 5, name: 'Unassigned Employee' },
       ]
     }
 
@@ -81,6 +89,11 @@ vi.mock('sqlite3', () => {
           return cb && cb(null);
         }
 
+        //INSERT report
+        if (q.includes('insert into report') || q.includes('insert into report_image')) {
+          const id = Database._nextReportId++;
+          return cb && cb.call({ lastID: id }, null);
+        }
         // default: success no-op
         return cb && cb(null);
       } catch (err) {
@@ -124,6 +137,9 @@ vi.mock('sqlite3', () => {
          //GET categories
         if (q.includes('from report_category')) {
            return cb && cb(null, Database._categories);
+        }
+        if (q.includes('from user_type')) {
+           return cb && cb(null, Database.roles.filter(r => [3, 4].includes(r.id)));
         }
         return cb && cb(null, []);
       } catch (err) {
@@ -255,4 +271,59 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       }
     )
   })
+  describe('getRoles', () => {
+    it('returns mucipal users roles', async () => {
+      const roles = await DAO.getRoles();
+      expect(Array.isArray(roles)).toBe(true);
+      expect(roles.length).toBe(2);
+      const names = roles.map(c => c.name);
+      expect(names).toEqual(expect.arrayContaining(['Municipal Public Relations Officer', 'Technical Office Staff Member']));
+      }
+    )
+  })
+  describe('assignEmployeeToOffice', () => {
+    it('assign employee to an Office', async () => {
+      const data = {
+        employeeId : 2,
+        officeId : 1,
+        roleId : 3
+      }
+      const assignedEmp = await DAO.assignEmployeeToOffice(data.employeeId, data.officeId, data.roleId);
+      expect(assignedEmp).toBe(undefined);      
+    })
+  })
+  describe('addNewReport', () => {
+    
+    it('add a new report', async () => {
+      const newReport = {
+        title : "fake title", 
+        description : "fake description", 
+        latitude : 45.10000, 
+        longitude : 32.25,
+        address : "indirizzo falso", 
+        userId : 1, 
+        catId : 1, 
+        statusId : 1 , 
+        createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100", 
+        anonymous: 1,
+        images: ['img1.png', 'img2.png']
+      }
+      const report = await DAO.addNewReport(newReport);
+      expect(report).toBeTruthy();
+      expect(report.id).toBeTruthy();
+      expect(report.title).toBe("fake title");
+      expect(report.description).toBe("fake description");
+      expect(report.latitude).toBe( 45.10000);
+      expect(report.longitude).toBe(32.25);
+      expect(report.address).toBe("indirizzo falso");
+      expect(report.userId).toBe(1);
+      expect(report.catId).toBe(1);
+      expect(report.statusId).toBe(1);
+      expect(report.createdAt).toBe("Tue Nov 12 2025 15:42:10 GMT+0100");
+      expect(report.anonymous).toBe(1);
+      expect(Array.isArray(report.images)).toBe(true);
+      expect(report.images.length).toBe(2);
+      }
+    )
+  }) 
 });
