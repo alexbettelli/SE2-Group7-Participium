@@ -5,17 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
 
-const categories = [
-    {id: 1, name: 'Water Supply – Drinking Water'},
-    {id: 2, name: 'Architectural Barriers'},
-    {id: 3, name: 'Sewer System'},
-    {id: 4, name: 'Public Lighting'},
-    {id: 5, name: 'Waste'},
-    {id: 6, name: 'Road Signs and Traffic Lights'},
-    {id: 7, name: 'Roads and Urban Furnishings'},
-    {id: 8, name: 'Public Green Areas and Playgrounds'},
-    {id: 9, name: 'Other'}
-];
+
 
 export default function CitizenPage({user}){
     const navigate = useNavigate();
@@ -33,6 +23,19 @@ export default function CitizenPage({user}){
     const [imagePreviews, setImagePreviews] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const cats = await API.getCategories();
+                setCategories(cats);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         if (!mapInstanceRef.current && mapRef.current) {
@@ -180,7 +183,7 @@ export default function CitizenPage({user}){
                 id: result.reportId,
                 title: reportData.title,
                 description: reportData.description,
-                category: categories.find(c => c.id === reportData.catId)?.name || 'Unknown',
+                category: categories.find(c => c.id === reportData.catId)?.categoryName || 'Unknown',
                 latitude: reportData.latitude,
                 longitude: reportData.longitude,
                 address: reportData.address,
@@ -296,7 +299,7 @@ export default function CitizenPage({user}){
                                     >
                                         <option value="">Select a category</option>
                                         {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                            <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
                                         ))}
                                     </select>
                                 </div>

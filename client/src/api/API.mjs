@@ -174,5 +174,20 @@ const submitReport = async(reportData) => {
   }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut };
+const getCategories = async() => {
+    const res = await fetch(SERVER_URL + '/categories', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const categories = await res.json();
+        return categories;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching categories');
+    }
+};
+
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories };
 export default API;
