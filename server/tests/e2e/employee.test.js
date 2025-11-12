@@ -13,7 +13,7 @@ describe('E2E Employee Routes', () => {
             lastName : "Prova"
         }
         let existingUsername = {
-            username : "marioRossi",
+            username : "mario.rossi",
             password : "passwordProva",
             email : "emailprova@gmail.com",
             firstName : "username",
@@ -25,16 +25,16 @@ describe('E2E Employee Routes', () => {
             expect(res.statusCode).toBe(401);
         })
         it("create an employee without being an admin", async () => {
-            const auth = await request(app).post('/session').send({ "username": "marioRossi", "password": "Password123!" });
+            const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
             const res = await request(app).post('/employees').set('Cookie', auth.headers['set-cookie'] ?? []).send(newEmployee);
             
             expect(res.statusCode).toBe(403);
         })
         it("create an employee with an existing username", async () => {
-            const auth = await request(app).post('/session').send({ "username": "marioRossi", "password": "Password123!" });
+            const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
             const res = await request(app).post('/employees').set('Cookie', auth.headers['set-cookie'] ?? []).send(existingUsername);
             
-            expect(res.statusCode).toBe(403);
+            expect(res.statusCode).toBe(409);
         })
         it("create an employee correctly", async () => {
             const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
@@ -52,7 +52,7 @@ describe('E2E Employee Routes', () => {
             expect(res.statusCode).toBe(401);
         })
         it("get all employees without being an admin", async () => {
-            const auth = await request(app).post('/session').send({ "username": "marioRossi", "password": "Password123!" });
+            const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
             const res = await request(app).get('/employees/unassigned').set('Cookie', auth.headers['set-cookie'] ?? []);
             
             expect(res.statusCode).toBe(403);
@@ -85,7 +85,7 @@ describe('E2E Employee Routes', () => {
     })  
     describe("POST /employees/assign", () => {
         let assignedEmployee = {
-            "employeeId" : 16,
+            "employeeId" : 3,
             "roleId": 4,
             "officeId": 2
         }
@@ -95,7 +95,7 @@ describe('E2E Employee Routes', () => {
             expect(res.statusCode).toBe(401);
         })
         it("assing an employee without being an admin", async () => {
-            const auth = await request(app).post('/session').send({ "username": "marioRossi", "password": "Password123!" });
+            const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
             const res = await request(app).post('/employees/assign').set('Cookie', auth.headers['set-cookie'] ?? []).send(assignedEmployee);
             
             expect(res.statusCode).toBe(403);
