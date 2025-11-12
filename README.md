@@ -76,7 +76,8 @@ current status, and responsible office.
 - **`latitude`** (REAL): Geographic latitude of the problem location.
 - **`longitude`** (REAL): Geographic longitude of the problem location.
 - **`address`** (TEXT, NULLABLE): address of the problem location. (We can get it with an API to OpenStreetMap (ChatGPT said so))
-- **`userId`** (INTEGER, FK → user.id, NULLABLE): ID of the citizen who submitted the report. NULL id mean anonymous
+- **`userId`** (INTEGER, FK → user.id): ID of the citizen who submitted the report. Always stored even for anonymous reports.
+- **`anonymous`** (INTEGER, DEFAULT 0): Flag indicating if the report is anonymous (1 = anonymous, 0 = not anonymous). When anonymous, the user's name is not visible in public reports, but the userId is still stored for internal tracking.
 - **`catId`** (INTEGER, FK → report_category.id): Type of issue reported.
 - **`statusId`** (INTEGER, FK → report_status.id): Current lifecycle status of the report.
 - **`officeId`** (INTEGER, FK → office.id, NULLABLE): Office currently handling the report.Null if report is not yet assigned
@@ -341,7 +342,8 @@ Defines all the channels able to send messages.
   - A required description field (10-255 characters)
   - A category dropdown with 9 predefined options (Water Supply, Architectural Barriers, Sewer System, Public Lighting, Waste, Road Signs and Traffic Lights, Roads and Urban Furnishings, Public Green Areas and Playgrounds, and Other)
   - An image upload section that accepts 1-3 photos with live previews and the ability to remove individual images before submission
-
+  - An anonymous checkbox option that allows citizens to submit reports without their name being visible in public reports. When checked, the report's `anonymous` flag is set to 1 in the database, but the `userId` is still stored for internal tracking purposes.
+  
   The form performs client-side validation to ensure all required fields are filled correctly and that image constraints are met. Upon successful submission, users are redirected to the report overview page to see their submitted report.
 
 ## Admin user

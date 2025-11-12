@@ -23,6 +23,7 @@ export default function CitizenPage({user}){
     const [imagePreviews, setImagePreviews] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
+    const [isAnonymous, setIsAnonymous] = useState(false);
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
@@ -174,7 +175,8 @@ export default function CitizenPage({user}){
                 longitude: selectedLocation.lng,
                 address: address,
                 catId: parseInt(catId),
-                images: images
+                images: images,
+                anonymous: isAnonymous
             };
 
             const result = await API.submitReport(reportData);
@@ -188,8 +190,8 @@ export default function CitizenPage({user}){
                 longitude: reportData.longitude,
                 address: reportData.address,
                 photos: result.images || [], 
-                author: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
-                isAnonymous: !user,
+                author: isAnonymous || !user ? 'Anonymous' : `${user.firstName} ${user.lastName}`,
+                isAnonymous: isAnonymous || !user,
                 status: 'Pending Approval',
                 createdAt: result.createdAt || new Date().toISOString()
             };   
@@ -329,6 +331,18 @@ export default function CitizenPage({user}){
                                             ))}
                                         </div>
                                     )}
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAnonymous}
+                                            onChange={(e) => setIsAnonymous(e.target.checked)}
+                                            className="checkbox-input"
+                                        />
+                                        <span>Submit as anonymous (name will not be visible in public reports)</span>
+                                    </label>
                                 </div>
 
                                 {submitMessage && !submitMessage.includes('success') && (
