@@ -341,7 +341,7 @@ export default function CitizenPage({user}){
                                             onChange={(e) => setIsAnonymous(e.target.checked)}
                                             className="checkbox-input"
                                         />
-                                        <span>Submit as anonymous (name will not be visible in public reports)</span>
+                                        <span>Submit as anonymous (your name will not be visible in public reports)</span>
                                     </label>
                                 </div>
 

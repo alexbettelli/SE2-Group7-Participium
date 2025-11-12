@@ -13,7 +13,7 @@ function AuthenticateForm(props){
 
     return (               
         <div className="auth-container">
-            <div className="auth-form-wrapper">
+            <div className={`auth-form-wrapper ${isLogin ? 'login-form-wrapper' : 'register-form-wrapper'}`}>
                 {isLogin 
                 ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle} loginError={props.loginError}/> 
                 : <RegistrationForm handleToggle={handleToggle}/>}                           
@@ -86,7 +86,7 @@ function RegistrationForm(props){
             props.handleToggle();
             return {success : true}
         } catch (error) {
-            return {error: 'Accesso fallito. Email o password errati!'}
+            return {error: 'Username already in use. Please choose another username or log in if you already have an account.'}
         }
     }
 
@@ -94,29 +94,33 @@ function RegistrationForm(props){
         <div className="auth-form register-form">              
             <h2 className="auth-title">Create new account</h2>
             <Form action={formAction} className="auth-form-element">
-                <Form.Group controlId='username' className='auth-form-group'>
-                    <Form.Label className="auth-label">Username</Form.Label>
-                    <Form.Control type='text' name='username' required className="auth-input" />
-                </Form.Group>  
+                <div className="auth-form-row">
+                    <Form.Group controlId='username' className='auth-form-group'>
+                        <Form.Label className="auth-label">Username</Form.Label>
+                        <Form.Control type='text' name='username' required className="auth-input" />
+                    </Form.Group>  
+                    <Form.Group controlId='email' className='auth-form-group'>
+                        <Form.Label className="auth-label">Email</Form.Label>
+                        <Form.Control type='email' name='email' required className="auth-input" />
+                    </Form.Group>    
+                </div>
                 <Form.Group controlId='password' className="auth-form-group">
                     <Form.Label className="auth-label">Password</Form.Label>
                     <Form.Control type='password' name='password' required minLength={6} className="auth-input"/>
                 </Form.Group>    
-                <Form.Group controlId='email' className='auth-form-group'>
-                    <Form.Label className="auth-label">Email</Form.Label>
-                    <Form.Control type='email' name='email' required className="auth-input" />
-                </Form.Group>    
-                <Form.Group controlId='firstName' className='auth-form-group'>
-                    <Form.Label className="auth-label">First name</Form.Label>
-                    <Form.Control type='text' name='firstName' required className="auth-input" />
-                </Form.Group>    
-                <Form.Group controlId='lastName' className='auth-form-group'>
-                    <Form.Label className="auth-label">Last name</Form.Label>
-                    <Form.Control type='text' name='lastName' required className="auth-input" />
-                </Form.Group>    
+                <div className="auth-form-row">
+                    <Form.Group controlId='firstName' className='auth-form-group'>
+                        <Form.Label className="auth-label">First name</Form.Label>
+                        <Form.Control type='text' name='firstName' required className="auth-input" />
+                    </Form.Group>    
+                    <Form.Group controlId='lastName' className='auth-form-group'>
+                        <Form.Label className="auth-label">Last name</Form.Label>
+                        <Form.Control type='text' name='lastName' required className="auth-input" />
+                    </Form.Group>    
+                </div>
                 <Form.Group className="auth-button-group">                            
                     <Button className='auth-btn-primary' type='submit'>Create</Button>
-                    <Button className="auth-btn-link" variant="link" type="button" onClick={props.handleToggle}>Have you an account yet?</Button>
+                    <Button className="auth-btn-link" variant="link" type="button" onClick={props.handleToggle}>Do you already have an account?</Button>
                 </Form.Group> 
             </Form>   
             {state?.error && (
