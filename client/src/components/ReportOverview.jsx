@@ -69,16 +69,16 @@ const ReportOverview = ({ report, onBackToHome }) => {
 
                 <div className="overview-footer">
                     <div className="report-meta">
-                        {/*{!report.isAnonymous && report.author && (*/}
+                        {!report.isAnonymous && report.author && (
                             <span className="author-info">
                                 Reported by: {report.author}
                             </span>
-                       {/* )}*/}
-                       {/*} {report.isAnonymous && (}
+                        )}
+                        {report.isAnonymous && (
                             <span className="author-info anonymous">
                                 Anonymous Report
                             </span>
-                        )}*/}
+                        )}
 
                  {report.createdAt && (
                  <span className="timestamp-info">
