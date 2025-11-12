@@ -173,13 +173,13 @@ Defines all the channels able to send messages.
     ]
 ```
 
-**Response**: `201 OK` (success),`401 Unauthorized`, `403 Forbidden`, `409 Conflict` (username already exists), or `503 Service unavailable` (Saving error).
+**Response**: `200 OK` (success),`401 Unauthorized`, `403 Forbidden`, `409 Conflict` (username already exists), or `503 Service unavailable` (Saving error).
 
   <br>
 
 - **GET** `/employees/unassigned`
   **Description**: Retrieve all employees not already assigned to a role
-  **Response**: `201 OK` (success), `401 Unauthorized`, `403 Forbidden` or `503 Service unavailable` (Saving error).
+  **Response**: `200 OK` (success), `401 Unauthorized`, `403 Forbidden` or `503 Service unavailable`.
   **Response body**:
 
 ```
@@ -217,13 +217,13 @@ Defines all the channels able to send messages.
     ]
 ```
 
-**Response**: `201 OK` (success), `401 Unauthorized`, `403 Forbidden`, or `503 Service unavailable` (Saving error).
+**Response**: `200 OK` (success), `401 Unauthorized`, `403 Forbidden`, or `503 Service unavailable` (Saving error).
 
   <br>
 
 - **GET** `/offices`
   **Description**: Retrieve list of all offices
-  **Response**: `201 OK` (success), `401 Unauthorized`, `403 Forbidden`, or `503 Service unavailable` (Saving error).
+  **Response**: `200 OK` (success), `401 Unauthorized`, `403 Forbidden`, or `503 Service unavailable` .
   **Response body**:
 
 ```
@@ -246,7 +246,7 @@ Defines all the channels able to send messages.
 
 - **GET** `/roles`
   **Description**: Retrieve list of roles assignable to employees
-  **Response**: `201 OK` (success), `401 Unauthorized`, `403 Forbidden`, or `503 Service unavailable` (Saving error).
+  **Response**: `200 OK` (success), `401 Unauthorized`, `403 Forbidden`, or `503 Service unavailable`.
   **Response body**:
 
 ```
@@ -263,6 +263,32 @@ Defines all the channels able to send messages.
 ```
 
   <br>
+  
+ - **GET** `\categories`
+**Description** : Retrieve list of valid categories for report creation
+**Response** : `200 OK (success)`, `401 Unauthorized`,`503 Service unavailable`
+ **Response body** :
+
+```
+[
+   {
+       "id": 1,
+       "categoryName": "Roads and Infrastructure"
+   },
+   {
+       "id": 2,
+       "categoryName": "Waste and Cleanliness"
+   },
+   {
+       "id": 3,
+       "categoryName": "Green Areas and Public Parks"
+   },
+   {
+       "id": 4,
+       "categoryName": "Public Transport and Mobility"
+   }
+]
+```
 
 <!--
 - **POST** `/user`
@@ -295,19 +321,23 @@ Defines all the channels able to send messages.
   - **Scope**: Creation form for a new employee in the admin page
 
 - `UnassignedEmployeeList` (in `EmployeeList.jsx`):
+
   - **Scope**: Shows to the admin list of all assignable employees and allow assignement
 
 - `ReportOverview` (in `ReportOverview.jsx` / `ReportOverviewPage.jsx`):
+
   - **Scope**: Displays the report after submission (post-submission preview).
 
 - `CitizenPage` (in `CitizenPage.jsx`):
+
   - **Scope**: Main interface for citizens to submit reports about city issues. This component integrates three key features:
-  
+
   **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city.
-  
+
   **Location Selection**: When users click anywhere on the map, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
-  
+
   **Submit Report Form**: Once a location is selected, a comprehensive form appears that allows users to provide details about the issue. The form includes:
+
   - A required title field (5-100 characters)
   - A required description field (10-255 characters)
   - A category dropdown with 9 predefined options (Water Supply, Architectural Barriers, Sewer System, Public Lighting, Waste, Road Signs and Traffic Lights, Roads and Urban Furnishings, Public Green Areas and Playgrounds, and Other)
