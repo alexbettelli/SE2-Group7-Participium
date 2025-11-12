@@ -154,6 +154,7 @@ const submitReport = async(reportData) => {
   formData.append('longitude', reportData.longitude);
   formData.append('address', reportData.address);
   formData.append('catId', reportData.catId);
+  formData.append('anonymous', reportData.anonymous ? 'true' : 'false');
   
   reportData.images.forEach(image => {
     formData.append('images', image);
