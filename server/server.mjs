@@ -197,6 +197,17 @@ app.get('/roles', isLogged, async (req, res) => {
   }
 });
 
+app.get('/categories', isLogged, async (req, res) => {
+  try {
+    const categories = await DAO.getCategories();
+    return res.status(200).json(categories);
+  }
+  catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching categories' });
+  }
+});
+
 app.post('/session', function (req, res, next) {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err); 

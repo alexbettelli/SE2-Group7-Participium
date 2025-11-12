@@ -175,6 +175,18 @@ const addNewReport = (report) => {
 
 }
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport}
+const getCategories = () => {
+  return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM report_category`;
+      db.all(query, [], (err, rows) => {
+          if (err) {
+              return reject(err);
+          }
+          resolve(rows);
+      });
+  });
+}
+
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories};
 
 export default DAO
