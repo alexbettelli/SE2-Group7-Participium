@@ -29,8 +29,7 @@ sections:
 | Story           | # Tasks | Points | Hours est. | Hours actual |
 | --------------- | ------- | ------ | ---------- | ------------ |
 | _Uncategorized_ |         |        |            |              |
-| Get ticket      |         |        |            |              |
-| Next Customer   |         |        |            |              |
+
 
 > story `Uncategorized` is for technical tasks, leave out story points (not applicable in this case)
 
