@@ -13,7 +13,7 @@ beforeEach(() => {
 describe('POST /reports', () => {
     it('201 OK', async () => {
         // arrange
-        const credentials = { "username": "marioRossi", "password": "Password123!" };
+        const credentials = { "username": "mario.rossi", "password": "mariorossi" };
         
         // act
         const auth = await request(app).post('/session').send(credentials);
@@ -36,7 +36,7 @@ describe('POST /reports', () => {
 
     it('400 Bad Request', async () => {
         // arrange
-        const credentials = { "username": "marioRossi", "password": "Password123!" };
+        const credentials = { "username": "mario.rossi", "password": "mariorossi" };
 
         // act
         const auth = await request(app).post('/session').send(credentials);
