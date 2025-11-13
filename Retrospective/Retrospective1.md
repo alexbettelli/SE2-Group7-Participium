@@ -71,37 +71,36 @@ sections:
 ## ASSESSMENT
 
 - What did go wrong in the sprint?
-  - Too many hours estimated for documentation and code merging operation
-  - Tests have been performed in the last few days
-  - Overestimation of MapRendering task because of the fear of unknown
+  - Too many hours were estimated for documentation and code merging;
+  - Tests were performed only in the last few days;
+  - Map-related tasks were overestimated, because they represented a feature none of us had ever faced.
 
 - What caused your errors in estimation (if any)?
 
-  - Previous sprint experience led us to overestimate code merging task
-  - Too much caution on tasks and problems we never faced  
-  - Assign documentation to too many people (people who did the client side and style had less things to document)
+  - Our previous sprint experience led us to overestimate the time needed for code merging;
+  - Excessive caution on tasks and problems we had never faced.; 
+  - The documentation task was equally assigned to every member of the group, even though those working on the client-side and style had less to mention in the README.
 
 - What lessons did you learn (both positive and negative) in this sprint?
 
-  - As a team we should have more confidence in our capabilities related to not overestimate unknown tasks
-  - Add some deadline ........
+  - As a team, we should be more confident in our ability to approach and overcome new challenges;
+  - If no deadline is set for the whole team, testing activities are performed too late in the sprint.
 
 - Which improvement goals set in the previous retrospective were you able to achieve?
 
-  - Define and differentiate tasks more clearly, with well-separated scopes and balancing coding, testing, and documentation.
-  - Establish a common structure and coding standards to reduce merge conflicts.
+  - We were able to define more specific tasks and improved our balance in coding, testing, and documentation efforts;
+  - Merge conflicts (and the hours needed to solve them) were drastically reduced, thanks to a better organization and a common structure.
 
 - Which ones you were not able to achieve? Why?
 
-  - We achieved all the improvements we set in the previous sprint
+  - We achieved all the improvements we set in the previous sprint.
 
 - Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
 
   > Propose one or two
 
-  - Achieve more balance on estimate tasks like documentation and code merging operation
-  - Implement test earlier in the sprint
+  - Achieve a more precise estimation for documentation and code merging;
+  - Implement tests earlier in the sprint.
 
 - One thing you are proud of as a Team!!
-  - We’re proud of our teamwork and reliability: everyone collaborated, completed their tasks on time, and maintained high quality.
-  - Everything works clearly and we did a great job
+  - We proved once again that our teamwork is reliable and efficient, generating a high-quality product that met our expectations. 
