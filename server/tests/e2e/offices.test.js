@@ -26,7 +26,7 @@ describe('GET /offices', () => {
         DAO.getOffices.mockResolvedValue(offices);
 
         // act
-        const auth = await request(app).post('/session').send({ "username": "myadmin", "password": "myadmin" });
+        const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
         const result = await request(app).get('/offices').set('Cookie', auth.headers['set-cookie'] ?? []);
 
         // assert
@@ -48,7 +48,7 @@ describe('GET /offices', () => {
     
     it('403 Forbidden', async () => {
         // act
-        const auth = await request(app).post('/session').send({ "username": "marioRossi", "password": "Password123!" });
+        const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
         const result = await request(app).get('/offices').set('Cookie', auth.headers['set-cookie'] ?? []);
 
         // assert
@@ -62,7 +62,7 @@ describe('GET /offices', () => {
         DAO.getOffices.mockImplementation(() => {throw new Error()});
 
         // act
-        const auth = await request(app).post('/session').send({ "username": "myadmin", "password": "myadmin" });
+        const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
         const result = await request(app).get('/offices').set('Cookie', auth.headers['set-cookie'] ?? []);
 
         // assert
