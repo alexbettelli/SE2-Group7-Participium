@@ -1,0 +1,66 @@
+### Registration
+POST http://localhost:3001/user
+Content-Type: application/json
+
+{
+  "username": "myadmin",
+  "password": "myadmin",  
+  "email": "myadmin@gmail.com",
+  "firstName": "Admin",
+  "lastName": "Admin",
+  "typeId": 2
+}
+
+###
+
+### Login
+POST http://localhost:3001/session
+Content-Type: application/json
+
+{
+  "username": "marioRossi",
+  "password": "Password123!"
+}
+
+### Get current user
+GET http://localhost:3001/session/current
+
+
+### Create a new Report
+POST http://localhost:3001/reports
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="title"
+
+Lampione rotto
+--MyBoundary
+Content-Disposition: form-data; name="description"
+
+Il lampione davanti alla scuola non funziona
+--MyBoundary
+Content-Disposition: form-data; name="latitude"
+
+45.12345
+--MyBoundary
+Content-Disposition: form-data; name="longitude"
+
+12.54321
+--MyBoundary
+Content-Disposition: form-data; name="address"
+
+Via Roma 1, Milano
+--MyBoundary
+Content-Disposition: form-data; name="userId"
+
+1
+--MyBoundary
+Content-Disposition: form-data; name="catId"
+
+1
+--MyBoundary
+Content-Disposition: form-data; name="createdAt"
+
+2025-11-07T18:30:00.000Z
+--MyBoundary--
+

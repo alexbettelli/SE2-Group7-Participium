@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <style>
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+
+        form input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form action="" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Insert a title" required>
+        <input type="text" name="description" placeholder="Insert a description" required>
+        <input type="text" name="latitude" placeholder="Insert a latitude" required>
+        <input type="text" name="longitude" placeholder="Insert a longitude" required>
+        <input type="text" name="address" placeholder="Insert a address" required>
+        <input type="text" name="userId" placeholder="Insert a userId" required>
+        <input type="text" name="catId" placeholder="Insert a catId" required>
+        <input type="file" multiple name="images" placeholder="Select from 1 to 3 photos" required minlength="1" maxlength="3">
+        <input type="submit" name="submit">
+    </form>
+
+    <script>
+        const form = document.getElementsByTagName('form')[0];
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const response = await fetch('http://localhost:3001/reports', {
+                method: 'POST',
+                body: new FormData(form)
+            }).then(() => console.log("OK")).catch(e => console.log(e));
+        });
+    </script>
+</body>
+</html>

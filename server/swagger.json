@@ -1,0 +1,1043 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Participium API",
+        "version": "1.0.0",
+        "description": "API documentation for Participium application"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3001",
+            "description": "Production Server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Operations for user authentication"
+        },
+        {
+            "name": "Reports",
+            "description": "Operations for reports handling"
+        },
+        {
+            "name": "Notifications",
+            "description": "Operations for notifications management"
+        },
+        {
+            "name": "Statistics",
+            "description": "Operations for statistics retrieval"
+        }
+    ],
+    "paths": {
+        "/api/users": {
+            "post": {
+                "tags": [ "Authentication" ],
+                "summary": "Create a new user",
+                "description": "This endpoint allows the creation of a new user in the system.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/user"
+                            },
+                            "example": {
+                                "username": "string",
+                                "email": "string",
+                                "password": "string",
+                                "firstName": "string",
+                                "lastName": "string",
+                                "typeId": 0,
+                                "allowEmailNotifications": 1,
+                                "telegramUsername": "string",
+                                "imageURL": "string"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": { "type": "integer" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid user data provided."
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "This user already exists."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/session": {
+            "post": {
+                "tags": [ "Authentication" ],
+                "summary": "Perform login",
+                "description": "This endpoint allows a user to log in to the system.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": { "type": "string" },
+                                    "password": { "type": "string" }
+                                },
+                                "required": [ "username", "password" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "headers": {
+                            "Set-Cookie": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "token=fake_token; Path=/; HttpOnly"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid username and/or password."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/session/current": {
+            "get": {
+                "tags": [ "Authentication" ],
+                "summary": "Get current logged-in user information",
+                "description": "This endpoint retrieves the currently logged-in user's information. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/user"
+                                },
+                                "example": {
+                                    "username": "string",
+                                    "email": "user@example.com",
+                                    "firstName": "string",
+                                    "lastName": "string",
+                                    "typeId": 0,
+                                    "allowEmailNotifications": 1,
+                                    "telegramUsername": "string",
+                                    "imageURL": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [ "Authentication" ],
+                "summary": "Perform logout",
+                "description": "This endpoint logs out the currently logged-in user by invalidating its session.",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/api/reports/": {
+            "post": {
+                "tags": [ "Reports" ],
+                "summary": "Create a new report",
+                "description": "This endpoint allows a logged-in user to create a new report. This operation requires authentication",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/report"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/report"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid report data provided."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/approved": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve approved reports",
+                "description": "Retrieve all reports with 'approved' status.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reports/{reportID}": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve a report",
+                "description": "Retrieve the report with a given ID",
+                "parameters": [
+                    {
+                        "name": "reportID",
+                        "description": "The ID of the report to retrieve",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/report"
+                                },
+                                "example": {
+                                    "user": "string",
+                                    "title": "string",
+                                    "description": "stringstri",
+                                    "latitude": "string",
+                                    "longitude": "string",
+                                    "address": "string",
+                                    "category": "string",
+                                    "status": "string",
+                                    "createdAt": "2025-11-05T16:12:25.471Z",
+                                    "updatedAt": "2025-11-05T16:12:25.471Z",
+                                    "rejectReason": "string",
+                                    "comments": [
+                                        {
+                                            "officer": "string",
+                                            "comment": "string",
+                                            "createdAt": "2025-11-05T16:12:25.471Z"
+                                        }
+                                    ],
+                                    "images": [
+                                        {
+                                            "imageURL": "string"
+                                        }
+                                    ]
+                                }
+                            }
+                        }   
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid report ID provided."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Report not found."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [ "Reports" ],
+                "summary": "Update the status of the report",
+                "description": "This operation allows to change the report status. Only officer can make this change. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "parameters": [
+                    {
+                        "name": "reportID",
+                        "description": "The ID of the report",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "statusId": { "type": "integer", "minimum": 0 },
+                                    "comment": { "type": "string", "maxLength": 255 },
+                                    "rejectReason": { "type": "string", "maxLength": 255 }
+                                },
+                                "required": [ "statusId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid request."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Report not found."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/api/notifications": {
+            "post": {
+                "tags": [ "Notifications" ],
+                "summary": "Send a notification",
+                "description": "This endpoint allows a logged-in user to send a notification. This operation requires authentication.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reportId": { "type": "integer" },
+                                    "receiverId": { "type": "integer" },
+                                    "text": { "type": "string" },
+                                    "channelId": { "type": "integer" }
+                                },
+                                "additionalProperties": false,
+                                "required": [ "reportId", "receiverId", "text", "channelId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid notification data provided."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+             "get": {
+                "tags": [ "Notifications" ],
+                "summary": "Retrieve user notifications",
+                "description": "This endpoint allows a logged-in user to retrieve their notifications. It is also possible to filter according to the channel. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "parameters": [
+                    {
+                        "name": "userID",
+                        "description": "The ID of the user",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "channelID",
+                        "description": "The ID of the channel from wich to retrieve notifications",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/notification"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid user ID or channel ID provided."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "User or channel not found."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/api/statistics/public": {
+            "get": {
+                "tags": [ "Statistics" ],
+                "summary": "Retrieve public statistics",
+                "description": "This operation allows to retrieve public statistics.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/public_stats"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/statistics/private": {
+            "get": {
+                "tags": [ "Statistics" ],
+                "summary": "Retrieve private statistics",
+                "description": "This operation allows an administrator to retrieve private statistics. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/private_stats"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "user": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": { "type": "integer" },
+                    "username": { "type": "string" },
+                    "email": { "type": "string", "format": "email" },
+                    "password": { "type": "string", "minLength": 8, "maxLength": 255 },
+                    "firstName": { "type": "string", "minLength": 3, "maxLength": 30 },
+                    "lastName": { "type": "string", "minLength": 2, "maxLength": 40},
+                    "typeId": { "type": "integer", "minimum": 0  },
+                    "allowEmailNotifications": { "type": "integer", "minimum": 0, "maximum": 1, "default": 1 },
+                    "telegramUsername": { "type": "string", "minLength": 5, "maxLength": 32  },
+                    "imageURL": { "type": "string", "format": "uri" }
+                },
+                "required": [ "username", "email", "password", "firstName", "lastName", "typeId" ]
+            },
+            "report": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
+                    "title": { "type": "string", "minLength": 5, "maxLength": 100 },
+                    "description": { "type": "string", "minLength": 10, "maxLength": 255 },
+                    "latitude": { "type": "string" },
+                    "longitude": { "type": "string" },
+                    "address": { "type": "string" },
+                    "userId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
+                    "catId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                    },
+                    "statusId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
+                    "officeId": { 
+                        "oneOf": [
+                            { "type": "integer", "minimum": 0 },
+                            { "type": "string", "pattern": "0|[1-9][0-9]*" }
+                        ]
+                     },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "updatedAt": { "type": "string", "format": "date-time" },
+                    "rejectReason": { "type": "string", "maxLength": 255 },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "binary"
+                        },
+                        "minItems": 1,
+                        "maxItems": 3
+                    },
+                    "anonymous": {
+                        "type": "string"
+                    }
+                },
+                "required": [ "title", "description", "latitude", "longitude", "catId" ]
+            },
+            "notification": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "reportId": { "type": "integer" },
+                    "senderId": { "type": "integer" },
+                    "receiverId": { "type": "integer" },
+                    "text": { "type": "string" },
+                    "channelId": { "type": "integer" }
+                },
+                "required": [ "senderId", "receiverId", "text", "channelId" ]
+            },
+            "public_stats": {
+                "type": "object",
+                "properties": {
+                    "reportsPerCategory": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "category": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerTrend": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "date": { "type": "string", "format": "date" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    }
+                }
+            },
+            "private_stats": {
+                "type": "object",
+                "properties": {
+                    "trends": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "date": { "type": "string", "format": "date" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerCategory": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "category": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerStatus": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "status": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerType": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "type": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerTypeStatus": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "type": { "type": "string" },
+                                "status": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerReporter": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "reporter": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerReporterType": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "reporter": { "type": "string" },
+                                "type": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "reportsPerReporterTypeAndStatus": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "reporter": { "type": "string" },
+                                "type": { "type": "string" },
+                                "status": { "type": "string" },
+                                "count": { "type": "integer", "minimum": 0 }
+                            }
+                        }
+                    },
+                    "top1percent": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "reporter": { "type": "string" },
+                                "reports": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": { "type": "string" },
+                                        "count": { "type": "integer", "minimum": 0 }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "top5percent": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "reporter": { "type": "string" },
+                                "reports": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": { "type": "string" },
+                                        "count": { "type": "integer", "minimum": 0 }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "error": {
+                "type": "object",
+                "properties": {
+                    "message": { "type": "string" }
+                },
+                "example": {
+                    "message": "An unexpected error occurred"
+            }
+            }
+        },
+        "securitySchemes": {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "connect.sid",
+                "description": "Session cookie for user authentication"
+            }
+        }
+    }
+}

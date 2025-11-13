@@ -1,0 +1,116 @@
+import { Table, Button, Form } from 'react-bootstrap';
+import { useState } from 'react';
+import '../styles/EmployeeList.css';
+
+export default function UnassignedEmployeeList (props) {
+    return (
+        <div className="employee-list-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h2 className="employee-list-title" style={{ textAlign: 'center', width: '100%' }}>Unassigned Employees {props.employees.length === 0 ? " - None" : ` - ${props.employees.length}`}</h2>
+          <Table className="employee-list-table" hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
+                <thead>
+                    <tr style={{ textAlign: 'center' }}>
+                        <th> Username </th>
+                        <th> First Name </th>
+                        <th> Last Name</th>
+                        <th> Assign to role </th>
+                        <th> Assign to office </th>
+                        {props.employees.length !== 0 && <th></th>}
+                    </tr>
+                </thead>
+                <tbody>
+                     {props.employees?.map((m)=>
+                        <EmployeeRow key={m.id} 
+                            employee={m}
+                            roles = {props.roles || []}
+                            offices={props.offices || []}
+                            onAssign={props.onAssign}
+                        />
+                    )}
+                </tbody>
+            </Table>
+        </div>
+    );
+}
+          
+function EmployeeRow (props) {
+    const { employee, roles, offices, onAssign } = props;
+    const [selectedRole, setSelectedRole] = useState('');
+    const [selectedOffice, setSelectedOffice] = useState('');
+
+    // Reset office when role is set to default
+    const handleRoleChange = (e) => {
+        const value = e.target.value;
+        setSelectedRole(value);
+        if (value === '') {
+            setSelectedOffice('');
+        }
+    };
+
+    const handleAssign = async () => {
+        if (!selectedRole) return;
+        try {
+            // support async onAssign
+            await onAssign?.(employee.id, selectedOffice, selectedRole);
+            setSelectedOffice('');
+            setSelectedRole('');
+        } catch (e) {
+            console.error('Assign failed', e);
+        }
+    };
+
+    return (
+        <tr>
+            <td>{employee.username}</td>
+            <td>{employee.firstName}</td>
+            <td>{employee.lastName}</td>
+
+            <td style={{ minWidth: 240 }}>
+                    <Form.Select
+                        size="sm"
+                        value={selectedRole}
+                        onChange={handleRoleChange}
+                        className={selectedRole === '' ? 'employee-select-unselected' : 'employee-select'}
+                    >
+                    <option value="">-- choose role --</option>
+                    {roles.map(r => (
+                        <option key={r.id} value={r.id}>{r.type}</option>
+                    ))}
+                </Form.Select>
+            </td>
+            
+            {selectedRole === '3' ? (
+                <td style={{ minWidth: 240, textAlign: 'center' }}>
+                  <span className="no-office-badge">— no office required —</span>
+                </td>
+            ) : (
+                <td style={{ minWidth: 240 }}>
+                        <Form.Select
+                            size="sm"
+                            value={selectedOffice}
+                            onChange={(e) => setSelectedOffice(e.target.value)}
+                            className={selectedOffice === '' ? 'employee-select-unselected' : 'employee-select'}
+                        >
+                        <option value="">-- choose office --</option>
+                        {offices.map(o => (
+                            <option key={o.id} value={o.id}>{o.name}</option>
+                        ))}
+                    </Form.Select>
+                </td>
+            )}
+
+            <td style={{ width: 120 }}>
+                    <button
+                        className="assign-button"
+                        onClick={handleAssign}
+                        disabled={
+                            !selectedRole ||
+                            (selectedRole !== '3' && !selectedOffice)
+                        }
+                    >
+                    Assign
+                </button>
+            </td>
+        </tr>
+    );
+}
+

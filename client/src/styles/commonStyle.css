@@ -1,5 +1,126 @@
-*{
+/* Color Palette Variables */
+:root {
+    --color-dark: #080705;        /* Deep black - primary dark */
+    --color-green: #539987;       /* Teal green - secondary */
+    --color-wine-dark: #702632;   /* Dark wine red */
+    --color-wine-light: #912f40;  /* Light wine red - accent */
+    --color-cream: #fffffa;       /* Off-white cream */
+}
+
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+/* Main layout with sticky footer */
+.main-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+    background-color: var(--color-cream);
+    color: var(--color-dark);
+    line-height: 1.6;
+}
+
+/* Base typography */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-dark);
+    margin-bottom: 1rem;
+}
+
+/* Button base styles */
+.btn-primary {
+    background-color: var(--color-wine-light);
+    border: 1px solid var(--color-wine-light);
+    color: var(--color-cream);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-wine-dark);
+    border-color: var(--color-wine-dark);
+    color: var(--color-cream);
+}
+
+.btn-secondary {
+    background-color: var(--color-green);
+    border: 1px solid var(--color-green);
+    color: var(--color-cream);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-dark);
+    border-color: var(--color-dark);
+    color: var(--color-cream);
+}
+
+/* Card styles */
+.card {
+    background-color: var(--color-cream);
+    border: 1px solid var(--color-green);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(8, 7, 5, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(8, 7, 5, 0.15);
+}
+
+/* Form styles */
+.form-control:focus {
+    border-color: var(--color-wine-light);
+    box-shadow: 0 0 0 0.2rem rgba(145, 47, 64, 0.25);
+}
+
+/* Navigation styles */
+.navbar-custom {
+    background-color: var(--color-dark) !important;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: var(--color-cream) !important;
+}
+
+.navbar-custom .nav-link:hover {
+    color: var(--color-wine-light) !important;
+}
+
+/* Footer styles */
+.footer-custom {
+    background-color: var(--color-green);
+    color: var(--color-cream);
+}
+
+/* Utility classes */
+.text-accent {
+    color: var(--color-wine-light);
+}
+
+.bg-dark-custom {
+    background-color: var(--color-dark);
+    color: var(--color-cream);
+}
+
+.bg-green-custom {
+    background-color: var(--color-green);
+    color: var(--color-cream);
+}
+
+.bg-wine-custom {
+    background-color: var(--color-wine-light);
+    color: var(--color-cream);
 }

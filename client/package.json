@@ -7,14 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "jest --coverage"
   },
   "dependencies": {
     "dayjs": "^1.11.19",
+    "leaflet": "^1.9.4",
     "react": "^19.1.1",
+    "bootstrap-icons": "^1.13.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
-    "react-router": "^7.9.5"
+    "react-router": "^7.9.5",
+    "react-router-dom": "^7.9.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
