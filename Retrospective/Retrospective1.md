@@ -11,9 +11,9 @@ sections:
 
 ### Macro statistics
 
-- Number of stories committed vs. done
-- Total points committed vs. done
-- Nr of hours planned vs. spent (as a team)
+- Number of stories committed vs. done: 5 / 5
+- Total points committed vs. done: 28 / 28
+- Nr of hours planned vs. spent (as a team): 96h / 90h 06m
 
 **Remember** a story is done ONLY if it fits the Definition of Done:
 
@@ -26,15 +26,14 @@ sections:
 
 ### Detailed statistics
 
-| Story                 | # Tasks  | Points  | Hours est.       | Hours actual  |
-| ----------------------| -------- | ------- | ---------------- | ------------- |
-| _Uncategorized_       |   13     |    0    |      55h 30m     |   49h 18m     |
-| Citizen registration  |    3     |    2    |        5h        |   5h 20m      |
-|  Administrator setup  |    5     |    3    |      8h 30m      |   7h 25m      |
-|  Role assignment      |    3     |    2    |      5h 30m      |   6h          |
-|  Geolocalization      |    3     |    8    |        7h        |   5h 40m      |
-|  Report compilation   |    6     |    13   |      14h 30m     |   16h 26m     |
-
+| Story                | # Tasks | Points | Hours est. | Hours actual |
+| -------------------- | ------- | ------ | ---------- | ------------ |
+| _Uncategorized_      | 13      | 0      | 55h 30m    | 49h 18m      |
+| Citizen registration | 3       | 2      | 5h         | 5h 20m       |
+| Administrator setup  | 5       | 3      | 8h 30m     | 7h 25m       |
+| Role assignment      | 3       | 2      | 5h 30m     | 6h           |
+| Geolocalization      | 3       | 8      | 7h         | 5h 40m       |
+| Report compilation   | 6       | 13     | 14h 30m    | 16h 26m      |
 
 > story `Uncategorized` is for technical tasks, leave out story points (not applicable in this case)
 
@@ -58,7 +57,7 @@ sections:
 - Unit Testing:
   - Total hours estimated: 6h
   - Total hours spent: 6h
-  - Nr of automated unit test cases: 14  
+  - Nr of automated unit test cases: 14
 - E2E testing:
   - Total hours estimated: 6h
   - Total hours spent: 6h 45m
@@ -71,6 +70,7 @@ sections:
 ## ASSESSMENT
 
 - What did go wrong in the sprint?
+
   - Too many hours were estimated for documentation and code merging;
   - Tests were performed only in the last few days;
   - Map-related tasks were overestimated, because they represented a feature none of us had ever faced.
@@ -78,7 +78,7 @@ sections:
 - What caused your errors in estimation (if any)?
 
   - Our previous sprint experience led us to overestimate the time needed for code merging;
-  - Excessive caution on tasks and problems we had never faced.; 
+  - Excessive caution on tasks and problems we had never faced.;
   - The documentation task was equally assigned to every member of the group, even though those working on the client-side and style had less to mention in the README.
 
 - What lessons did you learn (both positive and negative) in this sprint?
@@ -103,4 +103,4 @@ sections:
   - Implement tests earlier in the sprint.
 
 - One thing you are proud of as a Team!!
-  - We proved once again that our teamwork is reliable and efficient, generating a high-quality product that met our expectations. 
+  - We proved once again that our teamwork is reliable and efficient, generating a high-quality product that met our expectations.
