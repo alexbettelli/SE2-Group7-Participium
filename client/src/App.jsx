@@ -7,12 +7,15 @@ import NotFound from './components/NotFound';
 import DefaultLayout from './components/DefaultLayout';
 import HomePage from './components/HomePage';
 import { ReportOverviewPage } from './components/ReportOverviewPage.jsx';
+import MyReportsPage from './components/MyReportsPage.jsx';
+import ChatPage from './components/ChatPage.jsx';
 
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState({});
   const [loginError, setLoginError] = useState("");
+  const [selectedReport, setSelectedReport] = useState(null);
 
   useEffect(() => {
       API.getUserInfo()
@@ -47,6 +50,9 @@ function App() {
       <Route element={<DefaultLayout user={user} handleLogout={handleLogout} />}>     
         <Route path="/" index element={loggedIn ? <HomePage user={user}/> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />
+        <Route path="/profile"/>
+        <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/"  />} />
+        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} /> : <Navigate to="/"  />} />
         <Route path="*" element={<NotFound />}/>
       </Route>
     </Routes>
