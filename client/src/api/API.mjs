@@ -175,6 +175,21 @@ const submitReport = async(reportData) => {
   }
 };
 
+const getMyReports = async () => {
+    const res = await fetch(SERVER_URL + '/myreports', {
+        method: 'GET',
+        credentials: 'include'
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        console.log(reports);
+        return reports;
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error fetching user reports');
+    }
+};
+
 const getCategories = async() => {
     const res = await fetch(SERVER_URL + '/categories', {
         method: 'GET',
@@ -190,5 +205,5 @@ const getCategories = async() => {
     }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories };
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports };
 export default API;

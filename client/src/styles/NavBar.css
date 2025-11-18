@@ -1,3 +1,16 @@
+
+/* Profile icon/image size for navbar */
+.navbar-profile-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 auto;
+}
 /* NavBar Styles for Participium - City of Turin */
 
 .navbar-participium {
@@ -215,11 +228,6 @@
     font-weight: bold;
 }
 
-/* Home and Logout buttons flex styling */
-.nav-home-btn,
-.btn-logout {
-    flex-shrink: 0;
-}
 
 /* Logout button */
 .btn-logout {

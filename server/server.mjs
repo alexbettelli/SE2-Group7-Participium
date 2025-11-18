@@ -237,6 +237,18 @@ app.delete('/sessions/current', (req, res) => {
 
 // REPORTS
 
+app.get('/myreports', isLogged, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const reports = await DAO.getReportsByUserId(userId);
+    console.log(reports);
+    return res.status(200).json(reports);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching user reports' });
+  }
+});
+
 app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   

@@ -1,6 +1,7 @@
+
 import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
-import { User } from '../model/model.mjs';
+import { User, Report } from '../model/model.mjs';
 
 const db = new sqlite.Database('./database.db', (err) => {
     if(err) throw err;
@@ -137,8 +138,82 @@ const getUserByUsername = (username) => {
     });
 }
 
+const getCategoryById = (catId) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT categoryName FROM report_category WHERE id = ?`;
+        db.get(query, [catId], (err, row) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(row);
+        });
+    });
+}
+
+const getStatusById = (statusId) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT statusName FROM report_status WHERE id = ?`;
+        db.get(query, [statusId], (err, row) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(row);
+        });
+    });
+}
 
 // REPORT
+
+const getReportsByUserId = async (userId) => {
+    const query = `SELECT * FROM Report WHERE userId = ?`;
+    return new Promise((resolve, reject) => {
+        db.all(query, [userId], async (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            if (!rows || rows.length === 0) {
+                return resolve([]);
+            }
+            try {
+                const reports = await Promise.all(rows.map(async (row) => {
+                    // Get images
+                    const images = await new Promise((res, rej) => {
+                        const imgQuery = `SELECT imageUrl FROM report_image WHERE reportId = ?`;
+                        db.all(imgQuery, [row.id], (imgErr, imgRows) => {
+                            if (imgErr) return rej(imgErr);
+                            res(imgRows ? imgRows.map(img => img.imageUrl) : []);
+                        });
+                    });
+                    // Get category
+                    const category = await getCategoryById(row.catId);
+                    // Get status
+                    const status = await getStatusById(row.statusId);
+                    return new Report({
+                        id: row.id,
+                        title: row.title,
+                        description: row.description,
+                        latitude: row.latitude,
+                        longitude: row.longitude,
+                        address: row.address,
+                        userId: row.userId,
+                        catId: category.categoryName, 
+                        statusId: status.statusName,   
+                        officeId: row.officeId,
+                        createdAt: row.createdAt,
+                        updatedAt: row.updatedAt,
+                        rejectReason: row.rejectReason,
+                        images,
+                        anonymous: row.anonymous,
+                        unreadNotifications: 4
+                    });
+                }));
+                resolve(reports);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    });
+}
 
 const addNewReport = (report) => {
     return new Promise((resolve, reject) => {
@@ -187,6 +262,8 @@ const getCategories = () => {
   });
 }
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories};
+
+
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById};
 
 export default DAO
