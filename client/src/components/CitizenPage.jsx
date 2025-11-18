@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router';
 import L from 'leaflet';
+import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
@@ -45,8 +46,41 @@ export default function CitizenPage({user}){
                 attribution: '© OpenStreetMap contributors'
             }).addTo(mapInstanceRef.current);
 
+            // Load Turin boundary
+            fetch('/geo/torino.geojson')
+                .then(res => res.json())
+                .then(geojson => {
+                    const boundaryLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: '#539987',
+                            weight: 3,
+                            fillOpacity: 0.1,
+                        }
+                    }).addTo(mapInstanceRef.current);
+
+                    mapInstanceRef.current.fitBounds(boundaryLayer.getBounds());
+                    mapInstanceRef.current._turinBoundary = boundaryLayer;
+                })
+                .catch(err => console.error("Error loading Turin boundary:", err));
+
             mapInstanceRef.current.on('click', async (e) => {
                 const { lat, lng } = e.latlng;
+
+                // Check if inside Turin boundary
+                const boundary = mapInstanceRef.current._turinBoundary;
+                if (boundary) {
+                    const point = turf.point([lng, lat]);
+                    const boundaryGeoJSON = boundary.toGeoJSON();
+                    const inside = boundaryGeoJSON.features.some(feature =>
+                        turf.booleanPointInPolygon(point, feature)
+                    );
+
+                    if (!inside) {
+                        alert("Please select a location inside the City of Turin.");
+                        return;
+                    }
+                }
+
 
                 if (abortControllerRef.current) {
                     abortControllerRef.current.abort();
@@ -98,7 +132,7 @@ export default function CitizenPage({user}){
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
         const totalFiles = images.length + newFiles.length;
-        
+
         if (totalFiles > 3) {
             const remainingSlots = 3 - images.length;
             if (remainingSlots > 0) {
@@ -113,7 +147,7 @@ export default function CitizenPage({user}){
             e.target.value = '';
             return;
         }
-        
+
         const newPreviews = newFiles.map(file => URL.createObjectURL(file));
         setImages([...images, ...newFiles]);
         setImagePreviews([...imagePreviews, ...newPreviews]);
@@ -145,7 +179,7 @@ export default function CitizenPage({user}){
             setSubmitMessage('Title must be between 5 and 100 characters');
             return;
         }
-        
+
         const trimmedDescription = description.trim();
         if (!trimmedDescription) {
             setSubmitMessage('Description is required');
@@ -189,15 +223,15 @@ export default function CitizenPage({user}){
                 latitude: reportData.latitude,
                 longitude: reportData.longitude,
                 address: reportData.address,
-                photos: result.images || [], 
+                photos: result.images || [],
                 author: isAnonymous || !user ? 'Anonymous' : `${user.firstName} ${user.lastName}`,
                 isAnonymous: isAnonymous || !user,
                 status: 'Pending Approval',
                 createdAt: result.createdAt || new Date().toISOString()
-            };   
+            };
 
             navigate('/report-overview', { state: { report: reportForOverview } });
-            
+
         } catch (error) {
             setSubmitMessage(error.message || 'Error submitting report');
         } finally {
@@ -216,7 +250,7 @@ export default function CitizenPage({user}){
         setSelectedLocation(null);
         setAddress('');
         setLoadingAddress(false);
-        
+
         // Scroll to map
         if (mapRef.current) {
             mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
