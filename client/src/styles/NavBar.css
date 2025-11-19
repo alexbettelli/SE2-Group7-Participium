@@ -1,4 +1,3 @@
-
 /* Profile icon/image size for navbar */
 .navbar-profile-icon {
     width: 2.5rem;
@@ -10,6 +9,7 @@
     object-fit: cover;
     border-radius: 50%;
     margin: 0 auto;
+    cursor: pointer; 
 }
 /* NavBar Styles for Participium - City of Turin */
 
@@ -103,6 +103,7 @@
     position: relative;
     text-shadow: 2px 2px 4px rgba(8, 7, 5, 0.3);
     transition: all 0.3s ease;
+    cursor: pointer; 
 }
 
 .navbar-brand-participium:hover {
@@ -172,6 +173,7 @@
     position: relative;
     background: rgba(255, 255, 250, 0.05);
     backdrop-filter: blur(10px);
+    cursor: pointer; 
 }
 
 .navbar-nav .nav-link::after {
@@ -241,6 +243,7 @@
     backdrop-filter: blur(10px);
     font-weight: 500;
     letter-spacing: 0.5px;
+    cursor: pointer; 
 }
 
 .btn-logout:hover {

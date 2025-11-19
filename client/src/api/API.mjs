@@ -205,5 +205,38 @@ const getCategories = async() => {
     }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports };
+const updateProfile = async (formData)=> {
+    try{
+        const res = await fetch(SERVER_URL + '/api/user/profile', {
+            method: 'PUT',
+            credentials: 'include',
+            body: formData
+        });
+
+        if (!res.ok){
+            const errMessage = await res.json();
+            throw new Error (errMessage.error || 'Error updating profile');
+        }
+
+        return await res.json();
+    } catch (error) {
+        throw error;
+    }
+}
+
+const deleteProfilePhoto = async () => {
+  const response = await fetch(`${SERVER_URL}/api/user/profile/photo`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const errDetails = await response.text();
+    throw new Error(errDetails);
+  }
+  
+  return response.json();
+};
+
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, deleteProfilePhoto };
 export default API;
