@@ -274,6 +274,17 @@ const getCategories = () => {
 }
 
 
+const getAssignedReports = () => {
+    return new Promise((resolve, reject) => {
+        const query = "SELECT * FROM report WHERE statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned')";
+        db.all(query, (err, rows) => {
+            if (err) return reject(false);
+            const reports = rows.map(row => new Report(row));
+            resolve(reports);
+        });
+    });
+}
+
 const getReportNotificationsByChannel = (reportId, channelId) => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM notification WHERE reportId = ? AND channelId = ?`;
@@ -303,6 +314,6 @@ const getReportNotificationsByChannel = (reportId, channelId) => {
     });
 };
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId};
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId, getAssignedReports};
 
 export default DAO
