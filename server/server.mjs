@@ -288,6 +288,16 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
       
 });
 
+app.get('/reports/:id/chat', isLogged, async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const messages = await DAO.getReportNotificationsByChannel(reportId, 1);
+    return res.status(200).json(messages);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
 
 app.use((err, req, res, next) => {
   if(err instanceof ValidationError){

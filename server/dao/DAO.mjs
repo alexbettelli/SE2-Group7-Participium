@@ -1,7 +1,6 @@
-
 import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
-import { User, Report } from '../model/model.mjs';
+import { User, Report, Message } from '../model/model.mjs';
 
 const db = new sqlite.Database('./database.db', (err) => {
     if(err) throw err;
@@ -138,6 +137,17 @@ const getUserByUsername = (username) => {
     });
 }
 
+const getUsernameByUserId = (userId) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT username FROM user WHERE id = ?`;
+        db.get(query, [userId], (err, row) => {
+            if (err) return reject(err);
+            if (!row) return resolve(null);
+            resolve(row.username);
+        });
+    });
+};
+
 const getCategoryById = (catId) => {
     return new Promise((resolve, reject) => {
         const query = `SELECT categoryName FROM report_category WHERE id = ?`;
@@ -163,6 +173,7 @@ const getStatusById = (statusId) => {
 }
 
 // REPORT
+
 
 const getReportsByUserId = async (userId) => {
     const query = `SELECT * FROM Report WHERE userId = ?`;
@@ -263,7 +274,35 @@ const getCategories = () => {
 }
 
 
+const getReportNotificationsByChannel = (reportId, channelId) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM notification WHERE reportId = ? AND channelId = ?`;
+        db.all(query, [reportId, channelId], async (err, rows) => {
+            if (err) return reject(err);
+            try {
+                const messages = await Promise.all(rows.map(async row => {
+                    const senderUsername = await getUsernameByUserId(row.senderId);
+                    const receiverUsername = await getUsernameByUserId(row.receiverId);
+                    return new Message({
+                        id: row.id,
+                        report: row.reportId,
+                        senderId: row.senderId,
+                        senderUsername,
+                        receiverId: row.receiverId,
+                        receiverUsername,
+                        text: row.text,
+                        channel: row.channelId,
+                        sendAt: row.sendAt
+                    });
+                }));
+                resolve(messages);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    });
+};
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById};
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId};
 
 export default DAO

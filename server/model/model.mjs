@@ -29,4 +29,16 @@ function Report({title, description, latitude, longitude, address, userId, catId
     this.unreadNotifications = unreadNotifications;
 }
 
-export {User, Report}
+function Message({id, reportId, senderId, senderUsername, receiverId, receiverUsername, text, channel, sendAt}) {
+    this.id = id;
+    this.reportId = reportId;
+    this.senderId = senderId;
+    this.senderUsername = senderUsername;
+    this.receiverId = receiverId;
+    this.receiverUsername = receiverUsername;
+    this.text = text;
+    this.channel = channel;
+    this.sendAt = sendAt;
+}
+
+export {User, Report, Message}
