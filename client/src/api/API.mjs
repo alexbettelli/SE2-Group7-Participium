@@ -205,5 +205,22 @@ const getCategories = async() => {
     }
 };
 
+
+export const getReportChatMessages = async (reportId) => {
+    const res = await fetch(`${SERVER_URL}/reports/${reportId}/chat`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.message || 'Error fetching report messages');
+    }
+};
+
 const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports };
 export default API;

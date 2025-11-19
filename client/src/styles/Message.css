@@ -1,0 +1,28 @@
+.message-container {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 220px;
+  border: 2px solid var(--color-wine-light);
+}
+
+.message-content {
+  font-size: 1.1rem;
+  text-align: center;
+  word-break: break-word;
+  margin-bottom: 1.5rem;
+}
+
+.message-meta {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.7rem;
+  font-size: 0.85em;
+  color: #888;
+}
