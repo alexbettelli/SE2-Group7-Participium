@@ -57,7 +57,7 @@ export default function CitizenPage({user}){
                         style: {
                             color: '#539987',
                             weight: 3,
-                            fillOpacity: 0.1,
+                            fillOpacity: 0,
                         }
                     }).addTo(mapInstanceRef.current);
 
