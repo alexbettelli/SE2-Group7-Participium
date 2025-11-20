@@ -289,9 +289,9 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
 });
 
 app.get("/reports/assigned", isLogged, async (req, res) => {
-  if(req.user.typeId !== 2) return res.status(403).json(new errors.ForbiddenError());
+  if(![2, 4].includes(req.user.typeId)) return res.status(403).json(new errors.ForbiddenError());
   try {
-    const reports = await DAO.getAssignedReports();
+    const reports = await DAO.getAssignedReports(req.user.id);
     return res.status(200).json(reports);
   }catch(ex){
     return res.status(500).json(new errors.InternalServerError());
