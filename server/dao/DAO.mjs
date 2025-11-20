@@ -276,8 +276,8 @@ const getCategories = () => {
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT R.* FROM office O,office_employee OE, report R WHERE R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned')";
-        db.all(query, [userId], (err, rows) => {
+        const query = "SELECT R.* FROM office O,office_employee OE, report R WHERE R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
+        db.all(query, [userId, userId], (err, rows) => {
             if (err) return reject(false);
             const reports = rows.map(row => new Report(row));
             resolve(reports);
