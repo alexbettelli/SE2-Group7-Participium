@@ -32,19 +32,24 @@
     margin: 0 auto;
 }
 
+.footer-participium .py-5 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
 /* Brand Section */
 .footer-brand {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .footer-brand .footer-title {
     color: var(--color-cream);
     font-weight: 800;
-    font-size: 2rem;
+    font-size: 1.6rem;
     letter-spacing: 2px;
-    margin-top: 1rem;
-    margin-bottom: 0.3rem;
+    margin-top: 0.3rem;
+    margin-bottom: 0.2rem;
     text-shadow: 2px 2px 4px rgba(8, 7, 5, 0.3);
 }
 
@@ -62,7 +67,7 @@
 .footer-city {
     text-align: center;
     padding: 0 2rem;
-    margin-top: 1.5rem;
+    margin-top: 0.8rem;
 }
 
 .footer-city .city-name {
@@ -89,7 +94,7 @@
 /* Links Section */
 .footer-links {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .footer-link {
@@ -147,19 +152,19 @@
 /* Border Top */
 .border-top {
     border-top: 1px solid rgba(255, 255, 250, 0.3) !important;
-    margin-top: 2rem !important;
+    margin-top: 1rem !important;
 }
 
 /* Copyright */
 .footer-copyright {
     color: var(--color-cream);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     opacity: 0.7;
     letter-spacing: 0.3px;
     text-align: center;
     font-weight: 300;
-    line-height: 1.6;
-    padding: 1rem 0;
+    line-height: 1.4;
+    padding: 0.5rem 0;
     margin: 0;
 }
 

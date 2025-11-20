@@ -412,6 +412,27 @@ app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
     console.error('Error deleting profile photo:', err);
     res.status(500).json({ error: 'Failed to delete profile photo' });
   }
+}); 
+
+app.get("/reports/assigned", isLogged, async (req, res) => {
+  if(req.user.typeId !== 4) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await DAO.getAssignedReports(req.user.id);
+    return res.status(200).json(reports);
+  }catch(ex){
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get('/reports/:id/chat', isLogged, async (req, res) => {
+  try {
+    const reportId = req.params.id;
+    const messages = await DAO.getReportNotificationsByChannel(reportId, 1);
+    return res.status(200).json(messages);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
 });
 
 app.use((err, req, res, next) => {
