@@ -114,7 +114,7 @@ or administrative actions occur.
 
 - **`id`** (INTEGER, PK, AUTOINCREMENT): Unique identifier for the notification.
 - **`reportId`** (INTEGER, FK → report.id): Optional reference to a related report.
-- **`senderId`** (INTEGER, FK → user.id): The user or system actor who sent the notification.
+- **`senderId`** (INTEGER, FK → user.id, NULLABLE): The user who sent the notification. NULL for automatic/system messages.
 - **`receiverId`** (INTEGER, FK → user.id): The user receiving the notification.
 - **`text`** (TEXT): Content of the notification.
 - **`channelId`** (INTEGER): Delivery channel id (platform, email, Telegram).

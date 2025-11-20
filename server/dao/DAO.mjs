@@ -13,17 +13,17 @@ const addNewUser = (data) => {
         INSERT INTO user (username, password, email, firstName, lastName, typeId) 
         VALUES ( ?, ?, ?, ?, ?, ?)
         `;
-        
+
         console.log(data);
         console.log("Adding new user to the database...");
-        db.run(insertUsertSql, 
-            [data.username, data.password, data.email, data.firstName, data.lastName, data.typeId], 
+        db.run(insertUsertSql,
+            [data.username, data.password, data.email, data.firstName, data.lastName, data.typeId],
             function (err) {
-                if (err) return reject(err);            
+                if (err) return reject(err);
                 resolve(this.lastID);
             }
-        ) 
-    });    
+        )
+    });
 }
 
 
@@ -88,13 +88,13 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
             if (err) {
                 return reject(err);
             }
-            else if (roleId == 4) { 
+            else if (roleId == 4) {
               const insertEmployeeOffice = `
               INSERT INTO office_employee (officeId, userId)
               VALUES (?, ?)
               `;
               db.run(insertEmployeeOffice, [officeId, employeeId], function (err) {
-                  if (err) { 
+                  if (err) {
                       return reject(err);
                   }
                   resolve();
@@ -108,7 +108,7 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
 
 const getUserByUsername = (username) => {
     return new Promise((res, rej) => {
-        
+
         const query = `SELECT * FROM user WHERE username = ?`;
         db.get(query, [username], (err, row) => {
             if (err) {
@@ -116,7 +116,7 @@ const getUserByUsername = (username) => {
             }
             if (row === undefined) {
                 return res(null);
-            } else {                
+            } else {
                 const user = new User(
                     row.id,
                     row.username,
@@ -131,7 +131,7 @@ const getUserByUsername = (username) => {
                 const password = row.password;
                 const userInfo = {user, password}
 
-                res(userInfo);    
+                res(userInfo);
             }
         });
     });
@@ -207,8 +207,8 @@ const getReportsByUserId = async (userId) => {
                         longitude: row.longitude,
                         address: row.address,
                         userId: row.userId,
-                        catId: category.categoryName, 
-                        statusId: status.statusName,   
+                        catId: category.categoryName,
+                        statusId: status.statusName,
                         officeId: row.officeId,
                         createdAt: row.createdAt,
                         updatedAt: row.updatedAt,
@@ -232,7 +232,7 @@ const addNewReport = (report) => {
 
         const now = dayjs().toString();
 
-        const query1 = 'INSERT INTO Report (title, description, latitude, longitude, address, userId, catId, statusId, createdAt, anonymous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)' 
+        const query1 = 'INSERT INTO Report (title, description, latitude, longitude, address, userId, catId, statusId, createdAt, anonymous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         const params1 = [ report.title, report.description, report.latitude, report.longitude, report.address, report.userId, report.catId, 1, now, report.anonymous || 0  ]
         db.run(query1, params1, function(err){
             if(err){
@@ -240,7 +240,7 @@ const addNewReport = (report) => {
                 db.run('ROLLBACK');
             }
             report.id = this.lastID;
-    
+
             for(let i=0; i<report.images.length; i++){
                 const query2 = 'INSERT INTO report_image (reportId, imageUrl, uploadedAt) VALUES (?, ?, ?)'
                 const params2 = [ report.id, `http://localhost:3001/images/reports/${report.id}/${report.images[i]}`, now ]
@@ -292,7 +292,7 @@ const getReportNotificationsByChannel = (reportId, channelId) => {
             if (err) return reject(err);
             try {
                 const messages = await Promise.all(rows.map(async row => {
-                    const senderUsername = await getUsernameByUserId(row.senderId);
+                    const senderUsername = row.senderId ? await getUsernameByUserId(row.senderId) : "System";
                     const receiverUsername = await getUsernameByUserId(row.receiverId);
                     return new Message({
                         id: row.id,
