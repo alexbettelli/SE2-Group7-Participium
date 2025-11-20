@@ -190,6 +190,13 @@ const getMyReports = async () => {
     }
 };
 
+const getAssignedReports = async () => {
+    const res = await fetch(`${SERVER_URL}/reports/assigned`, { credentials: 'include' });
+    const json = await res.json();
+    if (res.ok) return json;
+    else return { error: json.error || 'Error fetching assigned reports' };
+};
+
 const getCategories = async() => {
     const res = await fetch(SERVER_URL + '/categories', {
         method: 'GET',
@@ -222,5 +229,5 @@ export const getReportChatMessages = async (reportId) => {
     }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports };
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, getAssignedReports };
 export default API;

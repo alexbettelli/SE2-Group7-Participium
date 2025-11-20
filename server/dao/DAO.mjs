@@ -276,11 +276,28 @@ const getCategories = () => {
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT R.* FROM office O,office_employee OE, report R WHERE R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
+        const query = "SELECT R.*, RST.statusName FROM office O, office_employee OE, report R, report_status RST WHERE R.statusId=RST.id AND R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
         db.all(query, [userId, userId], (err, rows) => {
             if (err) return reject(false);
-            const reports = rows.map(row => new Report(row));
-            resolve(reports);
+            console.log(rows);
+            let reports = rows.map(row => {
+                const report = new Report(row)
+                report.statusName = row.statusName
+                return report;
+            });
+            const reportIds = rows.map(row => row.id);
+            const sql2 = `SELECT * FROM report_image WHERE reportId IN (${reportIds.map(() => '?').join(',')})`;
+            db.all(sql2, reportIds, (err, rows) => {
+                if (err) {
+                    console.log(err);
+                    return reject(err);
+                }
+                rows.forEach(image => {
+                    const report = reports.find(report => report.id === image.reportId);
+                    if (report) report.images.push(image.imageUrl);
+                });
+                resolve(reports);
+            });
         });
     });
 }

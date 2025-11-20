@@ -48,7 +48,7 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout user={user} handleLogout={handleLogout} />}>     
-        <Route path="/" index element={loggedIn ? <HomePage user={user}/> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
+        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport} /> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />
         <Route path="/profile"/>
         <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/"  />} />

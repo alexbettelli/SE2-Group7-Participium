@@ -25,7 +25,7 @@ function Report({title, description, latitude, longitude, address, userId, catId
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.rejectReason = rejectReason;
-    this.images = images;
+    this.images = images || [];
     this.anonymous = anonymous;
     this.unreadNotifications = unreadNotifications;
 }

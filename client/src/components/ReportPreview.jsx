@@ -5,7 +5,23 @@ import { useNavigate } from "react-router";
 import '../styles/ReportPreview.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'; 
 
+
 export default function ReportPreview(props){
+    const { report, setSelectedReport } = props;
+
+    return (
+        <div className='report-preview-card'>
+            <div className="card-section">
+                <img src={report.images[0]} alt="Report image" />
+                <div>
+                    <h3>{report.title}</h3>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+/*export default function ReportPreview(props){
     const { user, report, setSelectedReport } = props;
     const [isExpanded, setIsExpanded] = useState(false); 
     const navigate = useNavigate();
@@ -81,7 +97,7 @@ export default function ReportPreview(props){
     return (
             <div className="overview-card">
 
-                {/* Blocco 1: Titolo e Status (Sempre Visibili) */}
+                {/* Blocco 1: Titolo e Status (Sempre Visibili) *//*}
                 <div className="overview-header">
                     <div className="header-content">
                         <h3 className="report-title">{report.title}</h3>
@@ -92,7 +108,7 @@ export default function ReportPreview(props){
                     </div>
                 </div>
                 
-                {/* Blocco 2: Mostra solo la prima immagine */}
+                {/* Blocco 2: Mostra solo la prima immagine *//*}
                 <div className="overview-section">
                     <h4 className="section-label">First photo of the report</h4>
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -109,10 +125,10 @@ export default function ReportPreview(props){
                     </div>
                 </div>
                 
-                {/* Blocco 3: Contenuto espandibile */}
+                {/* Blocco 3: Contenuto espandibile *//*}
                 {isExpanded && <ExpandedContent />}
 
-                {/* Blocco 4: Azioni (Pulsante Chat e Toggle Espansione) */}
+                {/* Blocco 4: Azioni (Pulsante Chat e Toggle Espansione) *//*}
                 <div className="overview-actions">
                     <div className="chat-action-wrapper">
                         <Button className="btn btn-primary" onClick={() => { setSelectedReport(report); navigate('/chat'); }}>
@@ -146,3 +162,4 @@ export default function ReportPreview(props){
             </div>
     );
 };
+*/

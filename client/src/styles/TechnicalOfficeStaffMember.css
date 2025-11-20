@@ -1,0 +1,9 @@
+@import './commonStyle.css';
+
+.office-member-container {
+    max-width: 1400px;
+    margin: 0 auto 2rem;
+    padding: 2rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
