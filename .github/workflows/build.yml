@@ -18,6 +18,6 @@ jobs:
       - name: Test and coverage
         run: yarn jest --coverage
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v1.0.0
         env:
           SONAR_TOKEN: ${{ secrets. SONARCLOUD_TOKEN }}
