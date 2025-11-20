@@ -1,14 +1,16 @@
 import React from 'react';
 import '../styles/ReportOverview.css';
 
-const ReportOverview = ({ report, onBackToHome }) => {
+const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
 
     return (
         <div className="report-overview-container">
-            <div className="success-banner">
-                <h2 className="success-title">Report Submitted Successfully!</h2>
-                <p className="success-subtitle">Your report has been saved and will be reviewed by our team.</p>
-            </div>
+            {showSuccessBanner && (
+                <div className="success-banner">
+                    <h2 className="success-title">Report Submitted Successfully!</h2>
+                    <p className="success-subtitle">Your report has been saved and will be reviewed by our team.</p>
+                </div>
+            )}
             
             <div className="overview-card">
 
@@ -90,7 +92,7 @@ const ReportOverview = ({ report, onBackToHome }) => {
 
                 <div className="overview-actions">
                     <button className="btn btn-primary" onClick={onBackToHome}>
-                        Back to Home
+                        Submit New Report
                     </button>
                 </div>
             </div>
