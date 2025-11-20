@@ -81,6 +81,7 @@ current status, and responsible office.
 - **`catId`** (INTEGER, FK → report_category.id): Type of issue reported.
 - **`statusId`** (INTEGER, FK → report_status.id): Current lifecycle status of the report.
 - **`officeId`** (INTEGER, FK → office.id, NULLABLE): Office currently handling the report.Null if report is not yet assigned
+- **`employeeId`** (INTEGER, FK → user.id, NULLABLE): ID of the employee assigned to handle the report. Null if no employee is assigned yet.
 - **`createdAt`** (TEXT, DEFAULT CURRENT_TIMESTAMP): Creation timestamp.
 - **`updatedAt`** (TEXT, DEFAULT CURRENT_TIMESTAMP): Last modification timestamp.
 - **`rejectReason`** (TEXT, NULLABLE): mandatory reason in case of rejection
@@ -118,6 +119,7 @@ or administrative actions occur.
 - **`text`** (TEXT): Content of the notification.
 - **`channelId`** (INTEGER): Delivery channel id (platform, email, Telegram).
 - **`sendAt`** (TEXT, DEFAULT CURRENT_TIMESTAMP): Timestamp when notification was sent.
+- **`isRead`** (INTEGER, DEFAULT 0): Flag indicating if the notification has been read (1 = read, 0 = unread).
 
 ### TABLE: channel
 

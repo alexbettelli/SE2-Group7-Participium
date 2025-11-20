@@ -10,7 +10,7 @@ function User(id, username, email, firstName, lastName, typeId, allowEmailNotifi
     this.imageUrl = imageUrl;
 }
 
-function Report({title, description, latitude, longitude, address, userId, catId, images, id, officeId, createdAt, updatedAt, rejectReason, statusId, anonymous, unreadNotifications}){
+function Report({title, description, latitude, longitude, address, userId, catId, images, id, officeId, employeeId, createdAt, updatedAt, rejectReason, statusId, anonymous, unreadNotifications}){
     this.id = id;
     this.title = title;
     this.description = description;
@@ -21,6 +21,7 @@ function Report({title, description, latitude, longitude, address, userId, catId
     this.catId = catId;
     this.statusId = statusId;
     this.officeId = officeId;
+    this.employeeId = employeeId;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.rejectReason = rejectReason;
