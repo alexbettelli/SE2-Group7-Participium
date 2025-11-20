@@ -5,6 +5,7 @@ import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
+import ReportOverview from './ReportOverview.jsx';
 
 
 
@@ -26,6 +27,8 @@ export default function CitizenPage({user}){
     const [submitMessage, setSubmitMessage] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [activeTab, setActiveTab] = useState('reports');
+    const [submittedReport, setSubmittedReport] = useState(null);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -94,6 +97,7 @@ export default function CitizenPage({user}){
                 setSelectedLocation({ lat, lng });
                 setAddress('');
                 setLoadingAddress(true);
+                setActiveTab('form');
 
                 abortControllerRef.current = new AbortController();
 
@@ -230,7 +234,16 @@ export default function CitizenPage({user}){
                 createdAt: result.createdAt || new Date().toISOString()
             };
 
-            navigate('/report-overview', { state: { report: reportForOverview } });
+            setSubmittedReport(reportForOverview);
+            setActiveTab('form');
+            clearSelection(true);
+            setTitle('');
+            setDescription('');
+            setCatId('');
+            setImages([]);
+            setImagePreviews([]);
+            setIsAnonymous(false);
+            setSubmitMessage('Report submitted successfully!');
 
         } catch (error) {
             setSubmitMessage(error.message || 'Error submitting report');
@@ -239,7 +252,7 @@ export default function CitizenPage({user}){
         }
     };
 
-    const clearSelection = () => {
+    const clearSelection = (keepTab = false) => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
@@ -250,11 +263,26 @@ export default function CitizenPage({user}){
         setSelectedLocation(null);
         setAddress('');
         setLoadingAddress(false);
-
-        // Scroll to map
-        if (mapRef.current) {
-            mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!keepTab) {
+            setActiveTab('reports');
         }
+    };
+
+    const resetForm = () => {
+        setSubmittedReport(null);
+        clearSelection(true);
+        setTitle('');
+        setDescription('');
+        setCatId('');
+        setImages([]);
+        setImagePreviews([]);
+        setIsAnonymous(false);
+        setSubmitMessage('');
+    };
+
+    const handleTabClick = (tab) => {
+        setActiveTab(tab);
+        setSubmitMessage('');
     };
 
     return (
@@ -262,139 +290,174 @@ export default function CitizenPage({user}){
             <div className="citizen-page-header">
                 <h2>Welcome to Participium - City of Turin</h2>
                 <p>Report issues in your city and help make Turin a better place for everyone.</p>
-                {!selectedLocation && (
-                    <p className="location-instruction">📍 Click on the map to select the location for your report.</p>
-                )}
             </div>
-
-            {submitMessage && submitMessage.includes('success') && (
-                <div className="success-message">
-                    {submitMessage}
-                </div>
-            )}
 
             <div className="citizen-page-content">
                 <div className="map-section">
                     <div className="map-container-wrapper">
                         <div ref={mapRef} className="map-container" />
-                        {selectedLocation && (
-                            <div className="map-overlay">
-                                <div className="map-overlay-content">
-                                    <p>Location set successfully!</p>
-                                    <p>Scroll down to complete your report</p>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                <div className="sidebar-container">
-                    {selectedLocation && (
-                        <>
-                            <div className="location-info-box">
-                                <strong>Selected Location</strong>
-                                <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
-                                <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
-                                <button className="reset-button" onClick={clearSelection}>
-                                    Reset Location
-                                </button>
+                <div className="right-panel">
+                    <div className="tabbar">
+                        <button
+                            className={`tab-button ${activeTab === 'reports' ? 'active' : ''}`}
+                            onClick={() => handleTabClick('reports')}
+                        >
+                            Reports
+                        </button>
+                        <button
+                            className={`tab-button ${activeTab === 'details' ? 'active' : ''}`}
+                            onClick={() => handleTabClick('details')}
+                        >
+                            Report Details
+                        </button>
+                        <button
+                            className={`tab-button ${activeTab === 'form' ? 'active' : ''}`}
+                            onClick={() => handleTabClick('form')}
+                        >
+                            New Report
+                        </button>
+                    </div>
+
+                    <div className="tab-content">
+                        {activeTab === 'reports' && (
+                            <div>
+                                <p className="empty-message">Reports will be displayed here</p>
                             </div>
+                        )}
 
-                            <form className="report-form" onSubmit={handleSubmit}>
-                                <h3>Report Details</h3>
+                        {activeTab === 'details' && (
+                            <div className="report-details">
+                                <p className="empty-message">Report details will be displayed here</p>
+                            </div>
+                        )}
 
-                                <div className="form-group">
-                                    <label>Title <span>*</span></label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        required
+                        {activeTab === 'form' && (
+                            <>
+                                {submittedReport ? (
+                                    <ReportOverview
+                                        report={submittedReport}
+                                        onBackToHome={resetForm}
+                                        showSuccessBanner={true}
                                     />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Description <span>*</span></label>
-                                    <textarea
-                                        className="form-textarea"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Category <span>*</span></label>
-                                    <select
-                                        className="form-select"
-                                        value={catId}
-                                        onChange={(e) => setCatId(e.target.value)}
-                                        size="1"
-                                        required
-                                    >
-                                        <option value="">Select a category</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Photos (1-3 required) <span>*</span></label>
-                                    <input
-                                        type="file"
-                                        className="file-input"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleImageChange}
-                                    />
-                                    {imagePreviews.length > 0 && (
-                                        <div className="image-previews">
-                                            {imagePreviews.map((preview, index) => (
-                                                <div key={index} className="preview-item">
-                                                    <img src={preview} alt={`Preview ${index + 1}`} />
-                                                    <button
-                                                        type="button"
-                                                        className="remove-image-button"
-                                                        onClick={() => removeImage(index)}
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </div>
-                                            ))}
+                                ) : selectedLocation ? (
+                                    <>
+                                        <div className="location-info-box">
+                                            <div className="location-header">
+                                                <strong>Selected Location</strong>
+                                                <button className="reset-button" onClick={clearSelection}>
+                                                    Reset
+                                                </button>
+                                            </div>
+                                            <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                                            <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
                                         </div>
-                                    )}
-                                </div>
 
-                                <div className="form-group">
-                                    <label className="checkbox-label">
-                                        <input
-                                            type="checkbox"
-                                            checked={isAnonymous}
-                                            onChange={(e) => setIsAnonymous(e.target.checked)}
-                                            className="checkbox-input"
-                                        />
-                                        <span>Submit as anonymous (your name will not be visible in public reports)</span>
-                                    </label>
-                                </div>
+                                        <form className="report-form" onSubmit={handleSubmit}>
+                                            <h3>Report Details</h3>
 
-                                {submitMessage && !submitMessage.includes('success') && (
-                                    <div className="error-message">
-                                        {submitMessage}
-                                    </div>
+                                            <div className="form-group">
+                                                <label>Title <span>*</span></label>
+                                                <input
+                                                    type="text"
+                                                    className="form-input"
+                                                    value={title}
+                                                    onChange={(e) => setTitle(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Description <span>*</span></label>
+                                                <textarea
+                                                    className="form-textarea"
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Category <span>*</span></label>
+                                                <select
+                                                    className="form-select"
+                                                    value={catId}
+                                                    onChange={(e) => setCatId(e.target.value)}
+                                                    size="1"
+                                                    required
+                                                >
+                                                    <option value="">Select a category</option>
+                                                    {categories.map(cat => (
+                                                        <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Photos (1-3 required) <span>*</span></label>
+                                                <label className="file-input-label">
+                                                    <input
+                                                        type="file"
+                                                        className="file-input"
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={handleImageChange}
+                                                    />
+                                                    <span className="file-input-button">Choose Files</span>
+                                                </label>
+                                                {imagePreviews.length > 0 && (
+                                                    <div className="image-previews">
+                                                        {imagePreviews.map((preview, index) => (
+                                                            <div key={index} className="preview-item">
+                                                                <img src={preview} alt={`Preview ${index + 1}`} />
+                                                                <button
+                                                                    type="button"
+                                                                    className="remove-image-button"
+                                                                    onClick={() => removeImage(index)}
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label className="checkbox-label">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isAnonymous}
+                                                        onChange={(e) => setIsAnonymous(e.target.checked)}
+                                                        className="checkbox-input"
+                                                    />
+                                                    <span>Submit as anonymous (your name will not be visible in public reports)</span>
+                                                </label>
+                                            </div>
+
+                                            {submitMessage && !submitMessage.includes('success') && (
+                                                <div className="error-message">
+                                                    {submitMessage}
+                                                </div>
+                                            )}
+
+                                            <button
+                                                type="submit"
+                                                className="submit-button"
+                                                disabled={submitting}
+                                            >
+                                                {submitting ? 'Submitting...' : 'Submit Report'}
+                                            </button>
+                                        </form>
+                                    </>
+                                ) : (
+                                    <p className="empty-message">Please select a location on the map first.</p>
                                 )}
-
-                                <button
-                                    type="submit"
-                                    className="submit-button"
-                                    disabled={submitting}
-                                >
-                                    {submitting ? 'Submitting...' : 'Submit Report'}
-                                </button>
-                            </form>
-                        </>
-                    )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
