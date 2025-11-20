@@ -1,23 +1,102 @@
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap'; 
 import { useNavigate } from "react-router";
+import { Carousel } from 'react-bootstrap';
 
-import '../styles/ReportPreview.css';
+//import '../styles/ReportPreview.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'; 
 
 
 export default function ReportPreview(props){
     const { report, setSelectedReport } = props;
+    const [expanded, setExpanded] = useState(false);
+    const navigate = useNavigate();
+
+    const getStatusClass = (statusName) => {
+        switch (statusName) {
+            case 'Completed':
+                return 'status-completed'; // Verde
+            case 'Pending Approval':
+                return 'status-pending'; // Giallo/Arancione
+            case 'Rejected':
+                return 'status-rejected'; // Rosso
+            case 'In Progress':
+                return 'status-in-progress'; // Blu/Azzurro
+            default:
+                return 'status-default'; // Grigio/Default
+        }
+    };
+
+    const getImage = () => {
+        if(report && report.images && report.images.length > 0) return report.images[0];
+        else return 'http://localhost:3001/images/not_found.jpg';
+    }
+
+    const toggleExpanded = () => {
+        setExpanded(!expanded);
+    };
 
     return (
-        <div className='report-preview-card'>
-            <div className="card-section">
-                <img src={report.images[0]} alt="Report image" />
-                <div>
-                    <h3>{report.title}</h3>
+        <>
+            <div className='report-preview-card' onClick={toggleExpanded}>
+                <div className="card-section">
+                    <img src={getImage()} alt="Report image" />
+                    <div className='card-main-info'>
+                        <h3>{report.title}</h3>
+                        <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
+                        <div className="wrapper">
+                            <span className="report-id-badge">Report #{report.id}</span>
+                            <span className={`status-badge ${getStatusClass(report.statusName)}`}>{report.statusName}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="card-section actions">
+                    <Button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
+                        <span className="chat-btn-flex">
+                            {report.unreadNotifications > 0 ? (
+                                <span className="notification-count-inline"><i className="bi bi-chat-dots-fill report-chat-icon"></i>{report.unreadNotifications}</span>
+                                ) : <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>}
+                            <span> Go to the chat</span>
+                        </span>
+                    </Button>
+                    <Button className="btn btn-secondary" onClick={(e) => { e.stopPropagation(); }}>
+                        <span><i className="bi bi-pencil-fill"></i> Change status</span>
+                    </Button>
                 </div>
             </div>
-        </div>
+            { expanded && <ReportView onClose={toggleExpanded} report={report} /> }
+        </>
+    )
+}
+
+function ReportView(props) {
+    useEffect(() => {
+        console.log('Opening report view for report:', props.report);
+    }, [props.report]);
+
+    return (
+        <>
+            <div id="backdrop" onClick={props.onClose}></div>
+            <div className="report-view">
+                <div className="report-view-header">
+                    <h2>Report #{props.report.id} - {props.report.title}</h2>
+                    <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
+                </div>
+                <div className="report-view-content">
+                    <Carousel>
+                        { props.report.images.map((image, index) => {
+
+                            return <Carousel.Item key={index}><img className="d-block w-100" src={image} alt={`Image ${index+1}`} /></Carousel.Item>;
+                        }) }
+                    </Carousel>
+                    <p><strong>Description:</strong> {props.report.description}</p>
+                    <p><strong>Category:</strong> {props.report.catId}</p>
+                    <p><strong>Address:</strong> {props.report.address}</p>
+                    <p><strong>Location:</strong> Lat {props.report.latitude}, Lon {props.report.longitude}</p>
+                    {/* Add more detailed report information as needed */}
+                </div>
+            </div>
+        </>
     )
 }
 

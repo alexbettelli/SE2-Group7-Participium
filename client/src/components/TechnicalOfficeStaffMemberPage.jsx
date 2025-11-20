@@ -22,8 +22,8 @@ export default function TechnicalOfficeStaffMemberPage(props) {
 
     return (
         <div className="office-member-container">
-            <h1>Welcome, Technical Office Staff Member {props.user.name}!</h1>
-            <p>This is your dashboard where you can manage technical office tasks.</p>
+            <h1>Welcome, <span id='fullname'>{props.user.firstName} {props.user.lastName}!</span></h1>
+            <h6>This is your dashboard where you can manage your assigned reports.</h6>
             <ReportsTable reports={reports} setSelectedReport={props.setSelectedReport} />
         </div>
     )
