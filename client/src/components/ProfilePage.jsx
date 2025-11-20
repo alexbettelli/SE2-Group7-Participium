@@ -43,6 +43,10 @@ export default function ProfilePage({ user, setUser }) {
       return;
     }
 
+    if(photoPreview && photoPreview.startsWith('blob:')){
+      URL.revokeObjectURL(photoPreview);
+    }
+
     setProfilePhoto(file);
     setPhotoPreview(URL.createObjectURL(file));
     setPhotoRemoved(false); // Reset removal flag if uploading new photo
@@ -68,11 +72,14 @@ export default function ProfilePage({ user, setUser }) {
       // If user clicked remove and there was an existing photo, delete it
       if (photoRemoved && user.imageUrl) {
         await API.deleteProfilePhoto();
+        setPhotoPreview(null);
+        setUser(prevUser => ({ ...prevUser, imageUrl: null }));
       }
       
       // Update profile with new data
+      if(!photoRemoved || profilePhoto){
       const formData = new FormData();
-      if (profilePhoto) {
+      if (profilePhoto && !photoRemoved) {
         formData.append('profilePhoto', profilePhoto); 
       }
       formData.append('telegramUsername', telegramUsername.trim());
@@ -81,6 +88,7 @@ export default function ProfilePage({ user, setUser }) {
       const updatedUser = await API.updateProfile(formData);
       
       setUser(updatedUser);
+      }  
       setPhotoRemoved(false); // Reset flag after successful save
       setMessage('Profile updated successfully!');
       
