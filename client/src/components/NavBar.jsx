@@ -20,6 +20,7 @@ function NavHeader(props){
   };
 
   useEffect(() => {
+    console.log(user);
     if (user?.imageUrl) {
       setProfilePhoto(user.imageUrl);
     } else {
@@ -57,7 +58,7 @@ function NavHeader(props){
             </div>
           )}
 
-          {user && user.typeId === 1 && ( 
+          {user && user.role?.id === 1 && ( 
             <div onClick={() => navigate("/profile")} >
               {profilePhoto ? (
                 <img 

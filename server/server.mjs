@@ -13,7 +13,6 @@ import swaggerUi from 'swagger-ui-express';
 import { Validator, ValidationError } from 'express-json-validator-middleware';
 import { fileURLToPath } from 'url';
 import DAO from './dao/DAO.mjs';
-import { Report } from './model/model.mjs';
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
 import fsPromises from 'fs/promises';
@@ -135,7 +134,7 @@ export const isLogged = (req, res, next) => {
 
 //middleware to check if the user is a citizen (typeId === 1)
 const isCitizen = (req, res, next) => {
-  if (req.isAuthenticated() && req.user.typeId === 1) {
+  if (req.isAuthenticated() && req.user.role.id === 1) {
     return next();
   }
   return res.status(403).json({ error: 'Access forbidden: Only citizens can access this resource' });
@@ -166,7 +165,7 @@ app.post("/user", async (req, res) => {
 app.post('/employees', isLogged,async (req, res) => {
   try {
 
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -189,7 +188,7 @@ app.post('/employees', isLogged,async (req, res) => {
 
 app.get('/employees/unassigned', isLogged,async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -203,7 +202,7 @@ app.get('/employees/unassigned', isLogged,async (req, res) => {
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -219,7 +218,7 @@ app.post('/employees/assign', isLogged, async (req, res) => {
 
 app.get('/offices', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -233,7 +232,8 @@ app.get('/offices', isLogged, async (req, res) => {
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    console.log(req.user);
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
     
@@ -307,7 +307,7 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
     return `${uuidv4()}.${extension}`
   })
 
-  const report = new Report({
+  const report = {
       title: req.body.title,
       description: req.body.description,
       latitude: req.body.latitude,
@@ -317,7 +317,7 @@ app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schem
       catId: req.body.catId,
       images: uuids,
       anonymous: req.body.anonymous === 'true' ? 1 : 0,
-  });
+  };
 
   try{
     const received = await DAO.addNewReport(report);
@@ -415,7 +415,7 @@ app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
 }); 
 
 app.get("/reports/assigned", isLogged, async (req, res) => {
-  if(req.user.typeId !== 4) return res.status(403).json(new errors.ForbiddenError());
+  if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
     const reports = await DAO.getAssignedReports(req.user.id);
     return res.status(200).json(reports);

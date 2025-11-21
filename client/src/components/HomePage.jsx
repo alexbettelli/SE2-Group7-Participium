@@ -8,7 +8,7 @@ import '../styles/commonStyle.css';
 export default function  HomePage (props) {
   if (!props.user) return <Navigate to="/" replace />; //back to login
 
-  switch (props.user.typeId) {
+  switch (props.user.role.id) {
     case 1:
       return <CitizenPage user={props.user}/>;
     case 2:
