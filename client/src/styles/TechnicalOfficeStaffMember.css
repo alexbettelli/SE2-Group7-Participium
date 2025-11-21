@@ -112,15 +112,56 @@ div#backdrop {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.6);
     z-index: 998;
 }
 
 div.report-view{
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 999;
     background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, .8);
+}
+
+div.report-view-header {
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+}
+
+button.close-button{
+    position: relative;
+    width: 50px;
+    height: 100%;
+    border: 0;
+    background-color: var(--color-wine-light);
+    color: #fff;
+    border-bottom-left-radius: 10px;
+    border-top-right-radius: 10px;
+    cursor: pointer;
+    transition: .3s;
+}
+
+button.close-button:hover{
+    background-color: var(--color-wine-dark);
+}
+
+div.carousel {
+    width: 400px;
+}
+
+div.carousel-item {
+    width: 400px;
+}
+
+div.carousel-item img{
+    height: 400px;
+    width: 100%;
+    object-fit: cover;
 }

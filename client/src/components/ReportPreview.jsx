@@ -70,29 +70,27 @@ export default function ReportPreview(props){
 }
 
 function ReportView(props) {
-    useEffect(() => {
-        console.log('Opening report view for report:', props.report);
-    }, [props.report]);
+    const report = props.report;
 
     return (
         <>
             <div id="backdrop" onClick={props.onClose}></div>
             <div className="report-view">
                 <div className="report-view-header">
-                    <h2>Report #{props.report.id} - {props.report.title}</h2>
+                    <h2>{props.report.title}</h2>
+                    <h3>Reported by {report.anonymous === 1 ? "Anonymous" : report.userId}</h3>
                     <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
                 </div>
                 <div className="report-view-content">
                     <Carousel>
                         { props.report.images.map((image, index) => {
 
-                            return <Carousel.Item key={index}><img className="d-block w-100" src={image} alt={`Image ${index+1}`} /></Carousel.Item>;
+                            return <Carousel.Item key={index}><img className="d-block" src={image} alt={`Image ${index+1}`} /></Carousel.Item>;
                         }) }
                     </Carousel>
-                    <p><strong>Description:</strong> {props.report.description}</p>
-                    <p><strong>Category:</strong> {props.report.catId}</p>
-                    <p><strong>Address:</strong> {props.report.address}</p>
-                    <p><strong>Location:</strong> Lat {props.report.latitude}, Lon {props.report.longitude}</p>
+                    <h3>Description</h3>
+                    <p>{report.description}</p>
+                    <p><strong>Address:</strong> {report.address}</p>
                     {/* Add more detailed report information as needed */}
                 </div>
             </div>
