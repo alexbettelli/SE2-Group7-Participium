@@ -284,7 +284,15 @@ app.delete('/sessions/current', (req, res) => {
 });
 
 // REPORTS
-
+app.get('/reports', isLogged, async (req, res) =>{
+  try {    
+    const reports = await DAO.getAllReports();
+    return res.status(200).json(reports);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: 'Error fetching user reports' });
+  }
+})
 app.get('/myreports', isLogged, async (req, res) => {
   try {
     const userId = req.user.id;
