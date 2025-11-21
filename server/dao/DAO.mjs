@@ -1,6 +1,6 @@
 import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
-import { User, Report, Message } from '../model/model.mjs';
+import Mapper from '../utils/mapper.mjs'
 
 const db = new sqlite.Database('./database.db', (err) => {
     if(err) throw err;
@@ -26,8 +26,6 @@ const addNewUser = (data) => {
     });
 }
 
-
-
 const getUnassignedEmployees = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
@@ -35,17 +33,7 @@ const getUnassignedEmployees = () => {
             if (err) {
                 return reject(err);
             }
-            const employees = rows.map(row => new User(
-                row.id,
-                row.username,
-                row.email,
-                row.firstName,
-                row.lastName,
-                row.typeId,
-                row.allowEmailNotification,
-                row.telegramUsername,
-                row.imageUrl
-            ));
+            const employees = Mapper.mapRowsToUsers(rows); 
             resolve(employees);
         });
     });
@@ -58,7 +46,8 @@ const getOffices = () => {
             if (err) {
                 return reject(err);
             }
-            resolve(rows);
+            const offices = Mapper.mapRowsToOffices(rows)
+            resolve(offices);
         });
     });
 }
@@ -70,9 +59,10 @@ const getRoles = () => {
       db.all(query, [], (err, rows) => {
           if (err) {
               return reject(err);
-          }
-          console.log(rows);
-          resolve(rows);
+          }          
+          const roles = Mapper.mapRowsToRoles(rows);
+          console.log(roles);
+          resolve(roles);
       });
   });
 }
@@ -117,20 +107,9 @@ const getUserByUsername = (username) => {
             if (row === undefined) {
                 return res(null);
             } else {
-                const user = new User(
-                    row.id,
-                    row.username,
-                    row.email,
-                    row.firstName,
-                    row.lastName,
-                    row.typeId,
-                    row.allowEmailNotification,
-                    row.telegramUsername,
-                    row.imageUrl
-                );
+                const user = Mapper.mapRowToUser(row);
                 const password = row.password;
                 const userInfo = {user, password}
-
                 res(userInfo);
             }
         });
@@ -155,7 +134,8 @@ const getCategoryById = (catId) => {
             if (err) {
                 return reject(err);
             }
-            resolve(row);
+            const category = Mapper.mapRowToCategory(row)
+            resolve(category);
         });
     });
 }
@@ -167,15 +147,63 @@ const getStatusById = (statusId) => {
             if (err) {
                 return reject(err);
             }
-            resolve(row);
+            const status = Mapper.mapRowToStatus(row);
+            resolve(status);
         });
     });
 }
 
 // REPORT
+const getReportsByUserId = async (userId) =>{
+    const query = `
+        select r.*,
+               u.username, 
+               e.username as employeeUsername,
+               rc.categoryName,
+               i.id as imageId, 
+               i.imageUrl,
+               s.statusName,
+               n.id as messageId, 
+               n.senderId, 
+               sender.username as senderUsername, 
+               n.receiverId, 
+               receiver.username as receiverUsername,
+               n.text, 
+               n.sendAt, 
+               n.isRead,
+               unread.unreadNotifications
+        from report r
+        join user u on r.userId = u.id 
+        left join user e on r.employeeId = e.id
+        join report_category rc on r.catId = rc.id
+        join report_image i on r.id = i.reportId
+        join report_status s on r.statusId = s.id
+        left join notification n on r.id = n.reportId and n.channelId = 1
+        left join user sender on n.senderId = sender.id
+        left join user receiver on n.receiverId = receiver.id
+        left join (
+            SELECT reportId, sum(isRead = 0) as unreadNotifications
+            FROM notification
+            WHERE channelId = 1
+            GROUP BY reportId
+        ) as unread on unread.reportId = r.id 
+        where userId = ?`;
 
-
-const getReportsByUserId = async (userId) => {
+    return new Promise ((resolve, reject) => {
+        db.all(query, [userId], async (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            if (!rows || rows.length === 0) {
+                return resolve([]);
+            }
+            console.log(rows)
+            const reports = Mapper.mapRowsToReports(rows);
+            resolve(reports);
+        })
+    })
+}
+/* const getReportsByUserId = async (userId) => {
     const query = `SELECT * FROM Report WHERE userId = ?`;
     return new Promise((resolve, reject) => {
         db.all(query, [userId], async (err, rows) => {
@@ -224,7 +252,7 @@ const getReportsByUserId = async (userId) => {
             }
         });
     });
-}
+} */
 
 const addNewReport = (report) => {
     return new Promise((resolve, reject) => {
@@ -268,7 +296,8 @@ const getCategories = () => {
           if (err) {
               return reject(err);
           }
-          resolve(rows);
+          const categories = Mapper.mapRowsToCategories(rows);
+          resolve(categories);
       });
   });
 }
@@ -305,8 +334,7 @@ const updateUserProfile = (userId, telegramUsername, allowEmailNotification, ima
 const getUserById = (userId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT id, username, email, firstName, lastName, typeId, 
-             allowEmailNotification, telegramUsername, imageUrl 
+      SELECT *
       FROM user 
       WHERE id = ?
     `;
@@ -315,7 +343,8 @@ const getUserById = (userId) => {
         console.error('Error getting user by id:', err);
         reject(err);
       } else {
-        resolve(row);
+        const user = Mapper.mapRowToUser(row);
+        resolve(user);
       }
     });
   });
@@ -327,13 +356,14 @@ const getAssignedReports = (userId) => {
         const query = "SELECT R.* FROM office O,office_employee OE, report R WHERE R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
         db.all(query, [userId, userId], (err, rows) => {
             if (err) return reject(false);
-            const reports = rows.map(row => new Report(row));
+            //const reports = rows.map(row => new Report(row));
+            const reports = Mapper.mapRowsToReports(rows);
             resolve(reports);
         });
     });
 }
 
-const getReportNotificationsByChannel = (reportId, channelId) => {
+/*const getReportNotificationsByChannel = (reportId, channelId) => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM notification WHERE reportId = ? AND channelId = ?`;
         db.all(query, [reportId, channelId], async (err, rows) => {
@@ -360,8 +390,8 @@ const getReportNotificationsByChannel = (reportId, channelId) => {
             }
         });
     });
-};
+}; */
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
 
 export default DAO
