@@ -6,6 +6,8 @@ import 'leaflet/dist/leaflet.css';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
 import ReportOverview from './ReportOverview.jsx';
+import ReportPopup from './ReportPopUp.jsx';
+import ReactDOM from "react-dom/client";
 
 
 
@@ -164,8 +166,7 @@ export default function CitizenPage({user}){
 
     useEffect(() => {
         if (!mapInstanceRef.current || reports.length === 0) return;
-
-        // Rimuovi marker esistenti
+        
         if (mapMarkersRef.current.length > 0) {
             mapMarkersRef.current.forEach((m) =>
                 mapInstanceRef.current.removeLayer(m)
@@ -173,21 +174,16 @@ export default function CitizenPage({user}){
         }
 
         mapMarkersRef.current = [];
-
-        // Aggiungi nuovi marker
+        
         reports.forEach((report) => {
             if (report.latitude && report.longitude) {
+                
+                const popupContainer = document.createElement("div");    
+                ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
+
                 const marker = L.marker([report.latitude, report.longitude])
                     .addTo(mapInstanceRef.current)
-                    .bindPopup(
-                        `<div style="min-width: 200px;">
-                            <h5 style="margin:0 0 5px 0;">${report.title}</h5>
-                            <p style="margin:0 0 5px 0;"><strong>Category:</strong> ${report.category?.categoryName || ""}</p>
-                            <button id="details-btn-${report.id}" style="padding: 5px 10px; cursor: pointer;">
-                                Vedi dettagli
-                            </button>
-                        </div>`
-                    );
+                    .bindPopup(popupContainer);
 
                 mapMarkersRef.current.push(marker);
             }
@@ -346,8 +342,17 @@ export default function CitizenPage({user}){
         setActiveTab(tab);
         setSubmitMessage('');
         setReportDetails({});
+        ResetZoom();
     };
-    const handleReportInListClick = (report) => {
+    const zoomToReportLocation = (report) =>{
+        if (report.latitude && report.longitude && mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17,{
+                animate: true,      
+                duration: 1.5
+            });
+        }
+    }
+    const showReportDetails = (report) => {
         const normalizedReport = {
             ...report,
             status: report.status?.statusName ?? "N/A",
@@ -357,11 +362,12 @@ export default function CitizenPage({user}){
         setActiveTab('details');        
         setReportDetails(normalizedReport);    
         zoomToReportLocation(normalizedReport);
+    }    
+    const handlePopUpDetailsClick = (report) => {
+        showReportDetails(report);
     }
-    const zoomToReportLocation = (report) =>{
-        if (report.latitude && report.longitude && mapInstanceRef.current) {
-            mapInstanceRef.current.setView([report.latitude, report.longitude], 17);
-        }
+    const ResetZoom = () => {
+         mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, {animate: true,  duration: 1});
     }
     return (
         <div className="citizen-page-container">
@@ -406,7 +412,7 @@ export default function CitizenPage({user}){
                                     <p className="empty-message">THERE ARE NO REPORT IN PROGRESS</p>
                                 ) : (
                                     reports.map((report) => (
-                                    <div key={report.id} className="report-card" onClick={() => handleReportInListClick(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
+                                    <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
                                         <h3>{report.title}</h3>
                                         <p>
                                         <strong>Category:</strong> {report.category?.categoryName}<br />
