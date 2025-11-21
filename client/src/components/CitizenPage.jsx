@@ -29,7 +29,19 @@ export default function CitizenPage({user}){
     const [categories, setCategories] = useState([]);
     const [activeTab, setActiveTab] = useState('reports');
     const [submittedReport, setSubmittedReport] = useState(null);
+    const [reports, setReports] = useState([]);
 
+    useEffect(() =>{
+        const getAllReports = async () =>{
+            try {
+                const reports = await API.getAllReports();
+                setReports(reports);
+            } catch (error) {
+                console.error('Error fetching reports:', error);
+            }
+        }
+        getAllReports();
+    }, [reports])
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -324,7 +336,21 @@ export default function CitizenPage({user}){
                     <div className="tab-content">
                         {activeTab === 'reports' && (
                             <div>
-                                <p className="empty-message">Reports will be displayed here</p>
+                                {reports.length === 0 ? (
+                                    <p className="empty-message">THERE ARE NO REPORT IN PROGRESS</p>
+                                ) : (
+                                    reports.map((report) => (
+                                    <div key={report.id} className="report-card">
+                                        <h3>{report.title}</h3>
+                                        <p>{report.description}</p>
+                                        <p>
+                                        <strong>Category:</strong> {report.category?.categoryName || "N/A"}<br />
+                                        <strong>Status:</strong> {report.status?.statusName || "N/A"}<br />
+                                        <strong>Address:</strong> {report.address || "N/A"}
+                                        </p>
+                                    </div>
+                                    ))
+                                )}
                             </div>
                         )}
 
