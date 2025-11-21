@@ -355,9 +355,14 @@ export default function CitizenPage({user}){
             username : report.user?.username ?? "Anonymous"
         };
         setActiveTab('details');        
-        setReportDetails(normalizedReport);        
+        setReportDetails(normalizedReport);    
+        zoomToReportLocation(normalizedReport);
     }
-    
+    const zoomToReportLocation = (report) =>{
+        if (report.latitude && report.longitude && mapInstanceRef.current) {
+            mapInstanceRef.current.setView([report.latitude, report.longitude], 17);
+        }
+    }
     return (
         <div className="citizen-page-container">
             <div className="citizen-page-header">
