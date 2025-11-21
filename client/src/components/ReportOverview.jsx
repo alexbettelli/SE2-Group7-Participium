@@ -71,9 +71,9 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true, showNe
 
                 <div className="overview-footer">
                     <div className="report-meta">
-                        {!report.isAnonymous && report.author && (
+                        {!report.isAnonymous && report.username && (
                             <span className="author-info">
-                                Reported by: {report.author}
+                                Reported by: {report.username}
                             </span>
                         )}
                         {report.isAnonymous && (

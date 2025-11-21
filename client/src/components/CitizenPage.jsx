@@ -51,13 +51,8 @@ export default function CitizenPage({user}){
     
     const getAllReports = async () =>{
         try {
-            const fetchedreports = await API.getAllReports();
-            const normalizedReports = fetchedreports.map(report => ({
-                ...report,
-                status: report.status?.statusName ?? "N/A",
-                category: report.category?.categoryName ?? "N/A"
-            }));
-            setReports(normalizedReports);
+            const reports = await API.getAllReports();            
+            setReports(reports);
         } catch (error) {
             console.error('Error fetching reports:', error);
         }
@@ -260,7 +255,7 @@ export default function CitizenPage({user}){
                 longitude: reportData.longitude,
                 address: reportData.address,
                 images: result.images || [],
-                author: isAnonymous || !user ? 'Anonymous' : `${user.firstName} ${user.lastName}`,
+                username: isAnonymous || !user ? 'Anonymous' : `${user.username}`,
                 isAnonymous: isAnonymous || !user,
                 status: 'Pending Approval',
                 createdAt: result.createdAt || new Date().toISOString()
@@ -317,13 +312,18 @@ export default function CitizenPage({user}){
         setActiveTab(tab);
         setSubmitMessage('');
         setReportDetails({});
-        console.log(reportDetails)
     };
     const handleReportInListClick = (report) => {
-        setReportDetails({});
-        setActiveTab('details');
-        setReportDetails(report);
-        console.log(report)
+        console.log(report);
+        const normalizedReport = {
+            ...report,
+            status: report.status?.statusName ?? "N/A",
+            category: report.category?.categoryName ?? "N/A",
+            username : report.user?.username ?? "Anonymous"
+        };
+        console.log(normalizedReport);
+        setActiveTab('details');        
+        setReportDetails(normalizedReport);
     }
 
     return (
@@ -372,9 +372,9 @@ export default function CitizenPage({user}){
                                     <div key={report.id} className="report-card" onClick={() => handleReportInListClick(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
                                         <h3>{report.title}</h3>
                                         <p>
-                                        <strong>Category:</strong> {report.category}<br />
+                                        <strong>Category:</strong> {report.category?.categoryName}<br />
                                         <strong>Address:</strong> {report.address}
-                                         <span className={`status-badge ${getStatusClass(report.status)}`}>{report.status}</span>
+                                         <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
                                         </p>
                                     </div>
                                     ))
