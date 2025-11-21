@@ -15,6 +15,8 @@ export default function CitizenPage({user}){
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
     const abortControllerRef = useRef(null);
+    const mapMarkersRef = useRef([]);
+
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [address, setAddress] = useState('');
     const [loadingAddress, setLoadingAddress] = useState(false);
@@ -159,6 +161,38 @@ export default function CitizenPage({user}){
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (!mapInstanceRef.current || reports.length === 0) return;
+
+        // Rimuovi marker esistenti
+        if (mapMarkersRef.current.length > 0) {
+            mapMarkersRef.current.forEach((m) =>
+                mapInstanceRef.current.removeLayer(m)
+            );
+        }
+
+        mapMarkersRef.current = [];
+
+        // Aggiungi nuovi marker
+        reports.forEach((report) => {
+            if (report.latitude && report.longitude) {
+                const marker = L.marker([report.latitude, report.longitude])
+                    .addTo(mapInstanceRef.current)
+                    .bindPopup(
+                        `<div style="min-width: 200px;">
+                            <h5 style="margin:0 0 5px 0;">${report.title}</h5>
+                            <p style="margin:0 0 5px 0;"><strong>Category:</strong> ${report.category?.categoryName || ""}</p>
+                            <button id="details-btn-${report.id}" style="padding: 5px 10px; cursor: pointer;">
+                                Vedi dettagli
+                            </button>
+                        </div>`
+                    );
+
+                mapMarkersRef.current.push(marker);
+            }
+        });
+    }, [reports]);
 
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
@@ -314,18 +348,16 @@ export default function CitizenPage({user}){
         setReportDetails({});
     };
     const handleReportInListClick = (report) => {
-        console.log(report);
         const normalizedReport = {
             ...report,
             status: report.status?.statusName ?? "N/A",
             category: report.category?.categoryName ?? "N/A",
             username : report.user?.username ?? "Anonymous"
         };
-        console.log(normalizedReport);
         setActiveTab('details');        
-        setReportDetails(normalizedReport);
+        setReportDetails(normalizedReport);        
     }
-
+    
     return (
         <div className="citizen-page-container">
             <div className="citizen-page-header">
