@@ -18,13 +18,16 @@ POST http://localhost:3001/session
 Content-Type: application/json
 
 {
-  "username": "marioRossi",
-  "password": "Password123!"
+  "username": "mario.rossi",
+  "password": "mariorossi"
 }
+
+###
 
 ### Get current user
 GET http://localhost:3001/session/current
 
+###
 
 ### Create a new Report
 POST http://localhost:3001/reports
@@ -63,4 +66,72 @@ Content-Disposition: form-data; name="createdAt"
 
 2025-11-07T18:30:00.000Z
 --MyBoundary--
+
+###
+
+### Update user profile with photo
+PUT http://localhost:3001/api/user/profile
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="telegramUsername"
+
+@mario_rossi
+--MyBoundary
+Content-Disposition: form-data; name="allowEmailNotification"
+
+1
+--MyBoundary
+Content-Disposition: form-data; name="profilePhoto"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< /Users/auroragennaro/Downloads/huge-join.png
+--MyBoundary--
+
+###
+
+### Verify profile photo in database
+GET http://localhost:3001/session/current
+
+###
+
+### Update profile without photo (only telegram and notifications)
+PUT http://localhost:3001/api/user/profile
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="telegramUsername"
+
+@mario_updated
+--MyBoundary
+Content-Disposition: form-data; name="allowEmailNotification"
+
+0
+--MyBoundary--
+
+###
+
+### Update profile with new photo (should delete old one)
+PUT http://localhost:3001/api/user/profile
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="telegramUsername"
+
+@mario_rossi
+--MyBoundary
+Content-Disposition: form-data; name="allowEmailNotification"
+
+1
+--MyBoundary
+Content-Disposition: form-data; name="profilePhoto"; filename="new-profile.jpg"
+Content-Type: image/jpeg
+
+< /Users/auroragennaro/Downloads/huge-join.png
+--MyBoundary--
+
+###
+
+### Delete profile photo
+DELETE http://localhost:3001/api/user/profile/photo
 

@@ -273,6 +273,54 @@ const getCategories = () => {
   });
 }
 
+const updateUserProfile = (userId, telegramUsername, allowEmailNotification, imageUrl) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE user 
+      SET telegramUsername = ?, 
+          allowEmailNotification = ?, 
+          imageUrl = ?
+      WHERE id = ?
+    `;
+    
+    db.run(sql, [
+      telegramUsername, 
+      allowEmailNotification ? 1 : 0, 
+      imageUrl, 
+      userId
+    ], function (err) {
+      if (err) {
+        console.error('Error updating user profile:', err);
+        return reject(err);
+      }
+      console.log(`User ${userId} profile updated`);
+      
+      getUserById(userId)
+        .then(user => resolve(user))
+        .catch(err => reject(err));
+    });
+  });
+};
+
+const getUserById = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, username, email, firstName, lastName, typeId, 
+             allowEmailNotification, telegramUsername, imageUrl 
+      FROM user 
+      WHERE id = ?
+    `;
+    db.get(sql, [userId], (err, row) => {
+      if (err) {
+        console.error('Error getting user by id:', err);
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+};
+
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
@@ -314,6 +362,6 @@ const getReportNotificationsByChannel = (reportId, channelId) => {
     });
 };
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId, getAssignedReports};
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
 
 export default DAO
