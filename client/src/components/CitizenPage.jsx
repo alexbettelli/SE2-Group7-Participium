@@ -30,18 +30,38 @@ export default function CitizenPage({user}){
     const [activeTab, setActiveTab] = useState('reports');
     const [submittedReport, setSubmittedReport] = useState(null);
     const [reports, setReports] = useState([]);
-
-    useEffect(() =>{
-        const getAllReports = async () =>{
-            try {
-                const reports = await API.getAllReports();
-                setReports(reports);
-            } catch (error) {
-                console.error('Error fetching reports:', error);
-            }
+    const [reportDetails, setReportDetails] = useState({})
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Completed':
+                return 'status-completed'; // Verde
+            case 'Pending Approval':
+                return 'status-pending'; // Giallo/Arancione
+            case 'Rejected':
+                return 'status-rejected'; // Rosso
+            case 'In Progress':
+                return 'status-in-progress'; // Blu/Azzurro
+            default:
+                return 'status-default'; // Grigio/Default
         }
+    };
+    useEffect(() => {
         getAllReports();
-    }, [reports])
+    }, []);
+    
+    const getAllReports = async () =>{
+        try {
+            const fetchedreports = await API.getAllReports();
+            const normalizedReports = fetchedreports.map(report => ({
+                ...report,
+                status: report.status?.statusName ?? "N/A",
+                category: report.category?.categoryName ?? "N/A"
+            }));
+            setReports(normalizedReports);
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+        }
+    }
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -239,7 +259,7 @@ export default function CitizenPage({user}){
                 latitude: reportData.latitude,
                 longitude: reportData.longitude,
                 address: reportData.address,
-                photos: result.images || [],
+                images: result.images || [],
                 author: isAnonymous || !user ? 'Anonymous' : `${user.firstName} ${user.lastName}`,
                 isAnonymous: isAnonymous || !user,
                 status: 'Pending Approval',
@@ -261,6 +281,7 @@ export default function CitizenPage({user}){
             setSubmitMessage(error.message || 'Error submitting report');
         } finally {
             setSubmitting(false);
+            getAllReports();
         }
     };
 
@@ -295,7 +316,15 @@ export default function CitizenPage({user}){
     const handleTabClick = (tab) => {
         setActiveTab(tab);
         setSubmitMessage('');
+        setReportDetails({});
+        console.log(reportDetails)
     };
+    const handleReportInListClick = (report) => {
+        setReportDetails({});
+        setActiveTab('details');
+        setReportDetails(report);
+        console.log(report)
+    }
 
     return (
         <div className="citizen-page-container">
@@ -340,13 +369,12 @@ export default function CitizenPage({user}){
                                     <p className="empty-message">THERE ARE NO REPORT IN PROGRESS</p>
                                 ) : (
                                     reports.map((report) => (
-                                    <div key={report.id} className="report-card">
+                                    <div key={report.id} className="report-card" onClick={() => handleReportInListClick(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
                                         <h3>{report.title}</h3>
-                                        <p>{report.description}</p>
                                         <p>
-                                        <strong>Category:</strong> {report.category?.categoryName || "N/A"}<br />
-                                        <strong>Status:</strong> {report.status?.statusName || "N/A"}<br />
-                                        <strong>Address:</strong> {report.address || "N/A"}
+                                        <strong>Category:</strong> {report.category}<br />
+                                        <strong>Address:</strong> {report.address}
+                                         <span className={`status-badge ${getStatusClass(report.status)}`}>{report.status}</span>
                                         </p>
                                     </div>
                                     ))
@@ -356,7 +384,16 @@ export default function CitizenPage({user}){
 
                         {activeTab === 'details' && (
                             <div className="report-details">
-                                <p className="empty-message">Report details will be displayed here</p>
+                                {Object.keys(reportDetails).length === 0 ? (
+                                    <p className="empty-message">Select a report to show details</p>
+                                ) : (
+                                    <ReportOverview
+                                        report={reportDetails}
+                                        onBackToHome={resetForm}
+                                        showSuccessBanner={false}
+                                        showNewReportBtn={false}
+                                    />
+                                )}
                             </div>
                         )}
 

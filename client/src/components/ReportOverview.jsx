@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/ReportOverview.css';
 
-const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
+const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
 
     return (
         <div className="report-overview-container">
@@ -46,12 +46,12 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
                     </div>
                 </div>
 
-                {report.photos && report.photos.length > 0 ? (
+                {report.images && report.images.length > 0 ? (
                     <div className="overview-section">
-                        <h4 className="section-label">Attached Photos ({report.photos.length})</h4>
+                        <h4 className="section-label">Attached Photos ({report.images.length})</h4>
                         <div className="photo-gallery">
-                            {report.photos.map((photo, index) => (
-                                <div key={index} className="photo-item">
+                            {report.images.map((photo, index) => (
+                                <div key={index} className="photo-item">                                    
                                     <img 
                                         src={photo.imageUrl || photo} 
                                         alt={`Report photo ${index + 1}`}
@@ -90,11 +90,14 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
                     </div>
                 </div>
 
+                {showNewReportBtn &&
                 <div className="overview-actions">
                     <button className="btn btn-primary" onClick={onBackToHome}>
                         Submit New Report
                     </button>
                 </div>
+                }
+                
             </div>
         </div>
     );
