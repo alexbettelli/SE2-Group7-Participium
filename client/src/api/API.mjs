@@ -205,6 +205,39 @@ const getCategories = async() => {
     }
 };
 
+const updateProfile = async (formData)=> {
+    try{
+        const res = await fetch(SERVER_URL + '/api/user/profile', {
+            method: 'PUT',
+            credentials: 'include',
+            body: formData
+        });
+
+        if (!res.ok){
+            const errMessage = await res.json();
+            throw new Error (errMessage.error || 'Error updating profile');
+        }
+
+        return await res.json();
+    } catch (error) {
+        throw error;
+    }
+}
+
+const deleteProfilePhoto = async () => {
+  const response = await fetch(`${SERVER_URL}/api/user/profile/photo`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const errDetails = await response.text();
+    throw new Error(errDetails);
+  }
+  
+  return response.json();
+};
+
 
 export const getReportChatMessages = async (reportId) => {
     const res = await fetch(`${SERVER_URL}/reports/${reportId}/chat`, {
@@ -222,40 +255,5 @@ export const getReportChatMessages = async (reportId) => {
     }
 };
 
-export const submitNotification = async(notificationData) => {
-  const res = await fetch(SERVER_URL + '/notifications', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(notificationData)
-  });
-
-  if (res.ok) {
-    const data = await res.json();
-    return data;
-  } else {
-    const errDetails = await res.json();
-    throw new Error(errDetails.message || 'Error submitting notification');
-  }
-};
-
-export const getUnreadNotifications = async () => {
-    const res = await fetch(SERVER_URL + '/users/unreadnotifications', {
-        method: 'GET',
-        credentials: 'include'
-    });
-    if (res.ok) {
-        const unreadNotifications = await res.json();
-        console.log(unreadNotifications);
-        return unreadNotifications;
-    } else {
-        const errDetails = await res.json();
-        throw new Error(errDetails.error || 'Error fetching unread notifications');
-    }
-}
-
-
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, getUnreadNotifications };
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, getUnreadNotifications, updateProfile, deleteProfilePhoto };
 export default API;

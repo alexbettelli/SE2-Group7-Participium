@@ -881,7 +881,7 @@
                     "text": { "type": "string" },
                     "channelId": { "type": "integer" }
                 },
-                "required": [ "senderId", "receiverId", "text", "channelId" ]
+                "required": [ "receiverId", "text", "channelId" ]
             },
             "public_stats": {
                 "type": "object",

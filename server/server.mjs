@@ -13,9 +13,10 @@ import swaggerUi from 'swagger-ui-express';
 import { Validator, ValidationError } from 'express-json-validator-middleware';
 import { fileURLToPath } from 'url';
 import DAO from './dao/DAO.mjs';
-import { Report } from './model/model.mjs';
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
+import fsPromises from 'fs/promises';
+import fsSync from 'fs';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +50,33 @@ const PORT = 3001;
 const upload = multer();
 const upload_dir = 'uploads';
 
+const profileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+    const dir = path.join(__dirname, 'uploads', 'profiles');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${req.user.id}_${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const uploadProfile = multer({
+  storage: multer.memoryStorage(), 
+  limits: { 
+    fileSize: 5 * 1024 * 1024,  
+    files: 1
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
   console.log(`Swagger documentation is available at http://localhost:${PORT}/api-docs`);
@@ -81,8 +109,20 @@ passport.serializeUser( function( user, cb){
   cb(null, user);
 });
 
-passport.deserializeUser( function( user, cb){
-  cb(null, user);
+passport.deserializeUser(async function(user, cb){
+  try {
+    const freshUser = await DAO.getUserById(user.id);
+    if (freshUser) {
+      const userWithImageUrl = {
+        ...freshUser,
+        imageUrl: freshUser.imageUrl ? `http://localhost:3001/images/profiles/${freshUser.imageUrl}` : null
+      };
+      return cb(null, userWithImageUrl);
+    }
+    cb(null, user);
+  } catch (err) {
+    cb(err);
+  }
 });
 
 app.use(passport.authenticate('session'));
@@ -92,6 +132,13 @@ export const isLogged = (req, res, next) => {
   else return res.status(401).json(new errors.UnauthorizedError());
 }
 
+//middleware to check if the user is a citizen (typeId === 1)
+const isCitizen = (req, res, next) => {
+  if (req.isAuthenticated() && req.user.role.id === 1) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Access forbidden: Only citizens can access this resource' });
+};
 
 app.post("/user", async (req, res) => {
   try {
@@ -118,7 +165,7 @@ app.post("/user", async (req, res) => {
 app.post('/employees', isLogged,async (req, res) => {
   try {
 
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -141,7 +188,7 @@ app.post('/employees', isLogged,async (req, res) => {
 
 app.get('/employees/unassigned', isLogged,async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -155,7 +202,7 @@ app.get('/employees/unassigned', isLogged,async (req, res) => {
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -171,7 +218,7 @@ app.post('/employees/assign', isLogged, async (req, res) => {
 
 app.get('/offices', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -185,7 +232,8 @@ app.get('/offices', isLogged, async (req, res) => {
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.typeId !== 2) {  // typeId 2 = admin
+    console.log(req.user);
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
     
@@ -223,9 +271,9 @@ app.post('/session', function (req, res, next) {
 
 app.get('/session/current', (req, res) => {
   if (req.isAuthenticated()) {
-    res.json(req.user);
-  } else{
-    res.status(401).json(new errors.UnauthorizedError());
+    res.json(req.user); 
+  } else {
+    res.status(401).json({ error: 'Not authenticated' });
   }
 })
 
@@ -271,7 +319,7 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
     return `${uuidv4()}.${extension}`
   })
 
-  const report = new Report({
+  const report = {
       title: req.body.title,
       description: req.body.description,
       latitude: req.body.latitude,
@@ -281,7 +329,7 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
       catId: req.body.catId,
       images: uuids,
       anonymous: req.body.anonymous === 'true' ? 1 : 0,
-  });
+  };
 
   try{
     const received = await DAO.addNewReport(report);
@@ -298,6 +346,94 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
       
+});
+
+//PUT /api/user/profile
+app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profilePhoto'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { telegramUsername, allowEmailNotification } = req.body;
+    
+    const currentUser = await DAO.getUserById(userId);
+    const oldImageUrl = currentUser.imageUrl;
+    
+    let filename = oldImageUrl;
+    
+    if (req.file) {
+      const extension = req.file.originalname.split('.').pop();
+      filename = `${uuidv4()}.${extension}`;
+      
+      const directory = path.join(__dirname, 'uploads', 'profiles');
+      if (!fsSync.existsSync(directory)) fsSync.mkdirSync(directory, { recursive: true });
+      fsSync.writeFileSync(path.join(directory, filename), req.file.buffer);
+      
+      if (oldImageUrl) {
+        const oldPhotoPath = path.join(__dirname, 'uploads', 'profiles', oldImageUrl);
+        try {
+          await fsPromises.unlink(oldPhotoPath);
+          console.log(`Deleted old profile photo: ${oldPhotoPath}`);
+        } catch (err) {
+          console.error(`Error deleting old profile photo: ${err.message}`);
+        }
+      }
+    }
+
+    await DAO.updateUserProfile(
+      userId,
+      telegramUsername || null,
+      allowEmailNotification === '1' || allowEmailNotification === 'true' ? 1 : 0,
+      filename
+    );
+
+    const updatedUser = await DAO.getUserById(userId);
+    
+    const userResponse = {
+      ...updatedUser,
+      imageUrl: updatedUser.imageUrl ? `http://localhost:3001/images/profiles/${updatedUser.imageUrl}` : null
+    };
+    
+    res.status(200).json(userResponse);
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// DELETE /api/user/profile/photo - Remove profile photo
+app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const currentUser = await DAO.getUserById(userId);
+    const oldImageUrl = currentUser.imageUrl; 
+    
+    if (oldImageUrl) {
+      const oldPhotoPath = path.join(__dirname, 'uploads', 'profiles', oldImageUrl);
+      try {
+        await fsPromises.unlink(oldPhotoPath);
+        console.log(`Deleted profile photo: ${oldPhotoPath}`);
+      } catch (err) {
+        console.error(`Error deleting profile photo: ${err.message}`);
+      }
+      
+      await DAO.updateUserProfile(userId, null, null, null);
+    }
+    
+    res.status(200).json({ message: 'Profile photo deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting profile photo:', err);
+    res.status(500).json({ error: 'Failed to delete profile photo' });
+  }
+}); 
+
+app.get("/reports/assigned", isLogged, async (req, res) => {
+  if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await DAO.getAssignedReports(req.user.id);
+    return res.status(200).json(reports);
+  }catch(ex){
+    return res.status(500).json(new errors.InternalServerError());
+  }
 });
 
 app.get('/reports/:id/chat', isLogged, async (req, res) => {

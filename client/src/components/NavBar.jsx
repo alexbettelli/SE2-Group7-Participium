@@ -35,15 +35,12 @@ function NavHeader(props){
   }, []);
 
   useEffect(() => {
-      const fetchProfilePhoto = async () => {
-          // Reset photo when user changes or logs out
-          setProfilePhoto(null);
-          if (user && user.imageUrl) {
-            setProfilePhoto(`http://localhost:3001${user.imageUrl}`);
-          }
-      };
-
-      fetchProfilePhoto();
+    console.log(user);
+    if (user?.imageUrl) {
+      setProfilePhoto(user.imageUrl);
+    } else {
+      setProfilePhoto(null);
+    }
   }, [user]);
 
 
@@ -80,7 +77,7 @@ function NavHeader(props){
             </div>
           )}
 
-          {user && (
+          {user && user.role?.id === 1 && ( 
             <div onClick={() => navigate("/profile")} >
               {profilePhoto ? (
                 <img 
