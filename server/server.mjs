@@ -286,8 +286,8 @@ app.delete('/sessions/current', (req, res) => {
 app.post('/notifications', validate({ body: schemas.notification }), async (req, res) => {
   try {
     const message = req.body;
-    const newNotificationId = await DAO.createNotification(message);
-    return res.status(201).json({ id: newNotificationId });
+    const fullMessage = await DAO.createNotification(message);
+    return res.status(201).json(fullMessage);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
@@ -436,6 +436,8 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
   }
 });
 
+/*
+
 app.get('/reports/:id/chat', isLogged, async (req, res) => {
   try {
     const reportId = req.params.id;
@@ -446,6 +448,7 @@ app.get('/reports/:id/chat', isLogged, async (req, res) => {
     res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
+
 
 app.get('/users/unreadnotifications', isLogged, async (req, res) => {
   try {
@@ -458,6 +461,7 @@ app.get('/users/unreadnotifications', isLogged, async (req, res) => {
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 })
+  */
 
 
 

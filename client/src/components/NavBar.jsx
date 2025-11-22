@@ -22,17 +22,20 @@ function NavHeader(props){
   };
 
   useEffect(() => {
+      if(!user || !user?.id)
+            return;
       const fetchUnreadNotifications = async () => {
-          try {
-              const notifications = await API.getUnreadNotifications();
-              setUnreadNotifications(notifications);
-          } catch (error) {
-              console.error('Error fetching unread notifications:', error);
-          }
+        try {
+            const reports = await API.getMyReports();
+            const totalUnreadNotifications = reports.reduce((sum, report) => sum + (report.unreadNotifications || 0), 0);
+            setUnreadNotifications(totalUnreadNotifications);
+        } catch (error) {
+            console.error('Error fetching unread notifications:', error);
+        }
       };
 
       fetchUnreadNotifications();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     console.log(user);

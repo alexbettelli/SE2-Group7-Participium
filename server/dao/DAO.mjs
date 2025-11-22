@@ -363,34 +363,7 @@ const getAssignedReports = (userId) => {
     });
 }
 
-/*const getReportNotificationsByChannel = (reportId, channelId) => {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM notification WHERE reportId = ? AND channelId = ?`;
-        db.all(query, [reportId, channelId], async (err, rows) => {
-            if (err) return reject(err);
-            try {
-                const messages = await Promise.all(rows.map(async row => {
-                    const senderUsername = row.senderId ? await getUsernameByUserId(row.senderId) : "System";
-                    const receiverUsername = await getUsernameByUserId(row.receiverId);
-                    return new Message({
-                        id: row.id,
-                        report: row.reportId,
-                        senderId: row.senderId,
-                        senderUsername,
-                        receiverId: row.receiverId,
-                        receiverUsername,
-                        text: row.text,
-                        channel: row.channelId,
-                        sendAt: row.sendAt
-                    });
-                }));
-                resolve(messages);
-            } catch (e) {
-                reject(e);
-            }
-        });
-    });
-}; */
+
 
 const createNotification = (message) => {
     return new Promise((resolve, reject) => {
@@ -399,14 +372,29 @@ const createNotification = (message) => {
             VALUES (?, ?, ?, ?, ?)
         `;
         db.run(query, [
-            message.reportId || null,
-            message.senderId,
+            message.reportId,
+            message.senderId || null,
             message.receiverId,
             message.text,
             message.channelId
         ], function (err) {
             if (err) return reject(err);
-            resolve(this.lastID);
+            const newId = this.lastID;
+            db.get(`
+                SELECT n.*, 
+                       c.name as channelName,
+                       sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
+                       receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
+                FROM notification n
+                LEFT JOIN channel c ON n.channelId = c.id
+                LEFT JOIN user sender ON n.senderId = sender.id
+                LEFT JOIN user receiver ON n.receiverId = receiver.id
+                WHERE n.id = ?
+            `, [newId], (err, row) => {
+                if (err || !row) return reject(err);
+                const msg = Mapper.mapRowToMessage(row);
+                resolve(msg);
+            });
         });
     });
 };
@@ -426,6 +414,6 @@ const getUnreadNotifications = (userId) => {
 
 
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
 
 export default DAO

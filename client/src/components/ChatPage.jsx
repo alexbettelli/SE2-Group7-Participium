@@ -1,13 +1,12 @@
 import { useRef, useEffect, useState } from "react";
-import { getReportChatMessages, submitNotification } from "../api/API.mjs";
 import '../styles/ChatPage.css';
 import Message from "./Message.jsx";
 
 export default function ChatPage(props){
     const { report, user } = props;
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(report.notifications);
     const [officerUsername, setOfficerUsername] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
     const [notificationText, setNotificationText] = useState("");
     const [sending, setSending] = useState(false);
@@ -16,15 +15,7 @@ export default function ChatPage(props){
 
     useEffect(() => {
         if (report?.id) {
-            setLoading(true);
-            getReportChatMessages(report.id)
-                .then(msgs => {
-                    setMessages(msgs);
-                    const officerMsg = msgs.find(m => m.senderId !== user.id);
-                    setOfficerUsername(officerMsg ? officerMsg.senderUsername : null);
-                })
-                .catch(err => setError(err.message))
-                .finally(() => setLoading(false));
+            setMessages(report.notifications);
         }
     }, [report, user.id]);
 
@@ -38,22 +29,19 @@ export default function ChatPage(props){
         if (!notificationText.trim()) return;
         setSending(true);
         try {
-            await submitNotification({
+            const newMessage = await API.submitNotification({
                 reportId: report.id,
-                senderId: report.officeId || 1, 
-                receiverId: report.userId, 
+                senderId: report.employee.id || 1, 
+                receiverId: report.user.id, 
                 text: notificationText,
                 channelId: 1 
             });
             setNotificationText("");
-
-            setLoading(true);
-            const msgs = await getReportChatMessages(report.id);
-            setMessages(msgs);
-            setLoading(false);
+            if(newMessage)
+                setMessages(prev => [...prev, newMessage]);
         } catch (err) {
             setError(err.message);
-            setLoading(false);
+            setSending(false);
         } finally {
             setSending(false);
         }

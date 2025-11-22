@@ -239,6 +239,9 @@ const deleteProfilePhoto = async () => {
 };
 
 
+
+/*
+
 export const getReportChatMessages = async (reportId) => {
     const res = await fetch(`${SERVER_URL}/reports/${reportId}/chat`, {
         method: 'GET',
@@ -255,5 +258,25 @@ export const getReportChatMessages = async (reportId) => {
     }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, getUnreadNotifications, updateProfile, deleteProfilePhoto };
+*/
+
+const submitNotification = async (notificationData) => {
+  const res = await fetch(SERVER_URL + '/notifications', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(notificationData)
+  });
+
+  if (res.ok) {
+    return await res.json();
+  } else {
+    const errDetails = await res.json();
+    throw new Error(errDetails.message || 'Error submitting notification');
+  }
+};
+
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, deleteProfilePhoto, submitNotification };
 export default API;

@@ -128,7 +128,7 @@ const mapRowsToReports = (rows) => {
         }
 
         // add message if it not exist
-        if (row.messageId && !report.messages.some(msg => msg.id === row.messageId)) {
+        if (row.messageId && !report.notifications.some(msg => msg.id === row.messageId)) {
             const message = new Message({
                 id: row.messageId,
                 reportId: row.id,
@@ -153,6 +153,51 @@ const mapRowsToReport = (rows) => {
     return mapRowsToReports(rows)[0];
 }
 
+//map a single message 
+const mapRowToMessage = (row) => {
+    if (!row) return null;
+    let channel = null;
+    if (row.channelId) {
+        channel = new Channel(row.channelId, row.channelName || null);
+    } else if (row.channel && typeof row.channel === 'object') {
+        channel = new Channel(row.channel.id, row.channel.name);
+    }
+    // Costruisci User completo per sender
+    let sender = null;
+    if (row.senderId) {
+        sender = new User(
+            row.senderId,
+            row.senderUsername,
+            row.senderEmail,
+            row.senderFirstName,
+            row.senderLastName,
+            row.senderTypeId ? new Role(row.senderTypeId) : null
+        );
+    }
+    // Costruisci User completo per receiver
+    let receiver = null;
+    if (row.receiverId) {
+        receiver = new User(
+            row.receiverId,
+            row.receiverUsername,
+            row.receiverEmail,
+            row.receiverFirstName,
+            row.receiverLastName,
+            row.receiverTypeId ? new Role(row.receiverTypeId) : null
+        );
+    }
+    return new Message({
+        id: row.id,
+        reportId: row.reportId,
+        sender,
+        receiver,
+        text: row.text,
+        channel,
+        sendAt: row.sendAt,
+        isRead: !!row.isRead
+    });
+}
+
 const Mapper = {
     mapRowToUser,
     mapRowsToUsers,
@@ -167,5 +212,6 @@ const Mapper = {
     mapRowsToReports,
     mapRowsToReport    
 }
+
 
 export default Mapper;
