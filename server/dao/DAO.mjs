@@ -1,6 +1,7 @@
 import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
 import Mapper from '../utils/mapper.mjs'
+import { Report } from '../model/model.mjs';
 
 const db = new sqlite.Database('./database.db', (err) => {
     if(err) throw err;
@@ -353,10 +354,9 @@ const getUserById = (userId) => {
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT R.*, RST.statusName FROM office O, office_employee OE, report R, report_status RST WHERE R.statusId=RST.id AND R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
+        const query = "SELECT R.*, R.userId, RST.statusName FROM office O, office_employee OE, report R, report_status RST WHERE R.statusId=RST.id AND R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
         db.all(query, [userId, userId], (err, rows) => {
             if (err) return reject(false);
-            console.log(rows);
             let reports = rows.map(row => {
                 const report = new Report(row)
                 report.statusName = row.statusName
@@ -364,7 +364,7 @@ const getAssignedReports = (userId) => {
             });
             const reportIds = rows.map(row => row.id);
             const sql2 = `SELECT * FROM report_image WHERE reportId IN (${reportIds.map(() => '?').join(',')})`;
-            db.all(sql2, reportIds, (err, rows) => {
+            db.all(sql2, reportIds, async (err, rows) => {
                 if (err) {
                     console.log(err);
                     return reject(err);
@@ -373,9 +373,20 @@ const getAssignedReports = (userId) => {
                     const report = reports.find(report => report.id === image.reportId);
                     if (report) report.images.push(image.imageUrl);
                 });
+
+                for(const report of reports) {
+                    report.user = {};
+                    if(!report.anonymous){
+                        const user = await getUserById(report.userId);
+                        report.user = { "id": user.id, "username": user.username, "email": user.email, "firstName": user.firstName, "lastName": user.lastName };
+                        delete report.userId;
+                    }
+                }
+
                 
-                const reports = Mapper.mapRowsToReports(rows);
-                resolve(reports);
+                const final_reports = Mapper.mapRowsToReports(reports);
+                console.log(final_reports);
+                resolve(final_reports);
             });
         });
     });

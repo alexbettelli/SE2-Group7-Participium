@@ -2,10 +2,11 @@ import React, { use, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap'; 
 import { useNavigate } from "react-router";
 import { Carousel } from 'react-bootstrap';
+import Map from './Map.jsx';
+import dayjs from 'dayjs';
 
-//import '../styles/ReportPreview.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'; 
-
+import '../styles/ReportPreview.css'
 
 export default function ReportPreview(props){
     const { report, setSelectedReport } = props;
@@ -46,7 +47,7 @@ export default function ReportPreview(props){
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
                         <div className="wrapper">
                             <span className="report-id-badge">Report #{report.id}</span>
-                            <span className={`status-badge ${getStatusClass(report.statusName)}`}>{report.statusName}</span>
+                            <span className={`status-badge ${getStatusClass(report.status.statusName)}`}>{report.status.statusName}</span>
                         </div>
                     </div>
                 </div>
@@ -59,7 +60,7 @@ export default function ReportPreview(props){
                             <span> Go to the chat</span>
                         </span>
                     </Button>
-                    <Button className="btn btn-secondary" onClick={(e) => { e.stopPropagation(); }}>
+                    <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); }}>
                         <span><i className="bi bi-pencil-fill"></i> Change status</span>
                     </Button>
                 </div>
@@ -78,20 +79,47 @@ function ReportView(props) {
             <div className="report-view">
                 <div className="report-view-header">
                     <h2>{props.report.title}</h2>
-                    <h3>Reported by {report.anonymous === 1 ? "Anonymous" : report.userId}</h3>
                     <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
                 </div>
                 <div className="report-view-content">
-                    <Carousel>
-                        { props.report.images.map((image, index) => {
-
-                            return <Carousel.Item key={index}><img className="d-block" src={image} alt={`Image ${index+1}`} /></Carousel.Item>;
-                        }) }
-                    </Carousel>
-                    <h3>Description</h3>
-                    <p>{report.description}</p>
-                    <p><strong>Address:</strong> {report.address}</p>
-                    {/* Add more detailed report information as needed */}
+                    <div className="wrapper">
+                        <Carousel>
+                            { props.report.images.map((image, index) => {
+                                return <Carousel.Item key={index}><img className="d-block" src={image} alt={`Image ${index+1}`} /></Carousel.Item>;
+                            }) }
+                        </Carousel>
+                        <Map lat={report.latitude} lng={report.longitude} />
+                    </div>
+                    <div className="fields">
+                        <div className="field user-field">
+                            <h3>Reported by</h3>
+                            { report.anonymous === 1 ? <p>Anonymous</p> : 
+                                <>
+                                    <p><strong>Full name: </strong>{report.user.firstName} {report.user.lastName}</p> 
+                                    <p><strong>Username: </strong>{report.user.username}</p> 
+                                    <p><strong>Email: </strong>{report.user.email}</p>
+                                </>
+                            }
+                        </div>
+                        <div className="field">
+                            <h3>Reported on</h3>
+                            <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
+                            <p><strong>Last update: </strong>{dayjs(report.updatedAt).format('DD/MM/YYYY HH:mm')}</p>
+                        </div>
+                        <div className="field">
+                            <h3>Address</h3>
+                            <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
+                        </div>
+                        <div className="field">
+                            <h3>Report details</h3>
+                            <p><strong>Report ID: </strong>{report.id}</p>
+                            <p><strong>status: </strong>{report.status.statusName}</p>
+                        </div>
+                        <div className="field" style={{ "grid-column": "span 2" }}>
+                            <h3>Description</h3>
+                            <p>{report.description}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>

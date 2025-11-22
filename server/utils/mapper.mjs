@@ -105,7 +105,7 @@ const mapRowsToReports = (rows) => {
                 latitude: row.latitude,
                 longitude: row.longitude,
                 address: row.address,
-                user: new User(row.userId, row.username),
+                user: new User(row.user.id, row.user.username, row.user.email, row.user.firstName, row.user.lastName),
                 employee: row.employeeId ? new User(row.employeeId, row.employeeUsername) : null,
                 category: new Category(row.catId, row.categoryName),
                 status: new Status(row.statusId, row.statusName),
@@ -114,7 +114,7 @@ const mapRowsToReports = (rows) => {
                 updatedAt: row.updatedAt,
                 rejectReason: row.rejectReason,
                 anonymous: row.anonymous,
-                images: [],
+                images: row.images || [],
                 notifications: [],
                 unreadNotifications: row.unreadNotifications || 0
             };
