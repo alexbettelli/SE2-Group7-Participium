@@ -235,9 +235,21 @@ app.delete('/sessions/current', (req, res) => {
   });
 });
 
+app.post('/notifications', validate({ body: schemas.notification }), async (req, res) => {
+  try {
+    const message = req.body;
+    const newNotificationId = await DAO.createNotification(message);
+    return res.status(201).json({ id: newNotificationId });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    return res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+
 // REPORTS
 
-app.get('/myreports', isLogged, async (req, res) => {
+app.get('/users/myreports', isLogged, async (req, res) => {
   try {
     const userId = req.user.id;
     const reports = await DAO.getReportsByUserId(userId);
@@ -249,7 +261,7 @@ app.get('/myreports', isLogged, async (req, res) => {
   }
 });
 
-app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
+app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   
   if(images.length === 0) return res.status(400).json(new errors.BadRequestError());
@@ -298,6 +310,20 @@ app.get('/reports/:id/chat', isLogged, async (req, res) => {
     res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
+
+app.get('/users/unreadnotifications', isLogged, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const unreadNotifications = await DAO.getUnreadNotifications(userId);
+    console.log("Unread notifications: " + unreadNotifications);
+    return res.status(200).json(unreadNotifications);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    return res.status(503).json(new errors.ServiceUnvailableError());
+  }
+})
+
+
 
 app.use((err, req, res, next) => {
   if(err instanceof ValidationError){

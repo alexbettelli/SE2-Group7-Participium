@@ -303,6 +303,40 @@ const getReportNotificationsByChannel = (reportId, channelId) => {
     });
 };
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId};
+const createNotification = (message) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO notification (reportId, senderId, receiverId, text, channelId)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        db.run(query, [
+            message.reportId || null,
+            message.senderId,
+            message.receiverId,
+            message.text,
+            message.channelId
+        ], function (err) {
+            if (err) return reject(err);
+            resolve(this.lastID);
+        });
+    });
+};
+
+
+const getUnreadNotifications = (userId) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM notification WHERE receiverId = ?`; //!TODO: missing isRead field in the DB
+        db.all(query, [userId], async (err, rows) => {
+            if (err) {
+              return reject(err);
+          }
+          resolve(rows.length);
+        });
+    });
+}
+
+
+
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getReportNotificationsByChannel, getUsernameByUserId, getUnreadNotifications, createNotification};
 
 export default DAO

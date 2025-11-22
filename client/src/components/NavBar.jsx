@@ -1,12 +1,14 @@
 import { Navbar, Container, Nav, Button } from "react-bootstrap";
 import {useState, useEffect } from 'react';
 import { useNavigate } from "react-router";
+import API from '../api/API.mjs';
 import "../styles/NavBar.css";
 
 function NavHeader(props){
   const {user, handleLogout} = props;
   const navigate = useNavigate();
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const handleHomeClick = () => {
     navigate('/');
@@ -18,6 +20,19 @@ function NavHeader(props){
       navigate('/');
     }
   };
+
+  useEffect(() => {
+      const fetchUnreadNotifications = async () => {
+          try {
+              const notifications = await API.getUnreadNotifications();
+              setUnreadNotifications(notifications);
+          } catch (error) {
+              console.error('Error fetching unread notifications:', error);
+          }
+      };
+
+      fetchUnreadNotifications();
+  }, []);
 
   useEffect(() => {
       const fetchProfilePhoto = async () => {
@@ -53,11 +68,15 @@ function NavHeader(props){
           )}
         </div>
         
-        {/* Right side: Home + Login/Logout */}
         <div className="navbar-right">
           {user && (
             <div onClick={() => navigate("/myreports")} >  
-                <i className="bi bi-bell navbar-profile-icon"></i>
+                {unreadNotifications > 0 ? (
+                  <span className="navbar-notification-wrapper">
+                    <i className="bi bi-envelope navbar-profile-icon"></i>
+                    <span className="navbar-notification-count">{unreadNotifications}</span>
+                  </span>
+                ) : <i className="bi bi-envelope navbar-profile-icon"></i>}
             </div>
           )}
 
