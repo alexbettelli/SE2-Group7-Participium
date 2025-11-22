@@ -1,8 +1,11 @@
 import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router';
 import L from 'leaflet';
-import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import * as turf from '@turf/turf';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
 import ReportOverview from './ReportOverview.jsx';
@@ -17,7 +20,8 @@ export default function CitizenPage({user}){
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
     const abortControllerRef = useRef(null);
-    const mapMarkersRef = useRef([]);
+    //const mapMarkersRef = useRef([]);
+    const clusterGroupRef = useRef(null);
 
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [address, setAddress] = useState('');
@@ -93,6 +97,7 @@ export default function CitizenPage({user}){
                     }).addTo(mapInstanceRef.current);
 
                     mapInstanceRef.current.fitBounds(boundaryLayer.getBounds());
+                    mapInstanceRef.current.setView([45.0703, 7.6868], 10);
                     mapInstanceRef.current._turinBoundary = boundaryLayer;
                 })
                 .catch(err => console.error("Error loading Turin boundary:", err));
@@ -124,6 +129,7 @@ export default function CitizenPage({user}){
                     mapInstanceRef.current.removeLayer(markerRef.current);
                 }
 
+                
                 markerRef.current = L.marker([lat, lng]).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
                 setAddress('');
@@ -165,30 +171,44 @@ export default function CitizenPage({user}){
     }, []);
 
     useEffect(() => {
-        if (!mapInstanceRef.current || reports.length === 0) return;
-        
-        if (mapMarkersRef.current.length > 0) {
-            mapMarkersRef.current.forEach((m) =>
-                mapInstanceRef.current.removeLayer(m)
-            );
+        if (!mapInstanceRef.current) return;
+
+        // Rimuovi cluster precedente
+        if (clusterGroupRef.current) {
+        mapInstanceRef.current.removeLayer(clusterGroupRef.current);
         }
 
-        mapMarkersRef.current = [];
-        
-        reports.forEach((report) => {
-            if (report.latitude && report.longitude) {
-                
-                const popupContainer = document.createElement("div");    
-                ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
-
-                const marker = L.marker([report.latitude, report.longitude])
-                    .addTo(mapInstanceRef.current)
-                    .bindPopup(popupContainer);
-
-                mapMarkersRef.current.push(marker);
-            }
+        // Crea il gruppo cluster
+        const clusterGroup = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            disableClusteringAtZoom: 17,
+            zoomToBoundsOnClick: true
         });
+
+        // Aggiungi marker al gruppo
+        reports.forEach((report) => {
+        if (report.latitude && report.longitude) {
+            const popupContainer = document.createElement("div");    
+            ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
+
+            const marker = L.marker([report.latitude, report.longitude])                
+                .bindPopup(popupContainer);
+            clusterGroup.addLayer(marker);
+        }
+        });
+
+        // Aggiungi il gruppo alla mappa
+        clusterGroup.addTo(mapInstanceRef.current);
+        clusterGroupRef.current = clusterGroup;
+
+        // Cleanup
+        return () => {
+        if (mapInstanceRef.current && clusterGroupRef.current) {
+            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+        }
+        };
     }, [reports]);
+    
 
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
@@ -342,7 +362,8 @@ export default function CitizenPage({user}){
         setActiveTab(tab);
         setSubmitMessage('');
         setReportDetails({});
-        ResetZoom();
+        resetForm();
+        //ResetZoom();
     };
     const zoomToReportLocation = (report) =>{
         if (report.latitude && report.longitude && mapInstanceRef.current) {
@@ -430,7 +451,7 @@ export default function CitizenPage({user}){
                                 {Object.keys(reportDetails).length === 0 ? (
                                     <p className="empty-message">Select a report to show details</p>
                                 ) : (
-                                    <ReportOverview
+                                    <ReportOverview user={user}
                                         report={reportDetails}
                                         onBackToHome={resetForm}
                                         showSuccessBanner={false}
@@ -443,7 +464,7 @@ export default function CitizenPage({user}){
                         {activeTab === 'form' && (
                             <>
                                 {submittedReport ? (
-                                    <ReportOverview
+                                    <ReportOverview user={user}
                                         report={submittedReport}
                                         onBackToHome={resetForm}
                                         showSuccessBanner={true}

@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/ReportOverview.css';
 
-const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
+const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
 
     return (
         <div className="report-overview-container">
@@ -73,7 +73,7 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true, showNe
                     <div className="report-meta">
                         {!report.isAnonymous && report.username && (
                             <span className="author-info">
-                                Reported by: {report.username}
+                                Reported by: {report.username !==  user.username ? report.username : 'YOU'}
                             </span>
                         )}
                         {report.isAnonymous && (
