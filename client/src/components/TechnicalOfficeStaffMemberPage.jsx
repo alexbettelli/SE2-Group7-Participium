@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from '../api/API.mjs';
-import ReportPreview from './ReportPreview.jsx';
+import ReportsTable from './ReportsTable.jsx';
 import '../styles/TechnicalOfficeStaffMember.css';
 
 export default function TechnicalOfficeStaffMemberPage(props) {
@@ -25,29 +25,6 @@ export default function TechnicalOfficeStaffMemberPage(props) {
             <h1>Welcome, <span id='fullname'>{props.user.firstName} {props.user.lastName}!</span></h1>
             <h6>This is your dashboard where you can manage your assigned reports.</h6>
             <ReportsTable reports={reports} setSelectedReport={props.setSelectedReport} />
-        </div>
-    )
-}
-
-function ReportsTable(props) {
-    return (
-        <>
-            { props.reports.length === 0 ?
-                <p>No reports assigned to you.</p> :
-                <div className="reports-table">
-                    { props.reports.map(report => <ReportRow key={report.id} report={report} setSelectedReport={props.setSelectedReport} /> )}    
-                </div>
-            }
-        </>
-    )
-}
-
-function ReportRow(props) {
-    const { report, setSelectedReport } = props;
-
-    return (
-        <div className='reports-table-row'>
-            <ReportPreview key={report.id} report={report} setSelectedReport={setSelectedReport} />
         </div>
     )
 }

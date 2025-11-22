@@ -1,17 +1,50 @@
 import React, { use, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap'; 
 import { useNavigate } from "react-router";
-import { Carousel } from 'react-bootstrap';
+import { Carousel, Modal, Form } from 'react-bootstrap';
 import Map from './Map.jsx';
 import dayjs from 'dayjs';
 
 import 'bootstrap-icons/font/bootstrap-icons.css'; 
 import '../styles/ReportPreview.css'
+import API from '../api/API.mjs';
 
 export default function ReportPreview(props){
     const { report, setSelectedReport } = props;
     const [expanded, setExpanded] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [statuses, setStatuses] = useState([]);
+    const [updateStatus, setUpdateStatus] = useState(false);
+    const [selectedStatusId, setSelectedStatusId] = useState(null);
+
+    const handleClose = () => setShowStatusModal(false);
+    const handleShow = () => setShowStatusModal(true);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const getStatuses = async () => {
+            API.getReportStatuses().then((data) => {
+                setStatuses(data);
+            }).catch((error) => {
+                console.error('Error fetching report statuses:', error);
+            });
+        };
+
+        getStatuses();
+    }, []);
+
+    useEffect(() => {
+        const updateReportStatus = async () => {
+            API.updateReportStatus(report.id, selectedStatusId).then((data) => {
+                console.log('Report status updated:', data);
+            }).catch((error) => {
+                console.error('Error updating report status:', error);
+            });
+            setUpdateStatus(false);
+            setSelectedStatusId(null);
+        };
+        if (updateStatus) updateReportStatus();
+    }, [updateStatus]);
 
     const getStatusClass = (statusName) => {
         switch (statusName) {
@@ -60,12 +93,33 @@ export default function ReportPreview(props){
                             <span> Go to the chat</span>
                         </span>
                     </Button>
-                    <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); }}>
+                    <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
                         <span><i className="bi bi-pencil-fill"></i> Change status</span>
                     </Button>
                 </div>
             </div>
             { expanded && <ReportView onClose={toggleExpanded} report={report} /> }
+            
+            <Modal show={showStatusModal} onHide={handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Change status for report #{report.id}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Select aria-label="Default select example" onChange={(e) => setSelectedStatusId(e.target.value)}>
+                        { statuses.map(status => {
+                            return <option key={status.id} value={status.id}>{status.statusName}</option>;
+                        }) }
+                    </Form.Select>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={() => {handleClose(); setUpdateStatus(true); }}>
+                        Save Changes
+                    </Button>
+            </Modal.Footer>
+        </Modal>
         </>
     )
 }

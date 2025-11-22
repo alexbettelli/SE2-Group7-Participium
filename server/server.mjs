@@ -410,7 +410,7 @@ app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
     res.status(200).json({ message: 'Profile photo deleted successfully' });
   } catch (err) {
     console.error('Error deleting profile photo:', err);
-    res.status(500).json({ error: 'Failed to delete profile photo' });
+    res.status(500).json(new errors.InternalServerError("Failed to delete profile photo."));
   }
 }); 
 
@@ -420,6 +420,26 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
     const reports = await DAO.getAssignedReports(req.user.id);
     return res.status(200).json(reports);
   }catch(ex){
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.patch("/reports/:id", isLogged, async (req, res) => {
+  if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const result = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
+    if(!result) return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
+    return res.status(200).json({ message: "Report status updated successfully." });
+  } catch(e) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get("/reports/statuses", isLogged, async (req, res) => {
+  try {
+    const statuses = await DAO.getReportStatuses();
+    return res.status(200).json(statuses);
+  } catch(e) {
     return res.status(500).json(new errors.InternalServerError());
   }
 });

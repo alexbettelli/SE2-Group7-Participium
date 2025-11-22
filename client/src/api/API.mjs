@@ -231,6 +231,18 @@ const updateProfile = async (formData)=> {
     }
 }
 
+const getReportStatuses = async () => {
+    const res = await fetch(`${SERVER_URL}/reports/statuses`, { credentials: "include" });
+    if(res.ok) return await res.json();
+    else throw new Error('Error fetching report statuses');
+};
+
+const updateReportStatus = async (reportId, statusId) => {
+    const res = await fetch(`${SERVER_URL}/reports/${reportId}?statusId=${statusId}`, { method: 'PATCH', credentials: 'include' });
+    if (res.ok) return await res.json();
+    else throw new Error('Error updating report status');
+};
+
 const deleteProfilePhoto = async () => {
   const response = await fetch(`${SERVER_URL}/api/user/profile/photo`, {
     method: 'DELETE',
@@ -262,5 +274,23 @@ export const getReportChatMessages = async (reportId) => {
     }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, getAssignedReports, deleteProfilePhoto};
+const API = {
+    login, 
+    registrate, 
+    createNewEmployee, 
+    getUnassignedEmployees, 
+    getOffices, 
+    getRoles,
+    assignEmployeeToOffice, 
+    getUserInfo, 
+    submitReport, 
+    logOut, 
+    getCategories, 
+    getMyReports, 
+    getReportStatuses,
+    updateReportStatus,
+    updateProfile, 
+    getAssignedReports, 
+    deleteProfilePhoto
+};
 export default API;

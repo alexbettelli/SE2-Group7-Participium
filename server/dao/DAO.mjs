@@ -354,8 +354,8 @@ const getUserById = (userId) => {
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT R.*, R.userId, RST.statusName FROM office O, office_employee OE, report R, report_status RST WHERE R.statusId=RST.id AND R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
-        db.all(query, [userId, userId], (err, rows) => {
+        const query = "SELECT R.*, RS.statusName FROM report R, report_status RS WHERE R.statusId = RS.id AND R.employeeId = ?";
+        db.all(query, [userId], (err, rows) => {
             if (err) return reject(false);
             let reports = rows.map(row => {
                 const report = new Report(row)
@@ -385,9 +385,60 @@ const getAssignedReports = (userId) => {
 
                 
                 const final_reports = Mapper.mapRowsToReports(reports);
-                console.log(final_reports);
                 resolve(final_reports);
             });
+        });
+    });
+}
+
+const updateReportStatus = (userId, reportId, statusId) => {
+    return new Promise((resolve, reject) => {
+        const query1 = "SELECT * FROM report WHERE id = ? AND employeeId = ?";
+        db.get(query1, [reportId, userId], (err, row) => {
+            if (err) return reject(err);
+            if(row === undefined) resolve(false);
+            const query2 = "UPDATE report SET statusId = ? WHERE id = ?";
+            db.run(query2, [statusId, reportId], function(err) {
+                if (err) return reject(err);
+                const query3 = "INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt, isRead) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                let message = "Your report ";
+                switch(+statusId) {
+                    case 1:
+                        message += "is waiting to be approved."
+                        break;
+                    case 2:
+                        message += "has been assigned to the corresponding office."
+                        break;
+                    case 3:
+                        message += "is being resolved";
+                        break;
+                    case 4:
+                        message += "has been suspended.";
+                        break;
+                    case 5:
+                        message += "has been rejected.";
+                        break;
+                    case 6:
+                        message += "has been resolved. Thank you for your contribution!";
+                        break;
+                    default:
+                        console.log(`Unknown statusId: ${statusId}`);
+                }
+                db.run(query3, [reportId, userId, row.userId, message, 1, dayjs().toString(), 0], function(err) {
+
+                });
+                resolve(true);
+            });
+        });
+    });
+}
+
+const getReportStatuses = async () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM report_status`;
+        db.all(query, [], (err, rows) => {
+            if(err) return reject(err);
+            resolve(rows);
         });
     });
 }
@@ -421,6 +472,24 @@ const getAssignedReports = (userId) => {
     });
 }; */
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
+const DAO = {
+    getUserByUsername, 
+    getUnassignedEmployees, 
+    getOffices, 
+    getRoles, 
+    assignEmployeeToOffice, 
+    addNewUser,
+    addNewReport, 
+    getCategories, 
+    getReportsByUserId, 
+    getCategoryById, 
+    getStatusById, 
+    getUsernameByUserId, 
+    getAssignedReports, 
+    updateUserProfile, 
+    getUserById, 
+    updateReportStatus,
+    getReportStatuses
+};
 
-export default DAO
+export default DAO;
