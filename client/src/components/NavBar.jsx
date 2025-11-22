@@ -5,10 +5,9 @@ import API from '../api/API.mjs';
 import "../styles/NavBar.css";
 
 function NavHeader(props){
-  const {user, handleLogout} = props;
+  const {user, handleLogout, unreadNotifications, setUnreadNotifications} = props;
   const navigate = useNavigate();
   const [profilePhoto, setProfilePhoto] = useState(null);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const handleHomeClick = () => {
     navigate('/');

@@ -278,5 +278,24 @@ const submitNotification = async (notificationData) => {
   }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, deleteProfilePhoto, submitNotification };
+const setReadNotifications = async (reportId) => {
+    const res = await fetch(SERVER_URL + '/notifications/read', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({reportId})
+    });
+    if (res.ok) {
+        const data = await res.json();
+        return data.readNotifications;
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error setting notifications as read');
+    }
+};
+
+
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, deleteProfilePhoto, submitNotification, setReadNotifications };
 export default API;

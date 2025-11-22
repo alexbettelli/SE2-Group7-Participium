@@ -1,11 +1,12 @@
 import { useRef, useEffect, useState } from "react";
 import '../styles/ChatPage.css';
 import Message from "./Message.jsx";
+import API from "../api/API.mjs";
+
 
 export default function ChatPage(props){
-    const { report, user } = props;
+    const { report, user, unreadNotifications, setUnreadNotifications } = props;
     const [messages, setMessages] = useState(report.notifications);
-    const [officerUsername, setOfficerUsername] = useState(null);
     const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
     const [notificationText, setNotificationText] = useState("");
@@ -14,8 +15,27 @@ export default function ChatPage(props){
     const chatEndRef = useRef(null);
 
     useEffect(() => {
+        setLoading(true);
+        const markNotificationsRead = async () => {
+            if (report?.id && user?.id) {
+                try {
+                    const readNotifications = await API.setReadNotifications(report.id);
+                    setUnreadNotifications(prev => prev - readNotifications);
+                    console.log("Notifiche aggiornate, ora sono: " , unreadNotifications);
+                    setLoading(false)
+                } catch (err) {
+                    setError(err.message);
+                    setLoading(false);
+                }
+            }
+        };
+        markNotificationsRead();
+    }, []);
+
+    useEffect(() => {
         if (report?.id) {
-            setMessages(report.notifications);
+            const sortedMessages = [...report.notifications].sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt));
+            setMessages(sortedMessages);
         }
     }, [report, user.id]);
 
@@ -37,8 +57,17 @@ export default function ChatPage(props){
                 channelId: 1 
             });
             setNotificationText("");
-            if(newMessage)
-                setMessages(prev => [...prev, newMessage]);
+            if(newMessage) {
+                setMessages(prev => {
+                    const updated = [...prev, newMessage];
+                    setTimeout(() => {
+                        if (chatScrollRef.current) {
+                            chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+                        }
+                    }, 0);
+                    return updated;
+                });
+            }
         } catch (err) {
             setError(err.message);
             setSending(false);
@@ -51,16 +80,18 @@ export default function ChatPage(props){
     if (error) return <div>Error: {error}</div>;
 
     return (
-        <>
-            <h1 className="chat-title">Chat for the report: "{report.title}"</h1>
+        <div className="chat-page-container">
+            
+            <div className="chat-header-row">
+                <div className="chat-officer-label">
+                    {report.employee ? report.employee.username : 'No officer assigned'}
+                </div>
+                <div className="chat-report-title">
+                    Report title: "{report.title}"
+                </div>
+            </div>
             <div className="chat-container-fixed">
                 <div className="chat-messages-scroll" ref={chatScrollRef}>
-                    <div className="chat-fade-top" />
-                    {officerUsername && (
-                        <div className="chat-officer-label">
-                            {officerUsername}
-                        </div>
-                    )}
                     {messages.length === 0 ? (
                         <div>There are no messages in the chat yet</div>
                     ) : (
@@ -70,12 +101,12 @@ export default function ChatPage(props){
                                 key={msg.id}
                                 style={{
                                     display: 'flex',
-                                    justifyContent: msg.senderId === user.id ? 'flex-end' : 'flex-start',
+                                    justifyContent: msg.sender.id === user.id ? 'flex-end' : 'flex-start',
                                     width: '100%'
                                 }}
                             >
                                 <div
-                                    className={`chat-message-wrapper ${msg.senderId === user.id ? 'chat-message-right' : 'chat-message-left'}`}
+                                    className={`chat-message-wrapper ${msg.sender.id === user.id ? 'chat-message-right' : 'chat-message-left'}`}
                                 >
                                     <Message message={msg} user={user} />
                                 </div>
@@ -104,6 +135,6 @@ export default function ChatPage(props){
                     </div>
                 )}
             </div>
-        </>
+        </div>
     );
 }

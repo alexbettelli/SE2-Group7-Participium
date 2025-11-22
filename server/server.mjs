@@ -283,16 +283,7 @@ app.delete('/sessions/current', (req, res) => {
   });
 });
 
-app.post('/notifications', validate({ body: schemas.notification }), async (req, res) => {
-  try {
-    const message = req.body;
-    const fullMessage = await DAO.createNotification(message);
-    return res.status(201).json(fullMessage);
-  } catch (error) {
-    console.error(`ERROR: ${error.message}`);
-    return res.status(503).json(new errors.ServiceUnvailableError());
-  }
-});
+
 
 
 // REPORTS
@@ -436,32 +427,35 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
   }
 });
 
-/*
+//NOTIFICATIONS
 
-app.get('/reports/:id/chat', isLogged, async (req, res) => {
+app.post('/notifications', validate({ body: schemas.notification }), async (req, res) => {
   try {
-    const reportId = req.params.id;
-    const messages = await DAO.getReportNotificationsByChannel(reportId, 1);
-    return res.status(200).json(messages);
-  } catch (error) {
-    console.error(`ERROR: ${error.message}`);
-    res.status(503).json(new errors.ServiceUnvailableError());
-  }
-});
-
-
-app.get('/users/unreadnotifications', isLogged, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const unreadNotifications = await DAO.getUnreadNotifications(userId);
-    console.log("Unread notifications: " + unreadNotifications);
-    return res.status(200).json(unreadNotifications);
+    const message = req.body;
+    const fullMessage = await DAO.createNotification(message);
+    return res.status(201).json(fullMessage);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
-})
-  */
+});
+
+app.post('/notifications/read', async (req, res) => {
+  const { reportId } = req.body;
+  const userId = req.user.id;
+  let readNotifications = 0;
+  if (!reportId || !userId) {
+    return res.status(400).json({ error: 'Missing reportId or userId' });
+  }
+  try {
+    readNotifications = await DAO.setNotificationsAsRead(userId, reportId);
+    res.status(201).json({ success: true, readNotifications });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 
 
 

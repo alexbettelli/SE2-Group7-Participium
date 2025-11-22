@@ -184,13 +184,13 @@ const getReportsByUserId = async (userId) =>{
         left join (
             SELECT reportId, sum(isRead = 0) as unreadNotifications
             FROM notification
-            WHERE channelId = 1
+            WHERE channelId = 1 AND receiverId = ?
             GROUP BY reportId
         ) as unread on unread.reportId = r.id 
         where userId = ?`;
 
     return new Promise ((resolve, reject) => {
-        db.all(query, [userId], async (err, rows) => {
+        db.all(query, [userId, userId], async (err, rows) => {
             if (err) {
                 return reject(err);
             }
@@ -412,8 +412,18 @@ const getUnreadNotifications = (userId) => {
     });
 }
 
+const setNotificationsAsRead = (userId, reportId) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE notification SET isRead = 1 WHERE reportId = ? AND receiverId = ? AND isRead = 0`;
+        db.run(query, [reportId, userId], function (err) {
+            if (err) return reject(err);
+            resolve(this.changes);
+        });
+    });
+}
 
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById};
+
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById, setNotificationsAsRead};
 
 export default DAO

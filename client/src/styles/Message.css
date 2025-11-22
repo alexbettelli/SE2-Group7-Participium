@@ -9,7 +9,7 @@
   align-items: center;
   position: relative;
   min-width: 180px;
-  border: 2px solid var(--color-wine-light);
+  border: 2px solid var(--color-green);
 }
 
 .message-content {

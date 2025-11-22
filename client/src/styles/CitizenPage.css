@@ -15,17 +15,22 @@
     position: relative;
 }
 
-.citizen-page-header h2 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--color-wine-dark);
-    letter-spacing: 0.3px;
-}
 
 .citizen-page-header p {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--color-wine-light);
-    margin: 0.1rem 0 0;
+    margin: 0 0 2rem;
+}
+
+.citizen-page-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-wine-dark);
+    letter-spacing: 0.3px;  
+    margin-bottom: 0.5rem !important;  
 }
 
 .citizen-page-header .location-instruction {

@@ -162,8 +162,7 @@ const mapRowToMessage = (row) => {
     } else if (row.channel && typeof row.channel === 'object') {
         channel = new Channel(row.channel.id, row.channel.name);
     }
-    // Costruisci User completo per sender
-    let sender = null;
+    let sender = null; //for default notifications
     if (row.senderId) {
         sender = new User(
             row.senderId,
@@ -174,8 +173,7 @@ const mapRowToMessage = (row) => {
             row.senderTypeId ? new Role(row.senderTypeId) : null
         );
     }
-    // Costruisci User completo per receiver
-    let receiver = null;
+    let receiver = null; //maybe if in the future we want to have broadcast messages
     if (row.receiverId) {
         receiver = new User(
             row.receiverId,
@@ -198,6 +196,10 @@ const mapRowToMessage = (row) => {
     });
 }
 
+const mapRowsToMessage = (rows) => {
+    return rows.map(mapRowToMessage);
+}
+
 const Mapper = {
     mapRowToUser,
     mapRowsToUsers,
@@ -210,7 +212,9 @@ const Mapper = {
     mapRowToOffice, 
     mapRowsToOffices,
     mapRowsToReports,
-    mapRowsToReport    
+    mapRowsToReport,
+    mapRowToMessage,
+    mapRowsToMessage   
 }
 
 
