@@ -127,7 +127,7 @@ function ReportView(props) {
         <>
             <div className="overview-section">
                 <h4 className="section-label">Category</h4>
-                <p className="report-field">{report.catId}</p>
+                <p className="report-field">{report.category?.categoryName}</p>
             </div>
 
             <div className="overview-section">
@@ -151,7 +151,7 @@ function ReportView(props) {
             
             <div className="overview-footer">
                 <div className="report-meta">
-                    {!(report.anonymous === 1) && report.userId && (
+                    {!(report.anonymous === 1) && report.user?.id && (
                         <span className="author-info">
                             Reported by: {user.username}
                         </span>
@@ -180,7 +180,7 @@ function ReportView(props) {
                         <h3 className="report-title">{report.title}</h3>
                         <div className="header-badges">
                             <span className="report-id-badge">Report #{report.id}</span>
-                            <span className={`status-badge ${getStatusClass(report.statusId)}`}>{report.statusId}</span>
+                            <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
                         </div>
                     </div>
                 </div>
