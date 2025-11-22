@@ -288,7 +288,7 @@ export default function CitizenPage({user}){
     return (
         <div className="citizen-page-container">
             <div className="citizen-page-header">
-                <h2>Welcome to Participium - City of Turin</h2>
+                <h2 className="citizen-page-title">Welcome to Participium - City of Turin</h2>
                 <p>Report issues in your city and help make Turin a better place for everyone.</p>
             </div>
 

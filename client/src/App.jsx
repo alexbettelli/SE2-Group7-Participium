@@ -17,6 +17,7 @@ function App() {
   const [user, setUser] = useState({});
   const [loginError, setLoginError] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(null);
 
   useEffect(() => {
       API.getUserInfo()
@@ -48,12 +49,12 @@ function App() {
 
   return (
     <Routes>
-      <Route element={<DefaultLayout user={user} handleLogout={handleLogout} />}>     
-        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport} /> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
+      <Route element={<DefaultLayout user={user} handleLogout={handleLogout} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications}/>}>     
+        <Route path="/" index element={loggedIn ? <HomePage user={user}/> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />
         <Route path="/profile" element={user && user.role?.id === 1 ? ( <ProfilePage user={user} setUser={setUser} /> ) : (<Navigate to="/" replace />) } />
         <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/"  />} />
-        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} /> : <Navigate to="/"  />} />
+        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications}/> : <Navigate to="/"  />} />
         <Route path="*" element={<NotFound />}/>
       </Route>
     </Routes>

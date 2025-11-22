@@ -160,7 +160,7 @@ const submitReport = async(reportData) => {
     formData.append('images', image);
   });
 
-  const res = await fetch(SERVER_URL + '/reports', {
+  const res = await fetch(SERVER_URL + '/users/reports', {
     method: 'POST',
     credentials: 'include',
     body: formData
@@ -176,7 +176,7 @@ const submitReport = async(reportData) => {
 };
 
 const getMyReports = async () => {
-    const res = await fetch(SERVER_URL + '/myreports', {
+    const res = await fetch(SERVER_URL + '/users/myreports', {
         method: 'GET',
         credentials: 'include'
     });
@@ -258,6 +258,9 @@ const deleteProfilePhoto = async () => {
 };
 
 
+
+/*
+
 export const getReportChatMessages = async (reportId) => {
     const res = await fetch(`${SERVER_URL}/reports/${reportId}/chat`, {
         method: 'GET',
@@ -273,6 +276,44 @@ export const getReportChatMessages = async (reportId) => {
         throw new Error(errDetails.message || 'Error fetching report messages');
     }
 };
+*/
+
+const submitNotification = async (notificationData) => {
+  const res = await fetch(SERVER_URL + '/notifications', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(notificationData)
+  });
+
+  if (res.ok) {
+    return await res.json();
+  } else {
+    const errDetails = await res.json();
+    throw new Error(errDetails.message || 'Error submitting notification');
+  }
+};
+
+const setReadNotifications = async (reportId) => {
+    const res = await fetch(SERVER_URL + '/notifications/read', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({reportId})
+    });
+    if (res.ok) {
+        const data = await res.json();
+        return data.readNotifications;
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error setting notifications as read');
+    }
+};
+
 
 const API = {
     login, 
@@ -291,6 +332,8 @@ const API = {
     updateReportStatus,
     updateProfile, 
     getAssignedReports, 
-    deleteProfilePhoto
+    deleteProfilePhoto,
+    setReadNotifications
 };
+
 export default API;

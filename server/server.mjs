@@ -283,9 +283,12 @@ app.delete('/sessions/current', (req, res) => {
   });
 });
 
+
+
+
 // REPORTS
 
-app.get('/myreports', isLogged, async (req, res) => {
+app.get('/users/myreports', isLogged, async (req, res) => {
   try {
     const userId = req.user.id;
     const reports = await DAO.getReportsByUserId(userId);
@@ -297,7 +300,7 @@ app.get('/myreports', isLogged, async (req, res) => {
   }
 });
 
-app.post('/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
+app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   
   if(images.length === 0) return res.status(400).json(new errors.BadRequestError());
@@ -444,16 +447,37 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
   }
 });
 
-app.get('/reports/:id/chat', isLogged, async (req, res) => {
+//NOTIFICATIONS
+
+app.post('/notifications', validate({ body: schemas.notification }), async (req, res) => {
   try {
-    const reportId = req.params.id;
-    const messages = await DAO.getReportNotificationsByChannel(reportId, 1);
-    return res.status(200).json(messages);
+    const message = req.body;
+    const fullMessage = await DAO.createNotification(message);
+    return res.status(201).json(fullMessage);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json(new errors.ServiceUnvailableError());
+    return res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
+
+app.post('/notifications/read', async (req, res) => {
+  const { reportId } = req.body;
+  const userId = req.user.id;
+  let readNotifications = 0;
+  if (!reportId || !userId) {
+    return res.status(400).json({ error: 'Missing reportId or userId' });
+  }
+  try {
+    readNotifications = await DAO.setNotificationsAsRead(userId, reportId);
+    res.status(201).json({ success: true, readNotifications });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+
+
 
 app.use((err, req, res, next) => {
   if(err instanceof ValidationError){
