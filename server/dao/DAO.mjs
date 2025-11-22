@@ -363,6 +363,19 @@ const getAssignedReports = (userId) => {
     });
 }
 
+const getUnassignedReports = () => {
+  return new Promise((resolve, reject) => {
+    const query = "SELECT R.*, RI.id AS imageId, RI.imageUrl, RC.categoryName FROM report R, report_image RI, report_category RC WHERE R.statusId = 1 AND R.id = RI.reportId AND R.catId = RC.id";
+    db.all(query, [], async (err, rows) => {
+      if (err) return reject(err);
+      
+      const reports = Mapper.mapRowsToReports(rows);
+      resolve(reports);
+    });
+  });
+};
+
+
 
 
 const createNotification = (message) => {
@@ -424,6 +437,6 @@ const setNotificationsAsRead = (userId, reportId) => {
 
 
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, updateUserProfile, getUserById, setNotificationsAsRead};
+const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, getUnassignedReports, updateUserProfile, getUserById, setNotificationsAsRead};
 
 export default DAO

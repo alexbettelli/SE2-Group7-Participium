@@ -205,6 +205,22 @@ const getCategories = async() => {
     }
 };
 
+const getUnassignedReports = async() => {
+    const res = await fetch(SERVER_URL + '/reports/unassigned', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        console.log(reports);
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching unassigned reports');
+    }
+};
+
 const updateProfile = async (formData)=> {
     try{
         const res = await fetch(SERVER_URL + '/api/user/profile', {
@@ -297,5 +313,5 @@ const setReadNotifications = async (reportId) => {
 };
 
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, deleteProfilePhoto, submitNotification, setReadNotifications };
+const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getUnassignedReports, getMyReports, updateProfile, deleteProfilePhoto, submitNotification, setReadNotifications };
 export default API;

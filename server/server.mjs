@@ -300,6 +300,16 @@ app.get('/users/myreports', isLogged, async (req, res) => {
   }
 });
 
+app.get('/reports/unassigned', isLogged, async (req, res) => {
+  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await DAO.getUnassignedReports();
+    return res.status(200).json(reports);
+  }catch(ex){
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
 app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
   
@@ -423,6 +433,17 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
     const reports = await DAO.getAssignedReports(req.user.id);
     return res.status(200).json(reports);
   }catch(ex){
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get("/reports/unassigned", isLogged, async (req, res) => {
+  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await DAO.getUnassignedReports();
+    return res.status(200).json(reports);
+  }catch(err){
+    console.log(err);
     return res.status(500).json(new errors.InternalServerError());
   }
 });

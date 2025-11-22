@@ -46,15 +46,14 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
                     </div>
                 </div>
 
-                {report.photos && report.photos.length > 0 ? (
+                {report.images && report.images.length > 0 ? (
                     <div className="overview-section">
-                        <h4 className="section-label">Attached Photos ({report.photos.length})</h4>
+                        <h4 className="section-label">Attached Photos ({report.images.length})</h4>
                         <div className="photo-gallery">
-                            {report.photos.map((photo, index) => (
-                                <div key={index} className="photo-item">
+                            {report.images.map((img) => (
+                                <div key={img.id} className="photo-item">
                                     <img 
-                                        src={photo.imageUrl || photo} 
-                                        alt={`Report photo ${index + 1}`}
+                                        src={img.imageUrl} 
                                         onError={(e) => {
                                             e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
                                         }}
