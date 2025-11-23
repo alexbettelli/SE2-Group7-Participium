@@ -43,7 +43,7 @@ export default function ReportPreview(props){
             setUpdateStatus(false);
             setSelectedStatusId(null);
         };
-        if (updateStatus) updateReportStatus();
+        if (updateStatus && props.user.role.id === 4) updateReportStatus();
     }, [updateStatus]);
 
     const getStatusClass = (statusName) => {
@@ -62,7 +62,7 @@ export default function ReportPreview(props){
     };
 
     const getImage = () => {
-        if(report && report.images && report.images.length > 0) return report.images[0];
+        if(report && report.images && report.images.length > 0) return report.images[0].imageUrl;
         else return 'http://localhost:3001/images/not_found.jpg';
     }
 
@@ -93,9 +93,12 @@ export default function ReportPreview(props){
                             <span> Go to the chat</span>
                         </span>
                     </Button>
-                    <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
-                        <span><i className="bi bi-pencil-fill"></i> Change status</span>
-                    </Button>
+                    {  
+                        props.user.role.id === 4 && 
+                        <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
+                            <span><i className="bi bi-pencil-fill"></i> Change status</span>
+                        </Button>
+                    }
                 </div>
             </div>
             { expanded && <ReportView onClose={toggleExpanded} report={report} /> }
@@ -139,7 +142,7 @@ function ReportView(props) {
                     <div className="wrapper">
                         <Carousel>
                             { props.report.images.map((image, index) => {
-                                return <Carousel.Item key={index}><img className="d-block" src={image} alt={`Image ${index+1}`} /></Carousel.Item>;
+                                return <Carousel.Item key={index}><img className="d-block" src={image.imageUrl} alt={`Image ${index+1}`} /></Carousel.Item>;
                             }) }
                         </Carousel>
                         <Map lat={report.latitude} lng={report.longitude} />
@@ -149,9 +152,8 @@ function ReportView(props) {
                             <h3>Reported by</h3>
                             { report.anonymous === 1 ? <p>Anonymous</p> : 
                                 <>
-                                    <p><strong>Full name: </strong>{report.user.firstName} {report.user.lastName}</p> 
+                                    <p><strong>User id: </strong>{report.user.id}</p>
                                     <p><strong>Username: </strong>{report.user.username}</p> 
-                                    <p><strong>Email: </strong>{report.user.email}</p>
                                 </>
                             }
                         </div>

@@ -354,39 +354,45 @@ const getUserById = (userId) => {
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT R.*, RS.statusName FROM report R, report_status RS WHERE R.statusId = RS.id AND R.employeeId = ?";
+        const query = `
+            SELECT  
+                r.*, 
+                u.username, 
+                u.id AS userId,
+                e.username AS employeeUsername, 
+                ri.id AS imageId, 
+                ri.imageUrl, 
+                rs.statusName,
+                rc.categoryName,
+				n.id as messageId, 
+               n.senderId, 
+               sender.username as senderUsername, 
+               n.receiverId, 
+               receiver.username as receiverUsername,
+               n.text, 
+               n.sendAt, 
+               n.isRead,
+                (
+                    SELECT SUM(n2.isRead = 0)
+                    FROM notification n2
+                    WHERE n2.reportId = r.id 
+                    AND n2.channelId = 1
+                    AND n2.receiverId = r.employeeId
+                ) AS unreadNotifications
+            FROM report r
+            JOIN user u ON r.userId = u.id
+            JOIN user e ON r.employeeId = e.id
+            JOIN report_image ri ON r.id = ri.reportId
+            JOIN report_status rs ON r.statusId = rs.id
+            JOIN report_category rc ON r.catId = rc.id
+			JOIN notification n ON r.id = n.reportId AND n.channelId=1
+			JOIN user sender ON n.senderId = sender.id
+			JOIN user receiver ON n.receiverId = receiver.id
+            WHERE r.employeeId = ?`;
+
         db.all(query, [userId], (err, rows) => {
             if (err) return reject(false);
-            let reports = rows.map(row => {
-                const report = new Report(row)
-                report.statusName = row.statusName
-                return report;
-            });
-            const reportIds = rows.map(row => row.id);
-            const sql2 = `SELECT * FROM report_image WHERE reportId IN (${reportIds.map(() => '?').join(',')})`;
-            db.all(sql2, reportIds, async (err, rows) => {
-                if (err) {
-                    console.log(err);
-                    return reject(err);
-                }
-                rows.forEach(image => {
-                    const report = reports.find(report => report.id === image.reportId);
-                    if (report) report.images.push(image.imageUrl);
-                });
-
-                for(const report of reports) {
-                    report.user = {};
-                    if(!report.anonymous){
-                        const user = await getUserById(report.userId);
-                        report.user = { "id": user.id, "username": user.username, "email": user.email, "firstName": user.firstName, "lastName": user.lastName };
-                        delete report.userId;
-                    }
-                }
-
-                
-                const final_reports = Mapper.mapRowsToReports(reports);
-                resolve(final_reports);
-            });
+            resolve(Mapper.mapRowsToReports(rows));
         });
     });
 }
