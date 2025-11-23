@@ -208,13 +208,13 @@ const getReportsByUserId = async (userId) =>{
         left join (
             SELECT reportId, sum(isRead = 0) as unreadNotifications
             FROM notification
-            WHERE channelId = 1
+            WHERE channelId = 1 AND receiverId = ?
             GROUP BY reportId
         ) as unread on unread.reportId = r.id 
         where userId = ?`;
 
     return new Promise ((resolve, reject) => {
-        db.all(query, [userId], async (err, rows) => {
+        db.all(query, [userId, userId], async (err, rows) => {
             if (err) {
                 return reject(err);
             }
@@ -387,34 +387,66 @@ const getAssignedReports = (userId) => {
     });
 }
 
-/*const getReportNotificationsByChannel = (reportId, channelId) => {
+
+
+const createNotification = (message) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM notification WHERE reportId = ? AND channelId = ?`;
-        db.all(query, [reportId, channelId], async (err, rows) => {
+        const query = `
+            INSERT INTO notification (reportId, senderId, receiverId, text, channelId)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        db.run(query, [
+            message.reportId,
+            message.senderId || null,
+            message.receiverId,
+            message.text,
+            message.channelId
+        ], function (err) {
             if (err) return reject(err);
-            try {
-                const messages = await Promise.all(rows.map(async row => {
-                    const senderUsername = row.senderId ? await getUsernameByUserId(row.senderId) : "System";
-                    const receiverUsername = await getUsernameByUserId(row.receiverId);
-                    return new Message({
-                        id: row.id,
-                        report: row.reportId,
-                        senderId: row.senderId,
-                        senderUsername,
-                        receiverId: row.receiverId,
-                        receiverUsername,
-                        text: row.text,
-                        channel: row.channelId,
-                        sendAt: row.sendAt
-                    });
-                }));
-                resolve(messages);
-            } catch (e) {
-                reject(e);
-            }
+            const newId = this.lastID;
+            db.get(`
+                SELECT n.*, 
+                       c.name as channelName,
+                       sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
+                       receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
+                FROM notification n
+                LEFT JOIN channel c ON n.channelId = c.id
+                LEFT JOIN user sender ON n.senderId = sender.id
+                LEFT JOIN user receiver ON n.receiverId = receiver.id
+                WHERE n.id = ?
+            `, [newId], (err, row) => {
+                if (err || !row) return reject(err);
+                const msg = Mapper.mapRowToMessage(row);
+                resolve(msg);
+            });
         });
     });
-}; */
+};
+
+
+const getUnreadNotifications = (userId) => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM notification WHERE receiverId = ?`; //!TODO: missing isRead field in the DB
+        db.all(query, [userId], async (err, rows) => {
+            if (err) {
+              return reject(err);
+          }
+          resolve(rows.length);
+        });
+    });
+}
+
+const setNotificationsAsRead = (userId, reportId) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE notification SET isRead = 1 WHERE reportId = ? AND receiverId = ? AND isRead = 0`;
+        db.run(query, [reportId, userId], function (err) {
+            if (err) return reject(err);
+            resolve(this.changes);
+        });
+    });
+}
+
+
 
 const DAO = {
     getUserByUsername, 
@@ -428,10 +460,14 @@ const DAO = {
     getCategoryById, 
     getStatusById, 
     getUsernameByUserId, 
+    getUnreadNotifications, 
+    createNotification, 
+    getUsernameByUserId, 
     getAssignedReports, 
     updateUserProfile, 
     getUserById,
-    getAllReports
+    getAllReports,
+    setNotificationsAsRead
 };
 
 export default DAO
