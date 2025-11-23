@@ -53,6 +53,7 @@ function NavHeader(props){
         {/* Left side: PARTICIPIUM + Welcome message */}
         <div className="navbar-left">
           <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
+            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />
             PARTICIPIUM
           </Navbar.Brand>
           
