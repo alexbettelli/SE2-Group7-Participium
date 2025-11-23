@@ -345,3 +345,9 @@ Defines all the channels able to send messages.
 - **Employee user**
   **username** : maria.bianchi
   **password** : mariabianchi
+
+<br>
+
+- **Thechnical Office staff member**
+  **username** : giulia.rossi
+  **password** : GiuliaRossi
