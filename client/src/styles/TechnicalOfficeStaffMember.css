@@ -29,3 +29,40 @@
 span#fullname {
     color: var(--color-wine-light);
 }
+
+/* --- RESPONSIVE --- */
+
+/* Tablet */
+@media (max-width: 992px) {
+    .office-member-container {
+        padding: 1.5rem;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 768px) {
+    .office-member-container {
+        padding: 0.5rem; 
+        margin: 0; 
+        max-width: 100%; 
+    }
+
+    .reports-table-row {
+        padding: 1rem; 
+        margin: 0 -0.5rem; 
+        width: calc(100% + 1rem); 
+    }
+}
+
+
+@media (max-width: 480px) {
+    .office-member-container {
+        padding: 0.25rem;
+    }
+
+    .reports-table-row {
+        padding: 0.8rem;
+        margin: 0 -0.25rem;
+        width: calc(100% + 0.5rem);
+    }
+}
