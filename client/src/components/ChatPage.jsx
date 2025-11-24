@@ -101,12 +101,12 @@ export default function ChatPage(props){
                                 key={msg.id}
                                 style={{
                                     display: 'flex',
-                                    justifyContent: msg.sender.id === user.id ? 'flex-end' : 'flex-start',
+                                    justifyContent: ((msg.sender && msg.sender.id === user.id) || (!msg.sender && user.role.type !== 'Citizen')) ? 'flex-end' : 'flex-start',
                                     width: '100%'
                                 }}
                             >
                                 <div
-                                    className={`chat-message-wrapper ${msg.sender.id === user.id ? 'chat-message-right' : 'chat-message-left'}`}
+                                    className={`chat-message-wrapper ${(msg.sender && msg.sender.id === user.id) ? 'chat-message-right' : 'chat-message-left'}`}
                                 >
                                     <Message message={msg} user={user} />
                                 </div>
@@ -116,7 +116,7 @@ export default function ChatPage(props){
                         </>
                     )}
                 </div>
-                {user && ( //!TODO change it after OfficerPage is available
+                {user.role.type !== 'Citizen' && ( //!TODO change it after OfficerPage is available
                     <div className="chat-notification-form">
                         <input
                             type="text"

@@ -132,7 +132,7 @@ const mapRowsToReports = (rows) => {
             const message = new Message({
                 id: row.messageId,
                 reportId: row.id,
-                sender: new User(row.senderId, row.senderUsername),
+                sender: row.senderId ? new User(row.senderId, row.receiverId) : null, //for auto-generated messages
                 receiver: new User(row.receiverId, row.receiverUsername),
                 text: row.text,
                 channel: row.channelId || 1,

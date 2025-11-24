@@ -386,7 +386,7 @@ const getAssignedReports = (userId) => {
             JOIN report_status rs ON r.statusId = rs.id
             JOIN report_category rc ON r.catId = rc.id
 			JOIN notification n ON r.id = n.reportId AND n.channelId=1
-			JOIN user sender ON n.senderId = sender.id
+			LEFT JOIN user sender ON n.senderId = sender.id
 			JOIN user receiver ON n.receiverId = receiver.id
             WHERE r.employeeId = ?`;
 
