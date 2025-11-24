@@ -40,6 +40,7 @@ export default function CitizenPage({user}){
     const [activeTab, setActiveTab] = useState('reports');
     const [submittedReport, setSubmittedReport] = useState(null);
     const [reports, setReports] = useState([]);
+    const [approvedReports, setApprovedReports] = useState([]);
     const [reportDetails, setReportDetails] = useState({})
     const getStatusClass = (status) => {
         switch (status) {
@@ -115,6 +116,9 @@ export default function CitizenPage({user}){
         try {
             const reports = await API.getAllReports();            
             setReports(reports);
+            console.log(reports)
+            const approvedReports = reports.filter(report => report.status.id !== 1);
+            setApprovedReports(approvedReports);
         } catch (error) {
             console.error('Error fetching reports:', error);
         }
@@ -268,7 +272,7 @@ export default function CitizenPage({user}){
         });
 
         // Aggiungi marker al gruppo
-        reports.forEach((report) => {
+        approvedReports.forEach((report) => {
         if (report.latitude && report.longitude) {
             const popupContainer = document.createElement("div");    
             ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
@@ -290,7 +294,7 @@ export default function CitizenPage({user}){
             mapInstanceRef.current.removeLayer(clusterGroupRef.current);
         }
         };
-    }, [reports]);
+    }, [approvedReports]);
     
 
     const handleImageChange = (e) => {
@@ -512,10 +516,10 @@ export default function CitizenPage({user}){
                     <div className="tab-content">
                         {activeTab === 'reports' && (
                             <div>
-                                {reports.length === 0 ? (
+                                {approvedReports.length === 0 ? (
                                     <p className="empty-message">THERE ARE NO REPORT IN PROGRESS</p>
                                 ) : (
-                                    reports.map((report) => (
+                                    approvedReports.map((report) => (
                                     <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
                                         <h3>{report.title}</h3>
                                         <p>
