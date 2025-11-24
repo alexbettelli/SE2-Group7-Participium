@@ -4,6 +4,7 @@ import PrOfficerPage from './PrOfficerPage';
 import NotFound from './NotFound';
 import {Navigate} from 'react-router';
 import '../styles/commonStyle.css';
+import TechnicalOfficeStaffMemberPage from './TechnicalOfficeStaffMemberPage';
 
 
 export default function  HomePage (props) {
@@ -16,6 +17,8 @@ export default function  HomePage (props) {
       return <AdminPage user={props.user}/>;
     case 3:
       return <PrOfficerPage user={props.user}/>;
+    case 4:
+      return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} />;
     default:
       return <NotFound />;
   }

@@ -1,6 +1,7 @@
 import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
 import Mapper from '../utils/mapper.mjs'
+import { Report } from '../model/model.mjs';
 
 const db = new sqlite.Database('./database.db', (err) => {
     if(err) throw err;
@@ -364,12 +365,97 @@ const getUserById = (userId) => {
 
 const getAssignedReports = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT R.* FROM office O,office_employee OE, report R WHERE R.officeId = O.id AND OE.officeId = O.id AND OE.userId = ? AND R.statusId = (SELECT id FROM report_status WHERE statusName = 'Assigned') AND R.employeeId = ?";
-        db.all(query, [userId, userId], (err, rows) => {
+        const query = `
+            SELECT  
+                r.*, 
+                u.username, 
+                u.id AS userId,
+                e.username AS employeeUsername, 
+                ri.id AS imageId, 
+                ri.imageUrl, 
+                rs.statusName,
+                rc.categoryName,
+				n.id as messageId, 
+               n.senderId, 
+               sender.username as senderUsername, 
+               n.receiverId, 
+               receiver.username as receiverUsername,
+               n.text, 
+               n.sendAt, 
+               n.isRead,
+                (
+                    SELECT SUM(n2.isRead = 0)
+                    FROM notification n2
+                    WHERE n2.reportId = r.id 
+                    AND n2.channelId = 1
+                    AND n2.receiverId = r.employeeId
+                ) AS unreadNotifications
+            FROM report r
+            JOIN user u ON r.userId = u.id
+            JOIN user e ON r.employeeId = e.id
+            JOIN report_image ri ON r.id = ri.reportId
+            JOIN report_status rs ON r.statusId = rs.id
+            JOIN report_category rc ON r.catId = rc.id
+			JOIN notification n ON r.id = n.reportId AND n.channelId=1
+			JOIN user sender ON n.senderId = sender.id
+			JOIN user receiver ON n.receiverId = receiver.id
+            WHERE r.employeeId = ?`;
+
+        db.all(query, [userId], (err, rows) => {
             if (err) return reject(false);
-            //const reports = rows.map(row => new Report(row));
-            const reports = Mapper.mapRowsToReports(rows);
-            resolve(reports);
+            resolve(Mapper.mapRowsToReports(rows));
+        });
+    });
+}
+
+const updateReportStatus = (userId, reportId, statusId) => {
+    return new Promise((resolve, reject) => {
+        const query1 = "SELECT * FROM report WHERE id = ? AND employeeId = ?";
+        db.get(query1, [reportId, userId], (err, row) => {
+            if (err) return reject(err);
+            if(row === undefined) resolve(false);
+            const query2 = "UPDATE report SET statusId = ? WHERE id = ?";
+            db.run(query2, [statusId, reportId], function(err) {
+                if (err) return reject(err);
+                const query3 = "INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt, isRead) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                let message = "Your report ";
+                switch(+statusId) {
+                    case 1:
+                        message += "is waiting to be approved."
+                        break;
+                    case 2:
+                        message += "has been assigned to the corresponding office."
+                        break;
+                    case 3:
+                        message += "is being resolved";
+                        break;
+                    case 4:
+                        message += "has been suspended.";
+                        break;
+                    case 5:
+                        message += "has been rejected.";
+                        break;
+                    case 6:
+                        message += "has been resolved. Thank you for your contribution!";
+                        break;
+                    default:
+                        console.log(`Unknown statusId: ${statusId}`);
+                }
+                db.run(query3, [reportId, userId, row.userId, message, 1, dayjs().toString(), 0], function(err) {
+
+                });
+                resolve(true);
+            });
+        });
+    });
+}
+
+const getReportStatuses = async () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM report_status`;
+        db.all(query, [], (err, rows) => {
+            if(err) return reject(err);
+            resolve(rows);
         });
     });
 }
@@ -423,7 +509,6 @@ const createNotification = (message) => {
     });
 };
 
-
 const getUnreadNotifications = (userId) => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM notification WHERE receiverId = ?`; //!TODO: missing isRead field in the DB
@@ -448,6 +533,27 @@ const setNotificationsAsRead = (userId, reportId) => {
 
 
 
-const DAO = {getUserByUsername, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, addNewUser, addNewReport, getCategories, getReportsByUserId, getCategoryById, getStatusById, getUsernameByUserId, getUnreadNotifications, createNotification, getUsernameByUserId, getAssignedReports, getUnassignedReports, updateUserProfile, getUserById, setNotificationsAsRead};
+const DAO = {
+    getUserByUsername, 
+    getUnassignedEmployees, 
+    getOffices, 
+    getRoles, 
+    assignEmployeeToOffice, 
+    addNewUser,
+    addNewReport, 
+    getCategories, 
+    getReportsByUserId,
+    getUnassignedReports, 
+    getCategoryById, 
+    getStatusById, 
+    getUsernameByUserId, 
+    getAssignedReports, 
+    updateUserProfile, 
+    getUserById, 
+    updateReportStatus,
+    getReportStatuses,
+    getUnreadNotifications,
+    setNotificationsAsRead
+};
 
-export default DAO
+export default DAO;

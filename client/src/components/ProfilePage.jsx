@@ -9,7 +9,7 @@ export default function ProfilePage({ user, setUser }) {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [telegramUsername, setTelegramUsername] = useState('');
-  const [allowEmailNotification, setAllowEmailNotification] = useState(true);
+  const [allowEmailNotification, setAllowEmailNotification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
