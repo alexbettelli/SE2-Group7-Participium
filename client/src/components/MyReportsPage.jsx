@@ -3,6 +3,7 @@ import API from '../api/API.mjs';
 import ReportOverview from './ReportOverview.jsx';
 import ReportPreview from "./ReportPreview.jsx";
 import '../styles/MyReportsPage.css';
+import ReportsTable from "./ReportsTable.jsx";
 
 export default function MyReportsPage(props){
     const { user, setSelectedReport } = props;
@@ -26,18 +27,17 @@ export default function MyReportsPage(props){
     }, []);
 
     return (
-        <div>
-            <h1 className="page-title">My Reports</h1>
-            <hr className="title-divider" />
-
-            {loading && <p>Loading reports...</p>}
-            {error && <p style={{color:'red'}}>Error: {error}</p>}
-            {reports.length === 0 && !loading && <p>No reports found.</p>}
-            <div className="reports-grid">
-                {reports.map((report) => (
-                    <ReportPreview key={report.id} user={user} report={report} setSelectedReport={setSelectedReport}/>
-                ))}
-            </div>
+        <div className="my-reports-page-container">
+            <h1>Welcome, <span id='fullname'>{props.user.firstName} {props.user.lastName}!</span></h1>
+            <h6>This is the dashboard where you can see and manage your reports.</h6>
+            { loading && <p>Loading reports...</p> }
+            { error && <p style={{color:'red'}}>Error: {error}</p> }
+            { reports.length === 0 && !loading && <p>No reports found.</p> }
+            <ReportsTable
+                user={user}
+                reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) - (a.unreadNotifications || 0))}
+                setSelectedReport={setSelectedReport}
+            />
         </div>
     );
 }

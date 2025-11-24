@@ -25,7 +25,7 @@ function NavHeader(props){
             return;
       const fetchUnreadNotifications = async () => {
         try {
-            const reports = await API.getMyReports();
+            const reports = user.role.id === 1 ? await API.getMyReports() : await API.getAssignedReports();
             const totalUnreadNotifications = reports.reduce((sum, report) => sum + (report.unreadNotifications || 0), 0);
             setUnreadNotifications(totalUnreadNotifications);
         } catch (error) {
@@ -50,7 +50,6 @@ function NavHeader(props){
     <Navbar className="navbar-participium">
       <Container fluid className="navbar-container">
         
-        {/* Left side: PARTICIPIUM + Welcome message */}
         <div className="navbar-left">
           <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
             PARTICIPIUM
@@ -69,7 +68,7 @@ function NavHeader(props){
         
         <div className="navbar-right">
           {user && (
-            <div onClick={() => navigate("/myreports")} >  
+            <div onClick={() => user.role.id === 1 ? navigate("/myreports") : navigate("/")} >  
                 {unreadNotifications > 0 ? (
                   <span className="navbar-notification-wrapper">
                     <i className="bi bi-envelope navbar-profile-icon"></i>

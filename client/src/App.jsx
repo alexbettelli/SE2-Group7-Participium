@@ -50,7 +50,7 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout user={user} handleLogout={handleLogout} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications}/>}>     
-        <Route path="/" index element={loggedIn ? <HomePage user={user}/> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
+        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport}/> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />
         <Route path="/profile" element={user && user.role?.id === 1 ? ( <ProfilePage user={user} setUser={setUser} /> ) : (<Navigate to="/" replace />) } />
         <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/"  />} />

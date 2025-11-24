@@ -46,14 +46,15 @@ function Message({id, reportId, sender, receiver, text, channel, sendAt, isRead}
     this.sendAt = sendAt;
     this.isRead = isRead;
 }
-function Report({id, title, description, latitude, longitude, address, user, category, images, office, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications}){
+function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications}){
     this.id = id;
     this.title = title;
     this.description = description;
     this.latitude = latitude;
     this.longitude = longitude;
     this.address = address;
-    this.user = user;//obj of type User
+    this.userId = userId;
+    this.user = user;
     this.category = category;//obj of type Category
     this.status = status;//obj of type Status
     this.office = office;//obj of type Office
@@ -61,7 +62,7 @@ function Report({id, title, description, latitude, longitude, address, user, cat
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.rejectReason = rejectReason;
-    this.images = images;//array of obj of type Image
+    this.images = images || [];
     this.anonymous = anonymous;
     this.notifications = notifications;//array of obj of type Message
     this.unreadNotifications = unreadNotifications
