@@ -230,6 +230,21 @@ const getUnassignedReports = async() => {
     }
 };
 
+const assignReportToOfficer = async (reportId, categoryId, officeId, officerId) => {
+    const res = await fetch(SERVER_URL + '/reports/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reportId, categoryId, officeId, officerId })
+    }); 
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error assigning report to officer');
+    }
+};
+
 const updateProfile = async (formData)=> {
     try{
         const res = await fetch(SERVER_URL + '/api/user/profile', {
@@ -345,7 +360,9 @@ const API = {
     submitReport, 
     logOut, 
     getCategories, 
-    getUnassignedReports, getMyReports, 
+    getUnassignedReports, 
+    assignReportToOfficer,
+    getMyReports, 
     getReportStatuses,
     updateReportStatus,
     updateProfile, 

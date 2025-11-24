@@ -472,7 +472,22 @@ const getUnassignedReports = () => {
   });
 };
 
-
+const assignReportToOfficer = (reportId, categoryId, officeId, officerId) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE report 
+                       SET employeeId = ?, 
+                           statusId = 2,
+                           officeId = ?, 
+                           catId = ?,
+                           updatedAt = ?
+                       WHERE id = ?`;
+        const now = dayjs().toString();
+        db.run(query, [officerId, officeId, categoryId, now, reportId], function (err) {
+            if (err) return reject(err);
+            resolve();
+        });
+    });
+};
 
 
 const createNotification = (message) => {
@@ -544,6 +559,7 @@ const DAO = {
     getCategories, 
     getReportsByUserId,
     getUnassignedReports, 
+    assignReportToOfficer,
     getCategoryById, 
     getStatusById, 
     getUsernameByUserId, 

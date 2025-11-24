@@ -6,7 +6,7 @@ import Map from './Map.jsx';
 
 
 export default function UnassignedReportsList(props) {
-  const { reports, categories, offices } = props;
+  const { reports, categories, offices, handleAssign } = props;
   const [selectedReport, setSelectedReport] = useState(null);
 
   const onClick = (report) => {
@@ -39,7 +39,8 @@ export default function UnassignedReportsList(props) {
               report={r} 
               categories= {categories || []} 
               offices={offices || []} 
-              onClick={() => onClick(r)} />
+              onClick={() => onClick(r)} 
+              handleAssign={handleAssign}/>
           )}
         </tbody>
       </Table>
@@ -50,16 +51,16 @@ export default function UnassignedReportsList(props) {
 
 
 const ReportRow = (props) => {
-  const { report, categories, offices, onClick } = props;
-
+  const { report, categories, offices, onClick, handleAssign } = props;
   const initialCatId = report?.category?.id ?? '';
+
   const [selectedCategory, setSelectedCategory] = useState(String(initialCatId));
+  const [selectedOfficer, setSelectedOfficer] = useState('');
+  const [officers, setOfficers] = useState([]);
   const [selectedOffice, setSelectedOffice] = useState(() => {
     const first = offices.find(o => String(o.category?.id) === String(initialCatId));
     return first?.id ?? 'no offices';
   });
-  const [selectedOfficer, setSelectedOfficer] = useState('');
-  const [officers, setOfficers] = useState([]);
 
   useEffect(() => {
     const catId = String(selectedCategory);
@@ -107,7 +108,13 @@ const ReportRow = (props) => {
       </td>
 
       <td>
-        <button onClick={(e) => { e.stopPropagation(); console.log('Accept', report.id); }}>Accept</button>
+        <button onClick={(e) => { 
+          e.stopPropagation(); 
+          if(selectedOfficer && selectedOffice && selectedCategory)
+            handleAssign(report.id, selectedCategory, selectedOffice, selectedOfficer);
+          else
+            alert('Please select an officer to assign the report to.'); 
+          }}>Accept</button>
       </td>
       <td>
         <button onClick={(e) => { e.stopPropagation(); console.log('Reject', report.id); }}>Reject</button>
