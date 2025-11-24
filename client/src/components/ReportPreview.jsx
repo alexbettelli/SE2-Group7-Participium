@@ -85,19 +85,22 @@ export default function ReportPreview(props){
                     </div>
                 </div>
                 <div className="card-section actions">
-                    <Button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
-                        <span className="chat-btn-flex">
-                            {report.unreadNotifications > 0 ? (
-                                <span className="notification-count-inline"><i className="bi bi-chat-dots-fill report-chat-icon"></i>{report.unreadNotifications}</span>
-                                ) : <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>}
-                            <span> Go to the chat</span>
-                        </span>
-                    </Button>
+                    <div className="chat-btn-notification-wrapper">
+                        {report.unreadNotifications > 0 && (
+                            <span className="chat-btn-notification-count">{report.unreadNotifications}</span>
+                        )}
+                        <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
+                            <span className="chat-btn-flex">
+                                <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
+                                <span> Go to the chat</span>
+                            </span>
+                        </button>
+                    </div>
                     {  
                         props.user.role.id === 4 && 
-                        <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
+                        <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
                             <span><i className="bi bi-pencil-fill"></i> Change status</span>
-                        </Button>
+                        </button>
                     }
                 </div>
             </div>

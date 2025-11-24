@@ -406,7 +406,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
             const query2 = "UPDATE report SET statusId = ? WHERE id = ?";
             db.run(query2, [statusId, reportId], function(err) {
                 if (err) return reject(err);
-                const query3 = "INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt, isRead) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                const query3 = "INSERT INTO notification (reportId, receiverId, text, channelId) VALUES (?, ?, ?, ?)";
                 let message = "Your report ";
                 switch(+statusId) {
                     case 1:
@@ -430,7 +430,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
                     default:
                         console.log(`Unknown statusId: ${statusId}`);
                 }
-                db.run(query3, [reportId, userId, row.userId, message, 1, dayjs().toString(), 0], function(err) {
+                db.run(query3, [reportId, row.userId, message, 1], function(err) {
 
                 });
                 resolve(true);
@@ -528,7 +528,8 @@ const DAO = {
     updateReportStatus,
     getReportStatuses,
     getUnreadNotifications,
-    setNotificationsAsRead
+    setNotificationsAsRead,
+    createNotification
 };
 
 export default DAO;

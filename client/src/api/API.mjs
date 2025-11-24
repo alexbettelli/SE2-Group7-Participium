@@ -333,7 +333,8 @@ const API = {
     updateProfile, 
     getAssignedReports, 
     deleteProfilePhoto,
-    setReadNotifications
+    setReadNotifications,
+    submitNotification
 };
 
 export default API;

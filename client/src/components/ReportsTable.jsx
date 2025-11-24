@@ -5,7 +5,7 @@ export default function ReportsTable(props) {
     return (
         <>
             { props.reports.length === 0 ?
-                <p>No reports assigned to you.</p> :
+                <p>There are no reports at the moment.</p> :
                 <div className="reports-table">
                     { props.reports.map(report => <ReportRow key={report.id} report={report} user={props.user} setSelectedReport={props.setSelectedReport} /> )}    
                 </div>
