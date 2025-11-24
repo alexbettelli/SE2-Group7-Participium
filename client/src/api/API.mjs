@@ -175,6 +175,20 @@ const submitReport = async(reportData) => {
   }
 };
 
+const getAllReports = async() => {
+    const res = await fetch(SERVER_URL + '/reports', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching reports');
+    }
+}
 const getMyReports = async () => {
     const res = await fetch(SERVER_URL + '/users/myreports', {
         method: 'GET',
@@ -326,7 +340,8 @@ const API = {
     getUserInfo, 
     submitReport, 
     logOut, 
-    getCategories, 
+    getCategories,
+    getAllReports, 
     getMyReports, 
     getReportStatuses,
     updateReportStatus,
