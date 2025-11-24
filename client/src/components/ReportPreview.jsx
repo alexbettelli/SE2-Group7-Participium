@@ -110,7 +110,8 @@ export default function ReportPreview(props){
                 <Modal.Body>
                     <Form.Select aria-label="Default select example" onChange={(e) => setSelectedStatusId(e.target.value)}>
                         { statuses.map(status => {
-                            return <option key={status.id} value={status.id}>{status.statusName}</option>;
+                            if(![1, 2].includes(status.id))
+                                return <option key={status.id} value={status.id} selected={status.id === report.status.id}>{status.statusName}</option>;
                         }) }
                     </Form.Select>
                 </Modal.Body>
