@@ -40,8 +40,8 @@
 }
 
 .status-badge.status-completed {
-    background: var(--color-green); /* Verde */
-    box-shadow: 0 2px 4px rgba(26, 188, 156, 0.4);
+    background: #2cc455; /* Verde */
+    box-shadow: 0 2px 4px rgba(26, 188, 96, 0.4);
 }
 
 .status-badge.status-pending {
@@ -111,11 +111,9 @@ div.report-view-header h2{
 }
 
 button.close-button{
-    position: absolute;
-    top: 0;
-    right: 0;
     width: 40px;
     height: 40px;
+    margin-right: 1.1rem;
     border: 0;
     background-color: var(--color-wine-light);
     color: #fff;
@@ -173,7 +171,6 @@ div.field p {
 
 
 
-/* Custom chat button */
 .btn-chat {
     background: var(--color-green);
     color: var(--color-cream);
@@ -257,5 +254,65 @@ div.field p {
 
 .btn-change-status:active {
     background: var(--color-wine-light);
+    transform: scale(0.98);
+}
+
+
+.btn-close-modal {
+    background: var(--color-wine-light);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.4rem 1.5rem;
+    box-shadow: 0 4px 16px rgba(153, 97, 83, 0.18);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    position: relative;
+    outline: none;
+}
+
+.btn-close-modal:hover {
+    background: var(--color-wine-light);
+    box-shadow: 0 8px 24px rgba(112,38,50,0.15);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.btn-close-modal:active {
+    background: var(--color-wine-light);
+    transform: scale(0.98);
+}
+
+
+.btn-save-modal {
+    background: var(--color-green);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.4rem 1.5rem;
+    box-shadow: 0 4px 16px rgba(83, 153, 135, 0.18);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    position: relative;
+    outline: none;
+}
+
+.btn-save-modal:hover {
+    background: var(--color-green);
+    box-shadow: 0 8px 24px rgba(83, 153, 135, 0.28);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.btn-save-modal:active {
+    background: var(--color-green);
     transform: scale(0.98);
 }

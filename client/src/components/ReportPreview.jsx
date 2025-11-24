@@ -35,11 +35,16 @@ export default function ReportPreview(props){
 
     useEffect(() => {
         const updateReportStatus = async () => {
-            API.updateReportStatus(report.id, selectedStatusId).then((data) => {
-                console.log('Report status updated:', data);
-            }).catch((error) => {
+            try {
+                const result = await API.updateReportStatus(report.id, selectedStatusId);
+                console.log('Report status updated:', result);
+                if (result && result.notification) {
+                    report.notifications = [...report.notifications, result.notification];
+                    setSelectedReport({ ...report });
+                }
+            } catch (error) {
                 console.error('Error updating report status:', error);
-            });
+            }
             setUpdateStatus(false);
             setSelectedStatusId(null);
         };
@@ -48,7 +53,7 @@ export default function ReportPreview(props){
 
     const getStatusClass = (statusName) => {
         switch (statusName) {
-            case 'Completed':
+            case 'Resolved':
                 return 'status-completed'; // Verde
             case 'Pending Approval':
                 return 'status-pending'; // Giallo/Arancione
@@ -119,12 +124,12 @@ export default function ReportPreview(props){
                     </Form.Select>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
+                    <button className="btn-close-modal" type="button" onClick={handleClose}>
                         Close
-                    </Button>
-                    <Button variant="primary" onClick={() => {handleClose(); setUpdateStatus(true); }}>
+                    </button>
+                    <button className="btn-save-modal" type="button" onClick={() => {handleClose(); setUpdateStatus(true); }}>
                         Save Changes
-                    </Button>
+                    </button>
             </Modal.Footer>
         </Modal>
         </>
