@@ -1,3 +1,4 @@
+@import './commonStyle.css';
 
 /* Profile icon/image size for navbar */
 .navbar-profile-icon {
@@ -13,8 +14,8 @@
     cursor: pointer; 
     vertical-align: middle;
 }
-/* NavBar Styles for Participium - City of Turin */
 
+/* NavBar Styles for Participium - City of Turin */
 .navbar-participium {
     background: linear-gradient(135deg, var(--color-wine-dark) 0%, var(--color-wine-light) 100%);
     color: var(--color-cream);
@@ -49,50 +50,6 @@
     margin: 0 auto;
     padding: 1rem 2rem;
     min-height: 70px;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    flex-wrap: nowrap !important;
-}
-
-/* Container class for cleaner CSS */
-.navbar-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: nowrap;
-}
-
-/* Left side container */
-.navbar-left {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    flex-shrink: 0;
-}
-
-/* Right side container */
-.navbar-right {
-    display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 1rem;
-}
-
-/* Force single line layout */
-.navbar-participium {
-    overflow-x: auto;
-    overflow-y: visible;
-}
-
-.navbar-participium .container-fluid > * {
-    flex-shrink: 0 !important;
-}
-
-/* Brand Section - prevent shrinking */
-.navbar-brand-participium {
-    flex-shrink: 0 !important;
-    min-width: fit-content !important;
 }
 
 /* Brand Styles */
@@ -105,7 +62,8 @@
     position: relative;
     text-shadow: 2px 2px 4px rgba(8, 7, 5, 0.3);
     transition: all 0.3s ease;
-    cursor: pointer; 
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .navbar-brand-participium:hover {
@@ -132,9 +90,16 @@
     }
 }
 
+/* Navbar Nav Custom */
+.navbar-nav-custom {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 /* Home Button */
 .nav-home-btn {
-    background: none;
+    background: rgba(255, 255, 250, 0.05);
     border: none;
     color: var(--color-cream);
     font-size: 1rem;
@@ -145,9 +110,8 @@
     transition: all 0.3s ease;
     text-decoration: none;
     cursor: pointer;
-    background: rgba(255, 255, 250, 0.05);
     backdrop-filter: blur(10px);
-    margin-left: 1rem;
+    white-space: nowrap;
 }
 
 .nav-home-btn:hover {
@@ -163,53 +127,6 @@
     box-shadow: 0 0 0 2px rgba(255, 255, 250, 0.3);
 }
 
-
-/* Navigation Links */
-.navbar-nav .nav-link {
-    color: var(--color-cream) !important;
-    font-weight: 500;
-    font-size: 1rem;
-    letter-spacing: 0.5px;
-    margin: 0 1rem;
-    padding: 0.8rem 1.5rem !important;
-    border-radius: 25px;
-    transition: all 0.3s ease;
-    position: relative;
-    background: rgba(255, 255, 250, 0.05);
-    backdrop-filter: blur(10px);
-    cursor: pointer; 
-}
-
-.navbar-nav .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--color-cream), var(--color-green));
-    transition: width 0.3s ease;
-}
-
-.navbar-nav .nav-link:hover {
-    color: var(--color-cream) !important;
-    background: rgba(255, 255, 250, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 255, 250, 0.2);
-}
-
-.navbar-nav .nav-link:hover::after {
-    width: 80%;
-}
-
-/* Active nav link */
-.navbar-nav .nav-link.active {
-    background: rgba(255, 255, 250, 0.2);
-    color: var(--color-cream) !important;
-    box-shadow: 0 2px 8px rgba(255, 255, 250, 0.3);
-}
-
 /* User info section */
 .navbar-user {
     color: var(--color-cream);
@@ -220,13 +137,7 @@
     backdrop-filter: blur(10px);
     font-weight: 600;
     letter-spacing: 0.3px;
-    flex-shrink: 0;
     white-space: nowrap;
-}
-
-.navbar-user .user-name {
-    font-weight: 700;
-    margin-right: 0.5rem;
 }
 
 /* Username bold styling */
@@ -234,103 +145,104 @@
     font-weight: bold;
 }
 
-
-/* Logout button */
-.btn-logout {
-    background: rgba(255, 255, 250, 0.1);
-    border: 1px solid rgba(255, 255, 250, 0.3);
-    color: var(--color-cream);
-    font-size: 1rem;
-    padding: 0.8rem 1.5rem;
-    border-radius: 25px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    cursor: pointer; 
-}
-
-.btn-logout:hover {
-    background: rgba(255, 255, 250, 0.2);
-    color: var(--color-cream);
-    border-color: rgba(255, 255, 250, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 255, 250, 0.2);
-}
-
-.btn-logout:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 250, 0.3);
+/* Icon wrapper */
+.navbar-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 
 /* Notification Badge Styles */
 .navbar-notification-wrapper {
-  position: relative;
-  margin-right: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .navbar-notification-count {
-  position: absolute;
-  top: -8px;
-  right: -13px;
-  background: var(--color-wine-dark);
-  color: #f39c12;
-  font-size: 0.85rem;
-  font-weight: 700;
-  border-radius: 50%;
-  padding: 2px 7px;
-  min-width: 26px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(112,38,50,0.15);
-  z-index: 2;
+    position: absolute;
+    top: -8px;
+    right: -13px;
+    background: var(--color-wine-dark);
+    color: #f39c12;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 50%;
+    padding: 2px 7px;
+    min-width: 26px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(112,38,50,0.15);
+    z-index: 2;
 }
 
-/* Responsive Design */
-@media (max-width: 991px) {
-    .navbar-participium .container-fluid {
-        padding: 0.8rem 1rem;
-    }
-    
-    .navbar-brand-participium {
-        font-size: 1.5rem !important;
-        letter-spacing: 1px !important;
-    }
+/* Custom Hamburger Toggle */
+.navbar-toggler-custom {
+    border: 2px solid rgba(255, 255, 250, 0.3);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 250, 0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-@media (min-width: 992px) {
-    .navbar-collapse {
-        flex-grow: 0 !important;
-    }
-    
-    .navbar-nav {
-        flex-direction: row !important;
-        align-items: center !important;
-    }
-    
-    .navbar-user {
-        white-space: nowrap;
-        margin-left: 1rem;
-        margin-right: 0.5rem;
-    }
-    
-    .btn-logout {
-        margin-left: 0.5rem;
-        margin-right: 0;
-    }
+.navbar-toggler-custom:hover {
+    background: rgba(255, 255, 250, 0.15);
+    border-color: rgba(255, 255, 250, 0.5);
 }
 
-/* Force single line layout */
-.navbar-nav {
-    align-items: center;
+.navbar-toggler-custom:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 250, 0.2);
+    outline: none;
 }
 
-.navbar-nav .d-flex {
-    flex-direction: row !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
+.navbar-toggler-icon-custom {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background-color: var(--color-cream);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.navbar-toggler-icon-custom::before,
+.navbar-toggler-icon-custom::after {
+    content: '';
+    display: block;
+    width: 25px;
+    height: 2px;
+    background-color: var(--color-cream);
+    position: absolute;
+    transition: all 0.3s ease;
+}
+
+.navbar-toggler-icon-custom::before {
+    top: -8px;
+}
+
+.navbar-toggler-icon-custom::after {
+    bottom: -8px;
+}
+
+/* Hamburger animation quando aperto */
+.navbar-participium[aria-expanded="true"] .navbar-toggler-icon-custom {
+    background-color: transparent;
+}
+
+.navbar-participium[aria-expanded="true"] .navbar-toggler-icon-custom::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.navbar-participium[aria-expanded="true"] .navbar-toggler-icon-custom::after {
+    transform: rotate(-45deg);
+    bottom: 0;
+}
+
+/* Collapse animation */
+.navbar-collapse {
+    transition: all 0.3s ease-in-out;
 }
 
 /* Elegant entrance animation */
@@ -349,8 +261,98 @@
     animation: navSlideDown 0.6s ease-out;
 }
 
-/* Sticky navbar enhancement */
-.navbar-participium.sticky-top {
-    backdrop-filter: blur(25px);
-    background: linear-gradient(135deg, rgba(112, 38, 50, 0.95) 0%, rgba(145, 47, 64, 0.95) 100%);
+/* --- RESPONSIVE --- */
+
+/* Desktop (min 992px) */
+@media (min-width: 992px) {
+    .navbar-nav-custom {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .navbar-toggler-custom {
+        display: none;
+    }
+}
+
+/* Tablet (768px - 991px) */
+@media (max-width: 991px) {
+    .navbar-participium .container-fluid {
+        padding: 1rem;
+    }
+    
+    .navbar-brand-participium {
+        font-size: 1.6rem !important;
+        letter-spacing: 1.5px !important;
+    }
+    
+    .navbar-nav-custom {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 250, 0.2);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.8rem;
+    }
+    
+    .navbar-user {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .navbar-icon-wrapper {
+        justify-content: center;
+        padding: 0.5rem;
+    }
+    
+    .nav-home-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Mobile (max 768px) */
+@media (max-width: 768px) {
+    .navbar-participium .container-fluid {
+        padding: 0.8rem;
+    }
+    
+    .navbar-brand-participium {
+        font-size: 1.4rem !important;
+        letter-spacing: 1px !important;
+    }
+    
+    .navbar-profile-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 2rem;
+    }
+    
+    .navbar-notification-count {
+        font-size: 0.75rem;
+        padding: 1px 5px;
+        min-width: 22px;
+    }
+}
+
+/* Mobile Small (max 480px) */
+@media (max-width: 480px) {
+    .navbar-participium .container-fluid {
+        padding: 0.6rem;
+    }
+    
+    .navbar-brand-participium {
+        font-size: 1.2rem !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .navbar-user {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .nav-home-btn {
+        font-size: 0.9rem;
+        padding: 0.7rem 1.2rem;
+    }
 }
