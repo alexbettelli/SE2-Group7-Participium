@@ -39,9 +39,20 @@ const getUnassignedEmployees = () => {
     });
 }
 
+
+
 const getOffices = () => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM office`;
+        const query = `SELECT O.*,
+                 RC.id AS catId,
+                 RC.categoryName,
+                 OE.userId AS employeeId,
+                 U.username, U.firstName, U.lastName, U.email
+          FROM office O
+          LEFT JOIN office_employee OE ON O.id = OE.officeId
+          LEFT JOIN user U ON OE.userId = U.id
+          LEFT JOIN report_category RC ON O.catId = RC.id
+        `;
         db.all(query, [], (err, rows) => {
             if (err) {
                 return reject(err);

@@ -99,12 +99,14 @@ const getOffices = async() => {
     });
     if (res.ok) {
         const offices = await res.json();
+        console.log(offices);
         return offices;
     } else {
         const errMessage = await res.json();
         throw new Error(errMessage.error || 'Error fetching offices');
     }
 };
+
 
 const getRoles = async() => {
     const res = await fetch(SERVER_URL + '/roles', {

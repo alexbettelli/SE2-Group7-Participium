@@ -200,6 +200,7 @@ app.get('/employees/unassigned', isLogged,async (req, res) => {
   }
 });
 
+
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
@@ -218,7 +219,7 @@ app.post('/employees/assign', isLogged, async (req, res) => {
 
 app.get('/offices', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2 && req.user.role.id !== 3) {  // typeId 2 = admin, typeId 3 = PR officer
       return res.status(403).json(new errors.ForbiddenError());
     }
 

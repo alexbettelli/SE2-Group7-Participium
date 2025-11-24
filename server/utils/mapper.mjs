@@ -43,7 +43,7 @@ const mapRowsToOffices = (rows) => {
         }
 
         if (row.employeeId) {
-            acc[row.id].employees.push(new User(row.employeeId, row.username));
+            acc[row.id].employees.push(new User(row.employeeId, row.username, row.email, row.firstName, row.lastName));
         }
 
         return acc;
