@@ -462,7 +462,7 @@ const getReportStatuses = async () => {
 
 const getUnassignedReports = () => {
   return new Promise((resolve, reject) => {
-    const query = "SELECT R.*, RI.id AS imageId, RI.imageUrl, RC.categoryName FROM report R, report_image RI, report_category RC WHERE R.statusId = 1 AND R.id = RI.reportId AND R.catId = RC.id";
+    const query = "SELECT R.*, RI.id AS imageId, RI.imageUrl, RC.categoryName, U.username FROM report R, report_image RI, report_category RC, user U WHERE R.statusId = 1 AND R.id = RI.reportId AND R.catId = RC.id AND R.userId = U.id";
     db.all(query, [], async (err, rows) => {
       if (err) return reject(err);
       
@@ -489,6 +489,20 @@ const assignReportToOfficer = (reportId, categoryId, officeId, officerId) => {
     });
 };
 
+const rejectReport = (reportId, reason) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE report 
+                       SET statusId = 5,
+                            rejectReason = ?,
+                            updatedAt = ?
+                        WHERE id = ?`;
+        const now = dayjs().toString();
+        db.run(query, [reason, now, reportId], function (err) {
+            if (err) return reject(err);
+            resolve();
+        });
+    });
+};
 
 const createNotification = (message) => {
     return new Promise((resolve, reject) => {
@@ -560,6 +574,7 @@ const DAO = {
     getReportsByUserId,
     getUnassignedReports, 
     assignReportToOfficer,
+    rejectReport,
     getCategoryById, 
     getStatusById, 
     getUsernameByUserId, 
@@ -568,6 +583,7 @@ const DAO = {
     getUserById, 
     updateReportStatus,
     getReportStatuses,
+    createNotification,
     getUnreadNotifications,
     setNotificationsAsRead
 };

@@ -230,12 +230,12 @@ const getUnassignedReports = async() => {
     }
 };
 
-const assignReportToOfficer = async (reportId, categoryId, officeId, officerId) => {
+const assignReportToOfficer = async (reportId, userId, categoryId, officeId, officerId) => {
     const res = await fetch(SERVER_URL + '/reports/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ reportId, categoryId, officeId, officerId })
+        body: JSON.stringify({ reportId, userId, categoryId, officeId, officerId })
     }); 
     if (res.ok) {
         return;
@@ -244,6 +244,21 @@ const assignReportToOfficer = async (reportId, categoryId, officeId, officerId) 
         throw new Error(errMessage.error || 'Error assigning report to officer');
     }
 };
+
+const rejectReport = async (reportId, userId, reason) => {
+    const res = await fetch(SERVER_URL + '/reports/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({reportId, userId, reason})
+    });
+    if(res.ok){
+      return;
+    } else {
+      const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error rejecting report');
+    }
+}
 
 const updateProfile = async (formData)=> {
     try{
@@ -362,6 +377,7 @@ const API = {
     getCategories, 
     getUnassignedReports, 
     assignReportToOfficer,
+    rejectReport,
     getMyReports, 
     getReportStatuses,
     updateReportStatus,

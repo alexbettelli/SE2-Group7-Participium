@@ -40,16 +40,27 @@ export default function PrOfficerPage({user}) {
     fetchReports();
   }, []);
 
-  const assignReportToOfficer = async (reportId, categoryId, officeId, officerId) => {
+  const assignReportToOfficer = async (reportId, userId, categoryId, officeId, officerId) => {
     try {
-      await API.assignReportToOfficer(reportId, categoryId, officeId, officerId);
-      // Refresh the reports list after assignment
+      await API.assignReportToOfficer(reportId, userId, categoryId, officeId, officerId);
+
       const reports = await API.getUnassignedReports();
       setReports(reports);
     } catch (error) {
       console.error('Error assigning report to officer:', error);
     }
   };
+
+  const rejectReport = async (reportId, userId, reason) => {
+    try {
+      await API.rejectReport(reportId, userId, reason);
+      const reports = await API.getUnassignedReports();
+      setReports(reports);
+    } catch (error) {
+      console.error('Error rejecting report:', error);
+    }
+  };
+
 
   return (
     <>
@@ -58,7 +69,12 @@ export default function PrOfficerPage({user}) {
         <p className="admin-page-description">Welcome {user.username}! Here you can accept, reject and assign reports.</p>
         <hr className="admin-page-divider" />
         <section className="admin-page-section">
-          <UnassignedReportsList reports={reports} categories={categories} offices={offices}  handleAssign = {assignReportToOfficer}/>
+          <UnassignedReportsList 
+            reports={reports} 
+            categories={categories} 
+            offices={offices}  
+            handleAssign = {assignReportToOfficer}
+            handleReject = {rejectReport}/>
         </section>
       </div>
     </>

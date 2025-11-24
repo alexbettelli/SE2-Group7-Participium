@@ -6,8 +6,9 @@ import Map from './Map.jsx';
 
 
 export default function UnassignedReportsList(props) {
-  const { reports, categories, offices, handleAssign } = props;
+  const { reports, categories, offices, handleAssign, handleReject } = props;
   const [selectedReport, setSelectedReport] = useState(null);
+  const [reportToReject, setReportToReject] = useState(null);
 
   const onClick = (report) => {
     setSelectedReport(report);
@@ -15,6 +16,10 @@ export default function UnassignedReportsList(props) {
 
   const closeReportView = () => {
     setSelectedReport(null);
+  };
+
+  const closeRejectModal = () => {
+    setReportToReject(null);
   };
 
   return (
@@ -40,18 +45,21 @@ export default function UnassignedReportsList(props) {
               categories= {categories || []} 
               offices={offices || []} 
               onClick={() => onClick(r)} 
-              handleAssign={handleAssign}/>
+              handleAssign={handleAssign}
+              setReportToReject={setReportToReject} />
           )}
         </tbody>
       </Table>
-      {selectedReport && <ReportView report={selectedReport} onClose={closeReportView} />}
+      {selectedReport && <ReportView report={selectedReport} onClose={closeReportView}  />}
+      {reportToReject && <RejectReportModal report={reportToReject} onClose={closeRejectModal} handleReject={handleReject}/>}
+      
     </div>
   );
 };
 
 
 const ReportRow = (props) => {
-  const { report, categories, offices, onClick, handleAssign } = props;
+  const { report, categories, offices, onClick, handleAssign, setReportToReject } = props;
   const initialCatId = report?.category?.id ?? '';
 
   const [selectedCategory, setSelectedCategory] = useState(String(initialCatId));
@@ -108,16 +116,19 @@ const ReportRow = (props) => {
       </td>
 
       <td>
-        <button onClick={(e) => { 
+        <Button onClick={(e) => { 
           e.stopPropagation(); 
           if(selectedOfficer && selectedOffice && selectedCategory)
-            handleAssign(report.id, selectedCategory, selectedOffice, selectedOfficer);
+            handleAssign(report.id, report.user.id, selectedCategory, selectedOffice, selectedOfficer);
           else
             alert('Please select an officer to assign the report to.'); 
-          }}>Accept</button>
+          }}>Accept</Button>
       </td>
       <td>
-        <button onClick={(e) => { e.stopPropagation(); console.log('Reject', report.id); }}>Reject</button>
+        <Button onClick={(e) => { 
+          e.stopPropagation();
+          setReportToReject(report);
+        }}>Reject</Button>
       </td>
     </tr>
   );
@@ -147,20 +158,18 @@ function ReportView(props) {
                     <div className="fields">
                         <div className="field user-field">
                             <h3>Reported by</h3>
-                            <p><strong>User id: </strong>{report.user.id}</p>
                             <p><strong>Username: </strong>{report.user.username}</p> 
                         </div>
                         <div className="field">
                             <h3>Reported on</h3>
                             <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
-                            <p><strong>Last update: </strong>{dayjs(report.updatedAt).format('DD/MM/YYYY HH:mm')}</p>
                         </div>
                         <div className="field">
                             <h3>Address</h3>
                             <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
                         </div>
                         <div className="field">
-                            <h3>Report details</h3>
+                            <h3>Original Category</h3>
                             <p><strong>Report ID: </strong>{report.id}</p>
                             <p><strong>Category: </strong>{report.category.categoryName}</p>
                         </div>
@@ -173,4 +182,48 @@ function ReportView(props) {
             </div>
         </>
     )
+}
+
+function RejectReportModal(props) {
+    const { report, onClose, handleReject } = props;
+    const [reason, setReason] = useState('');
+
+    const handleRejectClick = async () => {
+        await handleReject(report.id, report.user.id, reason);
+        onClose();
+    };
+
+    return (
+        <>
+            <div className="rp-backdrop" onClick={onClose}></div>
+            <div
+                className="reject-modal"
+                style={{
+                    width: '400px',
+                    background: '#fff',
+                    borderRadius: '10px',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.15)',
+                    padding: '2rem',
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 1000
+                }}
+            >
+                <h3>Reason for rejection:</h3>
+                <textarea
+                    value={reason}
+                    onChange={e => setReason(e.target.value)}
+                    rows={4}
+                    style={{ width: '100%', marginBottom: '1.5rem', resize: 'vertical', borderRadius: '6px', border: '1px solid #ccc', padding: '0.5rem' }}
+                    placeholder="Write the reason here..."
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button variant="danger" onClick={handleRejectClick} disabled={!reason.trim()}>Reject</Button>
+                </div>
+            </div>
+        </>
+    );
 }
