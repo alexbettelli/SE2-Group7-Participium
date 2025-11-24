@@ -150,12 +150,8 @@ function ReportView(props) {
                     <div className="fields">
                         <div className="field user-field">
                             <h3>Reported by</h3>
-                            { report.anonymous === 1 ? <p>Anonymous</p> : 
-                                <>
-                                    <p><strong>User id: </strong>{report.user.id}</p>
-                                    <p><strong>Username: </strong>{report.user.username}</p> 
-                                </>
-                            }
+                            <p><strong>User id: </strong>{report.user.id}</p>
+                            <p><strong>Username: </strong>{report.user.username}</p> 
                         </div>
                         <div className="field">
                             <h3>Reported on</h3>
