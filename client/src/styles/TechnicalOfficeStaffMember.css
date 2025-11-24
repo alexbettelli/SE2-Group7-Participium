@@ -1,0 +1,31 @@
+@import './commonStyle.css';
+
+.office-member-container {
+    max-width: 1400px;
+    margin: 0 auto 2rem;
+    padding: 2rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.reports-table {
+    margin-top: 50px;
+}
+
+.reports-table-row {
+    border-bottom: 1px solid #ccc;
+    padding: 1.5rem;
+    cursor: pointer;
+}
+
+.reports-table-row:first-of-type {
+    border-top: 1px solid #ccc;
+}
+
+.reports-table-row:hover{
+    background-color: #f2f1f1;
+}
+
+span#fullname {
+    color: var(--color-wine-light);
+}

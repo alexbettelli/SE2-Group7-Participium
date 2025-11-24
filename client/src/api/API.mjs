@@ -190,6 +190,13 @@ const getMyReports = async () => {
     }
 };
 
+const getAssignedReports = async () => {
+    const res = await fetch(`${SERVER_URL}/reports/assigned`, { credentials: 'include' });
+    const json = await res.json();
+    if (res.ok) return json;
+    else return { error: json.error || 'Error fetching assigned reports' };
+};
+
 const getCategories = async() => {
     const res = await fetch(SERVER_URL + '/categories', {
         method: 'GET',
@@ -224,6 +231,18 @@ const updateProfile = async (formData)=> {
     }
 }
 
+const getReportStatuses = async () => {
+    const res = await fetch(`${SERVER_URL}/reports/statuses`, { credentials: "include" });
+    if(res.ok) return await res.json();
+    else throw new Error('Error fetching report statuses');
+};
+
+const updateReportStatus = async (reportId, statusId) => {
+    const res = await fetch(`${SERVER_URL}/reports/${reportId}?statusId=${statusId}`, { method: 'PATCH', credentials: 'include' });
+    if (res.ok) return await res.json();
+    else throw new Error('Error updating report status');
+};
+
 const deleteProfilePhoto = async () => {
   const response = await fetch(`${SERVER_URL}/api/user/profile/photo`, {
     method: 'DELETE',
@@ -257,7 +276,6 @@ export const getReportChatMessages = async (reportId) => {
         throw new Error(errDetails.message || 'Error fetching report messages');
     }
 };
-
 */
 
 const submitNotification = async (notificationData) => {
@@ -297,5 +315,25 @@ const setReadNotifications = async (reportId) => {
 };
 
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories, getMyReports, updateProfile, deleteProfilePhoto, submitNotification, setReadNotifications };
+const API = {
+    login, 
+    registrate, 
+    createNewEmployee, 
+    getUnassignedEmployees, 
+    getOffices, 
+    getRoles,
+    assignEmployeeToOffice, 
+    getUserInfo, 
+    submitReport, 
+    logOut, 
+    getCategories, 
+    getMyReports, 
+    getReportStatuses,
+    updateReportStatus,
+    updateProfile, 
+    getAssignedReports, 
+    deleteProfilePhoto,
+    setReadNotifications
+};
+
 export default API;
