@@ -7,7 +7,6 @@ export default function PrOfficerPage({user}) {
   const [reports, setReports] = useState([]);
   const [categories, setCategories] = useState([]);
   const [offices, setOffices] = useState([]);
-  const [selectedReport, setSelectedReport] = useState(null);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -41,7 +40,6 @@ export default function PrOfficerPage({user}) {
     fetchReports();
   }, []);
 
-  const closeDetails = () => setSelectedReport(null);
 
   return (
     <>
@@ -50,7 +48,7 @@ export default function PrOfficerPage({user}) {
         <p className="admin-page-description">Welcome {user.username}! Here you can accept, reject and assign reports.</p>
         <hr className="admin-page-divider" />
         <section className="admin-page-section">
-          <UnassignedReportsList reports={reports} categories={categories} offices={offices}  onClick={setSelectedReport} />
+          <UnassignedReportsList reports={reports} categories={categories} offices={offices}  />
         </section>
       </div>
     </>
