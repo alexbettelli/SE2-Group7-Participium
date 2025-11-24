@@ -23,8 +23,12 @@ export default function TechnicalOfficeStaffMemberPage(props) {
     return (
         <div className="office-member-container">
             <h1>Welcome, <span id='fullname'>{props.user.firstName} {props.user.lastName}!</span></h1>
-            <h6>This is your dashboard where you can manage your assigned reports.</h6>
-            <ReportsTable reports={reports} user={props.user} setSelectedReport={props.setSelectedReport} />
+            <h6>This is the dashboard where you can manage your assigned reports.</h6>
+            <ReportsTable
+                        user={props.user}
+                        reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) - (a.unreadNotifications || 0))}
+                        setSelectedReport={props.setSelectedReport}
+                    />
         </div>
     )
 }

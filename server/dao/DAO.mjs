@@ -155,6 +155,30 @@ const getStatusById = (statusId) => {
 }
 
 // REPORT
+const getAllReports = () => {
+    const query = `
+        select r.*,
+               u.username, 
+               rc.categoryName,
+               i.id as imageId, 
+               i.imageUrl,
+               s.statusName
+        from report r
+        join user u on r.userId = u.id 
+        join report_category rc on r.catId = rc.id
+        join report_image i on r.id = i.reportId
+        join report_status s on r.statusId = s.id
+    `;
+    return new Promise((resolve, reject) => {
+        db.all(query, [], (err, rows) => {
+            if (err) return reject(err);
+            else {
+                const reports = Mapper.mapRowsToReports(rows);
+                resolve(reports);
+            }    
+      });
+    });
+}
 const getReportsByUserId = async (userId) =>{
     const query = `
         select r.*,
@@ -385,8 +409,8 @@ const getAssignedReports = (userId) => {
             JOIN report_image ri ON r.id = ri.reportId
             JOIN report_status rs ON r.statusId = rs.id
             JOIN report_category rc ON r.catId = rc.id
-			JOIN notification n ON r.id = n.reportId AND n.channelId=1
-			JOIN user sender ON n.senderId = sender.id
+			RIGHT JOIN notification n ON r.id = n.reportId AND n.channelId=1
+			LEFT JOIN user sender ON n.senderId = sender.id
 			JOIN user receiver ON n.receiverId = receiver.id
             WHERE r.employeeId = ?`;
 
@@ -406,7 +430,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
             const query2 = "UPDATE report SET statusId = ? WHERE id = ?";
             db.run(query2, [statusId, reportId], function(err) {
                 if (err) return reject(err);
-                const query3 = "INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt, isRead) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                const query3 = "INSERT INTO notification (reportId, receiverId, text, channelId) VALUES (?, ?, ?, ?)";
                 let message = "Your report ";
                 switch(+statusId) {
                     case 1:
@@ -430,10 +454,25 @@ const updateReportStatus = (userId, reportId, statusId) => {
                     default:
                         console.log(`Unknown statusId: ${statusId}`);
                 }
-                db.run(query3, [reportId, userId, row.userId, message, 1, dayjs().toString(), 0], function(err) {
-
+                db.run(query3, [reportId, row.userId, message, 1], function(err) {
+                    if (err) return reject(err);
+                    const newId = this.lastID;
+                    db.get(`
+                        SELECT n.*, 
+                            c.name as channelName,
+                            sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
+                            receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
+                        FROM notification n
+                        LEFT JOIN channel c ON n.channelId = c.id
+                        LEFT JOIN user sender ON n.senderId = sender.id
+                        LEFT JOIN user receiver ON n.receiverId = receiver.id
+                        WHERE n.id = ?
+                    `, [newId], (err, row) => {
+                        if (err || !row) return reject(err);
+                        const msg = Mapper.mapRowToMessage(row);
+                        resolve(msg);
+                    });
                 });
-                resolve(true);
             });
         });
     });
@@ -518,6 +557,7 @@ const DAO = {
     addNewUser,
     addNewReport, 
     getCategories, 
+    getAllReports,
     getReportsByUserId, 
     getCategoryById, 
     getStatusById, 
@@ -528,7 +568,8 @@ const DAO = {
     updateReportStatus,
     getReportStatuses,
     getUnreadNotifications,
-    setNotificationsAsRead
+    setNotificationsAsRead,
+    createNotification
 };
 
 export default DAO;
