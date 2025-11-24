@@ -155,6 +155,30 @@ const getStatusById = (statusId) => {
 }
 
 // REPORT
+const getAllReports = () => {
+    const query = `
+        select r.*,
+               u.username, 
+               rc.categoryName,
+               i.id as imageId, 
+               i.imageUrl,
+               s.statusName
+        from report r
+        join user u on r.userId = u.id 
+        join report_category rc on r.catId = rc.id
+        join report_image i on r.id = i.reportId
+        join report_status s on r.statusId = s.id
+    `;
+    return new Promise((resolve, reject) => {
+        db.all(query, [], (err, rows) => {
+            if (err) return reject(err);
+            else {
+                const reports = Mapper.mapRowsToReports(rows);
+                resolve(reports);
+            }    
+      });
+    });
+}
 const getReportsByUserId = async (userId) =>{
     const query = `
         select r.*,
@@ -533,6 +557,7 @@ const DAO = {
     addNewUser,
     addNewReport, 
     getCategories, 
+    getAllReports,
     getReportsByUserId, 
     getCategoryById, 
     getStatusById, 
