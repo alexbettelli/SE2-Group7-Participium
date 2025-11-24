@@ -5,6 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
+import '@fortawesome/fontawesome-free/css/all.css';
 import * as turf from '@turf/turf';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
@@ -19,8 +22,7 @@ export default function CitizenPage({user}){
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
-    const abortControllerRef = useRef(null);
-    //const mapMarkersRef = useRef([]);
+    const abortControllerRef = useRef(null);    
     const clusterGroupRef = useRef(null);
 
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -53,6 +55,58 @@ export default function CitizenPage({user}){
                 return 'status-default'; // Grigio/Default
         }
     };
+    const categoryColors = {
+        "Roads and Infrastructure": "lightblue",
+        "Waste and Cleanliness": "black",
+        "Green Areas and Public Parks": "darkred",
+        "Public Transport and Mobility": "purple"
+    };
+    const  getMarkerIcon = (categoryName) => {
+        const color = categoryColors[categoryName] || "blue"; // Default color        
+        return L.AwesomeMarkers.icon({
+            icon: 'fa-circle',     
+            markerColor: color,
+            prefix: 'fa',
+            iconColor: 'white'
+        });
+    }
+    const addLegendToMap = (map, categoryColors) => {
+        const legend = L.control({ position: "topright" });
+        legend.onAdd = function () {
+            const div = L.DomUtil.create("div", "map-legend-collapsible");
+            let listItems = "";
+            for (const [category, color] of Object.entries(categoryColors)) {
+                listItems += `<li><span style="background:${color}"></span> ${category}</li>`;
+            }
+
+            div.innerHTML = `
+                <button class="legend-toggle-btn" aria-label="Show/hide legend">Show Legend</button>
+                <div class="legend-content">
+                    <h4>Legend</h4>
+                    <ul>
+                        ${listItems}
+                    </ul>
+                </div>
+            `;
+            L.DomEvent.disableClickPropagation(div);
+            L.DomEvent.disableScrollPropagation(div);
+
+            // Collapse by default
+            div.querySelector('.legend-content').style.display = 'none';
+            div.querySelector('.legend-toggle-btn').onclick = function() {
+                const content = div.querySelector('.legend-content');
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    this.textContent = 'Hide Legend';
+                } else {
+                    content.style.display = 'none';
+                    this.textContent = 'Legenda';
+                }
+            };
+            return div;
+        };
+        legend.addTo(map);
+    };
     useEffect(() => {
         getAllReports();
     }, []);
@@ -84,6 +138,8 @@ export default function CitizenPage({user}){
                 attribution: '© OpenStreetMap contributors'
             }).addTo(mapInstanceRef.current);
 
+            // Add categpory legend
+            addLegendToMap(mapInstanceRef.current, categoryColors);
             // Load Turin boundary
             fetch('/geo/torino.geojson')
                 .then(res => res.json())
@@ -130,7 +186,7 @@ export default function CitizenPage({user}){
                 }
 
                 
-                markerRef.current = L.marker([lat, lng]).addTo(mapInstanceRef.current);
+                markerRef.current = L.marker([lat, lng], {icon : getMarkerIcon()}).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
                 setAddress('');
                 setLoadingAddress(true);
@@ -182,7 +238,33 @@ export default function CitizenPage({user}){
         const clusterGroup = L.markerClusterGroup({
             maxClusterRadius: 80,
             disableClusteringAtZoom: 17,
-            zoomToBoundsOnClick: true
+            zoomToBoundsOnClick: true,
+            iconCreateFunction: (cluster) => {
+                const count = cluster.getChildCount();
+                let color;
+                 if (count < 10) color = "#4caf50";  
+                else if (count < 15) color = "#f1c40f";  
+                else if (count < 20) color = "#e67e22";  
+                else color = "#e74c3c";
+
+                return L.divIcon({
+                    html: `<div style="
+                        background:${color};
+                        width:35px;
+                        height:35px;
+                        border-radius:50%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        color:#fff;
+                        font-weight:600;
+                        font-size:14px;
+                        border:2px solid white;
+                    ">${count}</div>`,
+                    className: "clusterGroup",
+                    iconSize: [35, 35]
+                });
+            }
         });
 
         // Aggiungi marker al gruppo
@@ -191,9 +273,10 @@ export default function CitizenPage({user}){
             const popupContainer = document.createElement("div");    
             ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
 
-            const marker = L.marker([report.latitude, report.longitude])                
-                .bindPopup(popupContainer);
-            clusterGroup.addLayer(marker);
+            const marker = L.marker([report.latitude, report.longitude], {
+                icon: getMarkerIcon(report.category.categoryName)
+            }).bindPopup(popupContainer);            
+            clusterGroup.addLayer(marker); 
         }
         });
 
