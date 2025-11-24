@@ -591,3 +591,96 @@
         height: 75px;
     }
 }
+
+/* Report card  */
+.tab-content .report-card {
+    background: linear-gradient(135deg, 
+        var(--color-cream) 0%, 
+        rgba(255, 255, 250, 0.95) 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 2px solid rgba(112, 38, 50, 0.2);
+    box-shadow: 
+        0 4px 12px rgba(112, 38, 50, 0.12),
+        0 2px 6px rgba(83, 153, 135, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-sizing: border-box;
+    max-width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+
+.tab-content .report-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--color-wine-light);
+    transition: all 0.3s ease;
+}
+
+.tab-content .report-card:hover {
+    border-color: var(--color-wine-light);
+    box-shadow: 
+        0 8px 20px rgba(112, 38, 50, 0.18),
+        0 4px 12px rgba(83, 153, 135, 0.12);
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, 
+        var(--color-cream) 0%, 
+        rgba(255, 255, 250, 1) 100%);
+}
+
+.tab-content .report-card:hover::before {
+    width: 5px;
+    background: var(--color-wine-dark);
+}
+
+.tab-content .report-card h3 {
+    color: var(--color-wine-dark);
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.tab-content .report-card p {
+    color: var(--color-dark);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.tab-content .report-card strong {
+    color: var(--color-wine-light);
+    font-weight: 700;
+}
+
+.tab-content .report-card .status-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Empty message */
+.tab-content .empty-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-wine-light);
+    font-size: 1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 250, 0.8) 0%, 
+        rgba(255, 255, 250, 0.6) 100%);
+    border-radius: 12px;
+    border: 2px dashed rgba(112, 38, 50, 0.2);
+    margin: 1rem 0;
+}
