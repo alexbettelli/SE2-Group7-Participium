@@ -206,6 +206,7 @@ function ReportView(props) {
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
+                                { report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p> }
                             </div>
                             <div className="field description-field">
                                 <h3>Description</h3>
