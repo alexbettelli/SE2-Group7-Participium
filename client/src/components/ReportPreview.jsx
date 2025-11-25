@@ -150,43 +150,50 @@ function ReportView(props) {
                     <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
                 </div>
                 <div className="report-view-content">
-                    <div className="wrapper">
-                        <Carousel controls={props.report.images.length > 1} indicators={props.report.images.length > 1}>
-                            { props.report.images.map((image, index) => {
-                                return <Carousel.Item key={index}>
-                                            <img className="d-block" 
-                                                    src={image.imageUrl} 
-                                                    alt={`Image ${index+1}`} 
-                                                    onError={(e) => NotFoundImage.setSrcToNotFound(e)} 
-                                            />
-                                        </Carousel.Item>;
-                            }) }
-                        </Carousel>
-                        <Map lat={report.latitude} lng={report.longitude} />
+                    <div className="media-container">
+                        <div className="carousel-wrapper">
+                            <Carousel controls={props.report.images.length > 1} indicators={props.report.images.length > 1}>
+                                { props.report.images.map((image, index) => {
+                                    return <Carousel.Item key={index}>
+                                                <img className="d-block" 
+                                                        src={image.imageUrl} 
+                                                        alt={`Image ${index+1}`} 
+                                                        onError={(e) => NotFoundImage.setSrcToNotFound(e)} 
+                                                />
+                                            </Carousel.Item>;
+                                }) }
+                            </Carousel>
+                        </div>
+                        <div className="map-container-popup">
+                            <Map lat={report.latitude} lng={report.longitude} />
+                        </div>
                     </div>
-                    <div className="fields">
-                        <div className="field user-field">
-                            <h3>Reported by</h3>
-                            <p><strong>User id: </strong>{report.user.id}</p>
-                            <p><strong>Username: </strong>{report.user.username}</p> 
-                        </div>
-                        <div className="field">
-                            <h3>Reported on</h3>
-                            <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
-                            <p><strong>Last update: </strong>{dayjs(report.updatedAt).format('DD/MM/YYYY HH:mm')}</p>
-                        </div>
-                        <div className="field">
-                            <h3>Address</h3>
-                            <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
-                        </div>
-                        <div className="field">
-                            <h3>Report details</h3>
-                            <p><strong>Report ID: </strong>{report.id}</p>
-                            <p><strong>status: </strong>{report.status.statusName}</p>
-                        </div>
-                        <div className="field" style={{ "gridColumn": "span 2" }}>
-                            <h3>Description</h3>
-                            <p>{report.description}</p>
+                    
+                    <div className="report-details">
+                        <div className="fields">
+                            <div className="field user-field">
+                                <h3>Reported by</h3>
+                                <p><strong>User id: </strong>{report.user.id}</p>
+                                <p><strong>Username: </strong>{report.user.username}</p> 
+                            </div>
+                            <div className="field">
+                                <h3>Reported on</h3>
+                                <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
+                                <p><strong>Last update: </strong>{dayjs(report.updatedAt).format('DD/MM/YYYY HH:mm')}</p>
+                            </div>
+                            <div className="field">
+                                <h3>Address</h3>
+                                <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
+                            </div>
+                            <div className="field">
+                                <h3>Report details</h3>
+                                <p><strong>Report ID: </strong>{report.id}</p>
+                                <p><strong>Status: </strong>{report.status.statusName}</p>
+                            </div>
+                            <div className="field description-field">
+                                <h3>Description</h3>
+                                <p>{report.description}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
