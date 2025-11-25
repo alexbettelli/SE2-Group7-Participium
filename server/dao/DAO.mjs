@@ -438,10 +438,12 @@ const updateReportStatus = (userId, reportId, statusId) => {
         db.get(query1, [reportId, userId], (err, row) => {
             if (err) return reject(err);
             if(row === undefined) resolve(false);
-            const query2 = "UPDATE report SET statusId = ? WHERE id = ?";
-            db.run(query2, [statusId, reportId], function(err) {
+            const now = dayjs().toString();
+            const query2 = "UPDATE report SET statusId = ?, updatedAt = ? WHERE id = ?";
+            db.run(query2, [statusId, now, reportId], function(err) {
                 if (err) return reject(err);
-                const query3 = "INSERT INTO notification (reportId, receiverId, text, channelId) VALUES (?, ?, ?, ?)";
+                const now = dayjs().toString();
+                const query3 = "INSERT INTO notification (reportId, receiverId, text, sendAt, channelId) VALUES (?, ?, ?, ?, ?)";
                 let message = "Your report ";
                 switch(+statusId) {
                     case 1:
@@ -465,7 +467,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
                     default:
                         console.log(`Unknown statusId: ${statusId}`);
                 }
-                db.run(query3, [reportId, row.userId, message, 1], function(err) {
+                db.run(query3, [reportId, row.userId, message, now, 1], function(err) {
                     if (err) return reject(err);
                     const newId = this.lastID;
                     db.get(`
@@ -546,15 +548,17 @@ const rejectReport = (reportId, reason) => {
 const createNotification = (message) => {
     return new Promise((resolve, reject) => {
         const query = `
-            INSERT INTO notification (reportId, senderId, receiverId, text, channelId)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
+        const now = dayjs().toString();
         db.run(query, [
             message.reportId,
             message.senderId || null,
             message.receiverId,
             message.text,
-            message.channelId
+            message.channelId,
+            now
         ], function (err) {
             if (err) return reject(err);
             const newId = this.lastID;

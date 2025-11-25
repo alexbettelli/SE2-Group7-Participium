@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 function Role(id, type){
     this.id = id;
     this.type = type;
@@ -30,7 +32,7 @@ function Office(id, name, category, employees){
 function Image(id, imageUrl, uploadedAt){
     this.id = id;
     this.imageUrl = imageUrl;
-    this.uploadedAt = uploadedAt;
+    this.uploadedAt = dayjs(uploadedAt);
 }
 function Channel(id, name){
     this.id = id;
@@ -43,7 +45,7 @@ function Message({id, reportId, sender, receiver, text, channel, sendAt, isRead}
     this.receiver = receiver;//obj of type User    
     this.text = text;
     this.channel = channel;
-    this.sendAt = sendAt;
+    this.sendAt = dayjs(sendAt);
     this.isRead = isRead;
 }
 function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications}){
@@ -59,8 +61,8 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.status = status;//obj of type Status
     this.office = office;//obj of type Office
     this.employee = employee;//obj of type User
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
+    this.createdAt = dayjs(createdAt);
+    this.updatedAt = dayjs(updatedAt);
     this.rejectReason = rejectReason;
     this.images = images || [];
     this.anonymous = anonymous;

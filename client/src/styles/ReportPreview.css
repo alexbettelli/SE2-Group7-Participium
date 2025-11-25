@@ -76,6 +76,18 @@
     box-shadow: 0 2px 4px rgba(149, 165, 166, 0.4);
 }
 
+.report-id-badge {
+    background: #b312f3cf;
+    box-shadow: 0 2px 4px rgba(198, 18, 243, 0.4);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+}
+
 .wrapper {
     display: flex;
     align-items: center;

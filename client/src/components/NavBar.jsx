@@ -83,7 +83,7 @@ function NavHeader(props){
         {/* Right side: Icons + Buttons */}
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto navbar-nav-custom">
-            {user && (
+            {user && user.role?.id !== 2 && (
               <div 
                 onClick={() => {
                   user.role.id === 1 ? navigate("/myreports") : navigate("/");

@@ -11,6 +11,7 @@
     object-fit: cover;
     border-radius: 50%;
     margin: 0 auto;
+    margin-right: 0.5rem;
     cursor: pointer; 
     vertical-align: middle;
 }
@@ -128,6 +129,7 @@
     display: block;
     width: 25px;
     height: 2px;
+    margin: 0.6rem 0.1rem;
     background-color: var(--color-cream);
     position: relative;
     transition: all 0.3s ease;
@@ -206,6 +208,7 @@
     text-align: center;
     box-shadow: 0 2px 6px rgba(112,38,50,0.15);
     z-index: 2;
+    margin-right: 0.3rem;
 }
 
 /* Home Button */
