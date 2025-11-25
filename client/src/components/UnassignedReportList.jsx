@@ -34,7 +34,6 @@ export default function UnassignedReportsList(props) {
             <th> Officer </th>
             <th> Accept </th>
             <th> Reject </th>
-            {reports.length !== 0 && <th></th>}
           </tr>
         </thead>
         <tbody>
