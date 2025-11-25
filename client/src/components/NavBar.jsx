@@ -53,10 +53,25 @@ function NavHeader(props){
     <Navbar expand="lg" expanded={expanded} onToggle={setExpanded} className="navbar-participium">
       <Container fluid className="navbar-container">
         
-        <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
-          PARTICIPIUM
-        </Navbar.Brand>
+        {/* Left side: Brand + Logo + Welcome message */}
+        <div className="navbar-left">
+          <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
+            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />
+            PARTICIPIUM
+          </Navbar.Brand>
+          
+          {user ? (
+            <span className="navbar-user">
+              Welcome, <span className="username-bold">{user.username || 'User'}</span>
+            </span>
+          ) : (
+            <span className="navbar-user">
+              Please log in to continue
+            </span>
+          )}
+        </div>
 
+        {/* Hamburger toggle for mobile */}
         <Navbar.Toggle 
           aria-controls="navbar-nav" 
           className="navbar-toggler-custom"
@@ -65,18 +80,9 @@ function NavHeader(props){
           <span className="navbar-toggler-icon-custom"></span>
         </Navbar.Toggle>
 
+        {/* Right side: Icons + Buttons */}
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto navbar-nav-custom">
-            {user ? (
-              <span className="navbar-user">
-                Welcome, <span className="username-bold">{user.username || 'User'}</span>
-              </span>
-            ) : (
-              <span className="navbar-user">
-                Please log in to continue
-              </span>
-            )}
-
             {user && (
               <div 
                 onClick={() => {
