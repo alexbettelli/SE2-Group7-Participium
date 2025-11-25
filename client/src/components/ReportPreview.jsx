@@ -35,11 +35,16 @@ export default function ReportPreview(props){
 
     useEffect(() => {
         const updateReportStatus = async () => {
-            API.updateReportStatus(report.id, selectedStatusId).then((data) => {
-                console.log('Report status updated:', data);
-            }).catch((error) => {
+            try {
+                const result = await API.updateReportStatus(report.id, selectedStatusId);
+                console.log('Report status updated:', result);
+                if (result && result.notification) {
+                    report.notifications = [...report.notifications, result.notification];
+                    setSelectedReport({ ...report });
+                }
+            } catch (error) {
                 console.error('Error updating report status:', error);
-            });
+            }
             setUpdateStatus(false);
             setSelectedStatusId(null);
         };
@@ -48,7 +53,7 @@ export default function ReportPreview(props){
 
     const getStatusClass = (statusName) => {
         switch (statusName) {
-            case 'Completed':
+            case 'Resolved':
                 return 'status-completed'; // Verde
             case 'Pending Approval':
                 return 'status-pending'; // Giallo/Arancione
@@ -85,19 +90,22 @@ export default function ReportPreview(props){
                     </div>
                 </div>
                 <div className="card-section actions">
-                    <Button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
-                        <span className="chat-btn-flex">
-                            {report.unreadNotifications > 0 ? (
-                                <span className="notification-count-inline"><i className="bi bi-chat-dots-fill report-chat-icon"></i>{report.unreadNotifications}</span>
-                                ) : <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>}
-                            <span> Go to the chat</span>
-                        </span>
-                    </Button>
+                    <div className="chat-btn-notification-wrapper">
+                        {report.unreadNotifications > 0 && (
+                            <span className="chat-btn-notification-count">{report.unreadNotifications}</span>
+                        )}
+                        <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
+                            <span className="chat-btn-flex">
+                                <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
+                                <span> Go to the chat</span>
+                            </span>
+                        </button>
+                    </div>
                     {  
                         props.user.role.id === 4 && 
-                        <Button className="btn btn-secondary change-status" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
+                        <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
                             <span><i className="bi bi-pencil-fill"></i> Change status</span>
-                        </Button>
+                        </button>
                     }
                 </div>
             </div>
@@ -110,17 +118,18 @@ export default function ReportPreview(props){
                 <Modal.Body>
                     <Form.Select aria-label="Default select example" onChange={(e) => setSelectedStatusId(e.target.value)}>
                         { statuses.map(status => {
-                            return <option key={status.id} value={status.id}>{status.statusName}</option>;
+                            if(![1, 2].includes(status.id))
+                                return <option key={status.id} value={status.id} selected={status.id === report.status.id}>{status.statusName}</option>;
                         }) }
                     </Form.Select>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
+                    <button className="btn-close-modal" type="button" onClick={handleClose}>
                         Close
-                    </Button>
-                    <Button variant="primary" onClick={() => {handleClose(); setUpdateStatus(true); }}>
+                    </button>
+                    <button className="btn-save-modal" type="button" onClick={() => {handleClose(); setUpdateStatus(true); }}>
                         Save Changes
-                    </Button>
+                    </button>
             </Modal.Footer>
         </Modal>
         </>

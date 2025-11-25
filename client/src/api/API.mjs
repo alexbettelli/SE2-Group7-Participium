@@ -177,6 +177,20 @@ const submitReport = async(reportData) => {
   }
 };
 
+const getAllReports = async() => {
+    const res = await fetch(SERVER_URL + '/reports', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching reports');
+    }
+}
 const getMyReports = async () => {
     const res = await fetch(SERVER_URL + '/users/myreports', {
         method: 'GET',
@@ -287,8 +301,16 @@ const getReportStatuses = async () => {
 
 const updateReportStatus = async (reportId, statusId) => {
     const res = await fetch(`${SERVER_URL}/reports/${reportId}?statusId=${statusId}`, { method: 'PATCH', credentials: 'include' });
-    if (res.ok) return await res.json();
-    else throw new Error('Error updating report status');
+    if (res.ok) {
+        const data = await res.json();
+        console.log("New notification API-side: " + data.notification.text);
+        return {
+            ok: data.ok || true,
+            notification: data.notification || null
+        };
+    } else {
+        throw new Error('Error updating report status');
+    }
 };
 
 const deleteProfilePhoto = async () => {
@@ -374,7 +396,8 @@ const API = {
     getUserInfo, 
     submitReport, 
     logOut, 
-    getCategories, 
+    getCategories,
+    getAllReports, 
     getUnassignedReports, 
     assignReportToOfficer,
     rejectReport,
@@ -384,7 +407,8 @@ const API = {
     updateProfile, 
     getAssignedReports, 
     deleteProfilePhoto,
-    setReadNotifications
+    setReadNotifications,
+    submitNotification
 };
 
 export default API;

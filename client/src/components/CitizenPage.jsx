@@ -1,11 +1,19 @@
 import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router';
 import L from 'leaflet';
-import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
+import '@fortawesome/fontawesome-free/css/all.css';
+import * as turf from '@turf/turf';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
 import ReportOverview from './ReportOverview.jsx';
+import ReportPopup from './ReportPopUp.jsx';
+import ReactDOM from "react-dom/client";
 
 
 
@@ -14,7 +22,9 @@ export default function CitizenPage({user}){
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
-    const abortControllerRef = useRef(null);
+    const abortControllerRef = useRef(null);    
+    const clusterGroupRef = useRef(null);
+
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [address, setAddress] = useState('');
     const [loadingAddress, setLoadingAddress] = useState(false);
@@ -29,7 +39,90 @@ export default function CitizenPage({user}){
     const [categories, setCategories] = useState([]);
     const [activeTab, setActiveTab] = useState('reports');
     const [submittedReport, setSubmittedReport] = useState(null);
+    const [reports, setReports] = useState([]);
+    const [approvedReports, setApprovedReports] = useState([]);
+    const [reportDetails, setReportDetails] = useState({})
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Completed':
+                return 'status-completed'; // Verde
+            case 'Pending Approval':
+                return 'status-pending'; // Giallo/Arancione
+            case 'Rejected':
+                return 'status-rejected'; // Rosso
+            case 'In Progress':
+                return 'status-in-progress'; // Blu/Azzurro
+            default:
+                return 'status-default'; // Grigio/Default
+        }
+    };
+    const categoryColors = {
+        "Roads and Infrastructure": "lightblue",
+        "Waste and Cleanliness": "black",
+        "Green Areas and Public Parks": "darkred",
+        "Public Transport and Mobility": "purple"
+    };
+    const  getMarkerIcon = (categoryName) => {
+        const color = categoryColors[categoryName] || "blue"; // Default color        
+        return L.AwesomeMarkers.icon({
+            icon: 'fa-circle',     
+            markerColor: color,
+            prefix: 'fa',
+            iconColor: 'white'
+        });
+    }
+    const addLegendToMap = (map, categoryColors) => {
+        const legend = L.control({ position: "topright" });
+        legend.onAdd = function () {
+            const div = L.DomUtil.create("div", "map-legend-collapsible");
+            let listItems = "";
+            for (const [category, color] of Object.entries(categoryColors)) {
+                listItems += `<li><span style="background:${color}"></span> ${category}</li>`;
+            }
 
+            div.innerHTML = `
+                <button class="legend-toggle-btn" aria-label="Show/hide legend">Show Legend</button>
+                <div class="legend-content">
+                    <h4>Legend</h4>
+                    <ul>
+                        ${listItems}
+                    </ul>
+                </div>
+            `;
+            L.DomEvent.disableClickPropagation(div);
+            L.DomEvent.disableScrollPropagation(div);
+
+            // Collapse by default
+            div.querySelector('.legend-content').style.display = 'none';
+            div.querySelector('.legend-toggle-btn').onclick = function() {
+                const content = div.querySelector('.legend-content');
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    this.textContent = 'Hide Legend';
+                } else {
+                    content.style.display = 'none';
+                    this.textContent = 'Legenda';
+                }
+            };
+            return div;
+        };
+        legend.addTo(map);
+    };
+    useEffect(() => {
+        getAllReports();
+    }, []);
+    
+    const getAllReports = async () =>{
+        try {
+            const reports = await API.getAllReports();            
+            setReports(reports);
+            console.log(reports)
+            const approvedReports = reports.filter(report => report.status.id !== 1);
+            setApprovedReports(approvedReports);
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+        }
+    }
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -49,6 +142,8 @@ export default function CitizenPage({user}){
                 attribution: '© OpenStreetMap contributors'
             }).addTo(mapInstanceRef.current);
 
+            // Add categpory legend
+            addLegendToMap(mapInstanceRef.current, categoryColors);
             // Load Turin boundary
             fetch('/geo/torino.geojson')
                 .then(res => res.json())
@@ -62,6 +157,7 @@ export default function CitizenPage({user}){
                     }).addTo(mapInstanceRef.current);
 
                     mapInstanceRef.current.fitBounds(boundaryLayer.getBounds());
+                    mapInstanceRef.current.setView([45.0703, 7.6868], 10);
                     mapInstanceRef.current._turinBoundary = boundaryLayer;
                 })
                 .catch(err => console.error("Error loading Turin boundary:", err));
@@ -93,7 +189,8 @@ export default function CitizenPage({user}){
                     mapInstanceRef.current.removeLayer(markerRef.current);
                 }
 
-                markerRef.current = L.marker([lat, lng]).addTo(mapInstanceRef.current);
+                
+                markerRef.current = L.marker([lat, lng], {icon : getMarkerIcon()}).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
                 setAddress('');
                 setLoadingAddress(true);
@@ -132,6 +229,73 @@ export default function CitizenPage({user}){
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (!mapInstanceRef.current) return;
+
+        // Rimuovi cluster precedente
+        if (clusterGroupRef.current) {
+        mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+        }
+
+        // Crea il gruppo cluster
+        const clusterGroup = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            disableClusteringAtZoom: 17,
+            zoomToBoundsOnClick: true,
+            iconCreateFunction: (cluster) => {
+                const count = cluster.getChildCount();
+                let color;
+                 if (count < 10) color = "#4caf50";  
+                else if (count < 15) color = "#f1c40f";  
+                else if (count < 20) color = "#e67e22";  
+                else color = "#e74c3c";
+
+                return L.divIcon({
+                    html: `<div style="
+                        background:${color};
+                        width:35px;
+                        height:35px;
+                        border-radius:50%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        color:#fff;
+                        font-weight:600;
+                        font-size:14px;
+                        border:2px solid white;
+                    ">${count}</div>`,
+                    className: "clusterGroup",
+                    iconSize: [35, 35]
+                });
+            }
+        });
+
+        // Aggiungi marker al gruppo
+        approvedReports.forEach((report) => {
+        if (report.latitude && report.longitude) {
+            const popupContainer = document.createElement("div");    
+            ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
+
+            const marker = L.marker([report.latitude, report.longitude], {
+                icon: getMarkerIcon(report.category.categoryName)
+            }).bindPopup(popupContainer);            
+            clusterGroup.addLayer(marker); 
+        }
+        });
+
+        // Aggiungi il gruppo alla mappa
+        clusterGroup.addTo(mapInstanceRef.current);
+        clusterGroupRef.current = clusterGroup;
+
+        // Cleanup
+        return () => {
+        if (mapInstanceRef.current && clusterGroupRef.current) {
+            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+        }
+        };
+    }, [approvedReports]);
+    
 
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
@@ -227,8 +391,8 @@ export default function CitizenPage({user}){
                 latitude: reportData.latitude,
                 longitude: reportData.longitude,
                 address: reportData.address,
-                photos: result.images || [],
-                author: isAnonymous || !user ? 'Anonymous' : `${user.firstName} ${user.lastName}`,
+                images: result.images || [],
+                username: isAnonymous || !user ? 'Anonymous' : `${user.username}`,
                 isAnonymous: isAnonymous || !user,
                 status: 'Pending Approval',
                 createdAt: result.createdAt || new Date().toISOString()
@@ -249,6 +413,7 @@ export default function CitizenPage({user}){
             setSubmitMessage(error.message || 'Error submitting report');
         } finally {
             setSubmitting(false);
+            getAllReports();
         }
     };
 
@@ -283,8 +448,35 @@ export default function CitizenPage({user}){
     const handleTabClick = (tab) => {
         setActiveTab(tab);
         setSubmitMessage('');
+        setReportDetails({});
+        resetForm();
+        //ResetZoom();
     };
-
+    const zoomToReportLocation = (report) =>{
+        if (report.latitude && report.longitude && mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17,{
+                animate: true,      
+                duration: 1.5
+            });
+        }
+    }
+    const showReportDetails = (report) => {
+        const normalizedReport = {
+            ...report,
+            status: report.status?.statusName ?? "N/A",
+            category: report.category?.categoryName ?? "N/A",
+            username : report.user?.username ?? "Anonymous"
+        };
+        setActiveTab('details');        
+        setReportDetails(normalizedReport);    
+        zoomToReportLocation(normalizedReport);
+    }    
+    const handlePopUpDetailsClick = (report) => {
+        showReportDetails(report);
+    }
+    const ResetZoom = () => {
+         mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, {animate: true,  duration: 1});
+    }
     return (
         <div className="citizen-page-container">
             <div className="citizen-page-header">
@@ -324,20 +516,42 @@ export default function CitizenPage({user}){
                     <div className="tab-content">
                         {activeTab === 'reports' && (
                             <div>
-                                <p className="empty-message">Reports will be displayed here</p>
+                                {approvedReports.length === 0 ? (
+                                    <p className="empty-message">THERE ARE NO REPORT IN PROGRESS</p>
+                                ) : (
+                                    approvedReports.map((report) => (
+                                    <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
+                                        <h3>{report.title}</h3>
+                                        <p>
+                                        <strong>Category:</strong> {report.category?.categoryName}<br />
+                                        <strong>Address:</strong> {report.address}
+                                         <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
+                                        </p>
+                                    </div>
+                                    ))
+                                )}
                             </div>
                         )}
 
                         {activeTab === 'details' && (
                             <div className="report-details">
-                                <p className="empty-message">Report details will be displayed here</p>
+                                {Object.keys(reportDetails).length === 0 ? (
+                                    <p className="empty-message">Select a report to show details</p>
+                                ) : (
+                                    <ReportOverview user={user}
+                                        report={reportDetails}
+                                        onBackToHome={resetForm}
+                                        showSuccessBanner={false}
+                                        showNewReportBtn={false}
+                                    />
+                                )}
                             </div>
                         )}
 
                         {activeTab === 'form' && (
                             <>
                                 {submittedReport ? (
-                                    <ReportOverview
+                                    <ReportOverview user={user}
                                         report={submittedReport}
                                         onBackToHome={resetForm}
                                         showSuccessBanner={true}

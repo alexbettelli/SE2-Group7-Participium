@@ -1,7 +1,7 @@
 import React from 'react';
 import '../styles/ReportOverview.css';
 
-const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
+const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
 
     return (
         <div className="report-overview-container">
@@ -50,8 +50,8 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
                     <div className="overview-section">
                         <h4 className="section-label">Attached Photos ({report.images.length})</h4>
                         <div className="photo-gallery">
-                            {report.images.map((img) => (
-                                <div key={img.id} className="photo-item">
+                            {report.images.map((photo, index) => (
+                                <div key={index} className="photo-item">                                    
                                     <img 
                                         src={img.imageUrl} 
                                         onError={(e) => {
@@ -70,9 +70,9 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
 
                 <div className="overview-footer">
                     <div className="report-meta">
-                        {!report.isAnonymous && report.author && (
+                        {!report.isAnonymous && report.username && (
                             <span className="author-info">
-                                Reported by: {report.author}
+                                Reported by: {report.username !==  user.username ? report.username : 'YOU'}
                             </span>
                         )}
                         {report.isAnonymous && (
@@ -89,11 +89,14 @@ const ReportOverview = ({ report, onBackToHome, showSuccessBanner = true }) => {
                     </div>
                 </div>
 
+                {showNewReportBtn &&
                 <div className="overview-actions">
                     <button className="btn btn-primary" onClick={onBackToHome}>
                         Submit New Report
                     </button>
                 </div>
+                }
+                
             </div>
         </div>
     );
