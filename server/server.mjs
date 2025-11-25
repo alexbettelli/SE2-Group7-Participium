@@ -30,22 +30,22 @@ validator.ajv.addSchema(schemas.notification, 'notification');
 addFormats(validator.ajv);
 const validate = validator.validate;
 
+const PORT = process.env.PORT || 3001;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/images', express.static(path.join(__dirname, 'uploads')));
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: CORS_ORIGIN,
   optionsSuccessStatus: 200,
   credentials: true
 };
 
 app.use(cors(corsOptions));
-
-app.use('/public', express.static('public'));
-
-const PORT = 3001;
 
 const upload = multer();
 const upload_dir = 'uploads';
@@ -78,8 +78,8 @@ const uploadProfile = multer({
 });
 
 app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
-  console.log(`Swagger documentation is available at http://localhost:${PORT}/api-docs`);
+  console.log(`Server listening at ${BASE_URL}`);
+  console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
 });
 
 app.use(session({
@@ -115,7 +115,7 @@ passport.deserializeUser(async function(user, cb){
     if (freshUser) {
       const userWithImageUrl = {
         ...freshUser,
-        imageUrl: freshUser.imageUrl ? `http://localhost:3001/images/profiles/${freshUser.imageUrl}` : null
+        imageUrl: freshUser.imageUrl
       };
       return cb(null, userWithImageUrl);
     }
@@ -390,7 +390,7 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
       if(!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(path.join(__dirname, directory, uuids[idx]), images[idx].buffer);
     }
-    return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `http://localhost:3001/images/reports/${received.id}/${filename}`})) });
+    return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `${BASE_URL}/images/reports/${received.id}/${filename}`})) });
   }catch(e){
     console.log(e)
     return res.status(503).json(new errors.ServiceUnvailableError());
@@ -439,7 +439,7 @@ app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profileP
     
     const userResponse = {
       ...updatedUser,
-      imageUrl: updatedUser.imageUrl ? `http://localhost:3001/images/profiles/${updatedUser.imageUrl}` : null
+      imageUrl: updatedUser.imageUrl 
     };
     
     res.status(200).json(userResponse);

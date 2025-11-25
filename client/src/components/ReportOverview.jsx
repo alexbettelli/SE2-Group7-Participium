@@ -53,7 +53,7 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                             {report.images.map((photo, index) => (
                                 <div key={index} className="photo-item">                                    
                                     <img 
-                                        src={img.imageUrl} 
+                                        src={photo.imageUrl} 
                                         onError={(e) => {
                                             e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
                                         }}
