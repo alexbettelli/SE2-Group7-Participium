@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/ReportOverview.css';
+import { Carousel } from 'react-bootstrap';
 
 const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
 
@@ -50,16 +51,17 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                     <div className="overview-section">
                         <h4 className="section-label">Attached Photos ({report.images.length})</h4>
                         <div className="photo-gallery">
-                            {report.images.map((photo, index) => (
-                                <div key={index} className="photo-item">                                    
-                                    <img 
-                                        src={img.imageUrl} 
-                                        onError={(e) => {
-                                            e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
-                                        }}
-                                    />
-                                </div>
-                            ))}
+                            <Carousel>
+                                {report.images.map((image, index) => (
+                                    <Carousel.Item key={index}>
+                                        <img 
+                                            className="d-block w-100" 
+                                            src={image.imageUrl} 
+                                            alt={`Report image ${index + 1}`} 
+                                        />
+                                    </Carousel.Item>
+                                ))}
+                            </Carousel>
                         </div>
                     </div>
                 ) : (
