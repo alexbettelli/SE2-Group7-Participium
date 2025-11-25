@@ -137,7 +137,7 @@ const isCitizen = (req, res, next) => {
   if (req.isAuthenticated() && req.user.role.id === 1) {
     return next();
   }
-  return res.status(403).json({ error: 'Access forbidden: Only citizens can access this resource' });
+  return res.status(403).json(new errors.ForbiddenError("Access restricted to citizens only."));
 };
 
 app.post("/user", async (req, res) => {
@@ -275,7 +275,7 @@ app.get('/categories', isLogged, async (req, res) => {
   }
   catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching categories' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
@@ -296,7 +296,7 @@ app.get('/session/current', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user); 
   } else {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.status(401).json(new errors.UnauthorizedError());
   }
 })
 
@@ -319,7 +319,7 @@ app.get('/users/myreports', isLogged, async (req, res) => {
     return res.status(200).json(reports);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching user reports' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
@@ -458,7 +458,7 @@ app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profileP
     res.status(200).json(userResponse);
   } catch (err) {
     console.error('Error updating profile:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json(new errors.InternalServerError("Failed to update profile."));
   }
 });
 
@@ -548,13 +548,13 @@ app.post('/notifications/read', async (req, res) => {
   const userId = req.user.id;
   let readNotifications = 0;
   if (!reportId || !userId) {
-    return res.status(400).json({ error: 'Missing reportId or userId' });
+    return res.status(400).json(new errors.BadRequestError("Missing reportId or userId"));
   }
   try {
     readNotifications = await DAO.setNotificationsAsRead(userId, reportId);
     res.status(201).json({ success: true, readNotifications });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json(new errors.InternalServerError());
   }
 });
 
