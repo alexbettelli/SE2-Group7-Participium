@@ -27,6 +27,25 @@ const addNewUser = (data) => {
     });
 }
 
+const deleteEmployeeById = (employeeId) => {
+    return new Promise((resolve, reject) => {
+        const deleteUserSql = `
+        DELETE FROM user WHERE id = ?
+        `;
+        db.run(deleteUserSql, [employeeId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            db.run("DELETE FROM office_employee WHERE userId = ?", [employeeId], function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    });
+}
+
 const getUnassignedEmployees = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
@@ -608,6 +627,7 @@ const DAO = {
     getRoles, 
     assignEmployeeToOffice, 
     addNewUser,
+    deleteEmployeeById,
     addNewReport, 
     getCategories, 
     getAllReports,

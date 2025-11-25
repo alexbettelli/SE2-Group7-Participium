@@ -17,7 +17,7 @@ describe('POST /reports', () => {
         
         // act
         const auth = await request(app).post('/session').send(credentials);
-        const result = await request(app).post('/reports').set('Cookie', auth.headers['set-cookie'] ?? [])
+        const result = await request(app).post('/users/reports').set('Cookie', auth.headers['set-cookie'] ?? [])
             .field('title', 'Test report')
             .field('description', 'Some description')
             .field('latitude', '12.34')
@@ -40,7 +40,7 @@ describe('POST /reports', () => {
 
         // act
         const auth = await request(app).post('/session').send(credentials);
-        const result = await request(app).post('/reports').set('Cookie', auth.headers['set-cookie'] ?? [])
+        const result = await request(app).post('/users/reports').set('Cookie', auth.headers['set-cookie'] ?? [])
             .field('title', 'Test report')
             .field('description', 'Some description')
             .field('latitude', '12.34')
@@ -55,7 +55,7 @@ describe('POST /reports', () => {
 
     it('401 Unauthorized', async () => {
         // act
-        const result = await request(app).post('/reports');
+        const result = await request(app).post('/users/reports');
 
         // assert
         expect(result.status).toBe(401);

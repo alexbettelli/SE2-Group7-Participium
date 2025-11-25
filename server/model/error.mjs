@@ -51,4 +51,5 @@ class ServiceUnvailableError extends AppError {
     }
 }
 
+
 export { AppError, BadRequestError, UnauthorizedError, ForbiddenError, ConflictError, InternalServerError, ServiceUnvailableError }

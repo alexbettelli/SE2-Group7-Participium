@@ -186,6 +186,28 @@ app.post('/employees', isLogged,async (req, res) => {
   }
 });
 
+app.delete('/employees/:id', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const employeeId = req.params.id;
+    if (!employeeId) {
+      return res.status(400).json(new errors.BadRequestError("Employee ID is required."));
+    }
+    
+    const username = await DAO.getUserById(employeeId);
+    if (!username) {
+      return res.status(400).json(new errors.BadRequestError("Employee not found."));
+    }
+    await DAO.deleteEmployeeById(employeeId);
+    return res.status(200).json({ message: 'Employee deleted successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
 app.get('/employees/unassigned', isLogged,async (req, res) => {
   try {
     if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
@@ -288,15 +310,6 @@ app.delete('/sessions/current', (req, res) => {
 
 
 // REPORTS
-app.get('/reports', isLogged, async (req, res) =>{
-  try {    
-    const reports = await DAO.getAllReports();
-    return res.status(200).json(reports);
-  } catch (error) {
-    console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching user reports' });
-  }
-})
 
 app.get('/users/myreports', isLogged, async (req, res) => {
   try {
@@ -343,7 +356,7 @@ app.post('/reports/reject', isLogged, async (req, res) => {
   if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
   try {
     const { reportId, userId, reason } = req.body;
-    await DAO.rejectReport(reportId, reason);
+    await DAO.rejectReport(reportId, userId, reason);
     await DAO.createNotification({
       reportId: reportId,
       senderId: null,
@@ -480,7 +493,6 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
   if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
     const reports = await DAO.getAssignedReports(req.user.id);
-    console.log("Reports assigned: " + reports.length);
     return res.status(200).json(reports);
   }catch(ex){
     return res.status(500).json(new errors.InternalServerError());
@@ -490,10 +502,9 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
 app.patch("/reports/:id", isLogged, async (req, res) => {
   if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
-    const notification = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
-    console.log("New notification: ", notification);
-    if(!notification) return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
-    return res.status(200).json({ ok: true, notification });
+    const result = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
+    if(!result) return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
+    return res.status(200).json({ message: "Report status updated successfully." });
   } catch(e) {
     return res.status(500).json(new errors.InternalServerError());
   }
