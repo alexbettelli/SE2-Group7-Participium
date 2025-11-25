@@ -27,9 +27,9 @@ vi.mock('sqlite3', () => {
       Database._nextReportId = 10;
 
       Database._categories = [
-        { id: 1, name: 'Plumbing' },
-        { id: 2, name: 'Electrical'},
-        { id: 3, name: 'Landscaping' }
+        { id: 1, categoryName: 'Plumbing' },
+        { id: 2, categoryName: 'Electrical'},
+        { id: 3, categoryName: 'Landscaping' }
       ]
       Database.roles = [
         { id: 1, name: 'CItizen' },
@@ -266,7 +266,7 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       const categories = await DAO.getCategories();
       expect(Array.isArray(categories)).toBe(true);
       expect(categories.length).toBe(3);
-      const names = categories.map(c => c.name);
+      const names = categories.map(c => c.categoryName);
       expect(names).toEqual(expect.arrayContaining(['Plumbing', 'Electrical', 'Landscaping']));
       }
     )
@@ -276,8 +276,8 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       const roles = await DAO.getRoles();
       expect(Array.isArray(roles)).toBe(true);
       expect(roles.length).toBe(2);
-      const names = roles.map(c => c.name);
-      expect(names).toEqual(expect.arrayContaining(['Municipal Public Relations Officer', 'Technical Office Staff Member']));
+      const names = roles.map(c => c.id);
+      expect(names).toEqual([3, 4]);
       }
     )
   })

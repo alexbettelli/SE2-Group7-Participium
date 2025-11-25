@@ -68,7 +68,7 @@ describe('E2E User Routes', () => {
     const res = await agent.post('/user').send(testUser);
     expect([201,409]).toContain(res.statusCode); // 409 if user already exists
     if(res.statusCode === 409) {
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     } else {
       expect(res.body).toBeDefined();
     }
@@ -105,6 +105,6 @@ describe('E2E User Routes', () => {
   test('GET /session/current - after logout should be unauthorized', async () => {
   const res = await agent.get('/session/current');
   expect(res.statusCode).toBe(401);
-  expect(res.body).toHaveProperty('message');
+  expect(res.body).toHaveProperty('error');
   });
 });

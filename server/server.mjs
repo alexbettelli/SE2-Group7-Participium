@@ -137,7 +137,7 @@ const isCitizen = (req, res, next) => {
   if (req.isAuthenticated() && req.user.role.id === 1) {
     return next();
   }
-  return res.status(403).json({ error: 'Access forbidden: Only citizens can access this resource' });
+  return res.status(403).json(new errors.ForbiddenError("Access restricted to citizens only."));
 };
 
 app.post("/user", async (req, res) => {
@@ -180,6 +180,28 @@ app.post('/employees', isLogged,async (req, res) => {
     const created = await DAO.addNewUser(employeeData);
 
     return res.status(201).json(created);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.delete('/employees/:id', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const employeeId = req.params.id;
+    if (!employeeId) {
+      return res.status(400).json(new errors.BadRequestError("Employee ID is required."));
+    }
+    
+    const username = await DAO.getUserById(employeeId);
+    if (!username) {
+      return res.status(400).json(new errors.BadRequestError("Employee not found."));
+    }
+    await DAO.deleteEmployeeById(employeeId);
+    return res.status(200).json({ message: 'Employee deleted successfully' });
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json(new errors.ServiceUnvailableError());
@@ -253,7 +275,7 @@ app.get('/categories', isLogged, async (req, res) => {
   }
   catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching categories' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
@@ -274,7 +296,7 @@ app.get('/session/current', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user); 
   } else {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.status(401).json(new errors.UnauthorizedError());
   }
 })
 
@@ -288,15 +310,6 @@ app.delete('/sessions/current', (req, res) => {
 
 
 // REPORTS
-app.get('/reports', isLogged, async (req, res) =>{
-  try {    
-    const reports = await DAO.getAllReports();
-    return res.status(200).json(reports);
-  } catch (error) {
-    console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching user reports' });
-  }
-})
 
 app.get('/users/myreports', isLogged, async (req, res) => {
   try {
@@ -306,7 +319,7 @@ app.get('/users/myreports', isLogged, async (req, res) => {
     return res.status(200).json(reports);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
-    res.status(503).json({ error: 'Error fetching user reports' });
+    res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
 
@@ -343,7 +356,7 @@ app.post('/reports/reject', isLogged, async (req, res) => {
   if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
   try {
     const { reportId, userId, reason } = req.body;
-    await DAO.rejectReport(reportId, reason);
+    await DAO.rejectReport(reportId, userId, reason);
     await DAO.createNotification({
       reportId: reportId,
       senderId: null,
@@ -445,7 +458,7 @@ app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profileP
     res.status(200).json(userResponse);
   } catch (err) {
     console.error('Error updating profile:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json(new errors.InternalServerError("Failed to update profile."));
   }
 });
 
@@ -480,7 +493,6 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
   if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
     const reports = await DAO.getAssignedReports(req.user.id);
-    console.log("Reports assigned: " + reports.length);
     return res.status(200).json(reports);
   }catch(ex){
     return res.status(500).json(new errors.InternalServerError());
@@ -490,10 +502,9 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
 app.patch("/reports/:id", isLogged, async (req, res) => {
   if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
-    const notification = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
-    console.log("New notification: ", notification);
-    if(!notification) return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
-    return res.status(200).json({ ok: true, notification });
+    const result = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
+    if(!result) return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
+    return res.status(200).json({ message: "Report status updated successfully." });
   } catch(e) {
     return res.status(500).json(new errors.InternalServerError());
   }
@@ -537,13 +548,13 @@ app.post('/notifications/read', async (req, res) => {
   const userId = req.user.id;
   let readNotifications = 0;
   if (!reportId || !userId) {
-    return res.status(400).json({ error: 'Missing reportId or userId' });
+    return res.status(400).json(new errors.BadRequestError("Missing reportId or userId"));
   }
   try {
     readNotifications = await DAO.setNotificationsAsRead(userId, reportId);
     res.status(201).json({ success: true, readNotifications });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json(new errors.InternalServerError());
   }
 });
 
