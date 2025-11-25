@@ -2,8 +2,7 @@ import { Table, Form, Button, Carousel } from 'react-bootstrap';
 import { useEffect, useState} from 'react';
 import dayjs from 'dayjs';
 import Map from './Map.jsx';
-
-
+import '../styles/UnassignedReportList.css'; 
 
 export default function UnassignedReportsList(props) {
   const { reports, categories, offices, handleAssign, handleReject } = props;
@@ -23,17 +22,16 @@ export default function UnassignedReportsList(props) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="unassigned-reports-container">
       <h2 style={{ textAlign: 'center', width: '100%' }}>New Reports: {reports.length === 0 ? " - None" : ` - ${reports.length}`}</h2>
-      <Table hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
+      <Table hover className="unassigned-reports-table">
         <thead>
-          <tr style={{ textAlign: 'center' }}>
-            <th> Title </th>
-            <th> Category </th>
-            <th> Office </th>
-            <th> Officer </th>
-            <th> Accept </th>
-            <th> Reject </th>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Office</th>
+            <th>Officer</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +39,7 @@ export default function UnassignedReportsList(props) {
             <ReportRow 
               key={r.id} 
               report={r} 
-              categories= {categories || []} 
+              categories={categories || []} 
               offices={offices || []} 
               onClick={() => onClick(r)} 
               handleAssign={handleAssign}
@@ -49,13 +47,11 @@ export default function UnassignedReportsList(props) {
           )}
         </tbody>
       </Table>
-      {selectedReport && <ReportView report={selectedReport} onClose={closeReportView}  />}
+      {selectedReport && <ReportView report={selectedReport} onClose={closeReportView} />}
       {reportToReject && <RejectReportModal report={reportToReject} onClose={closeRejectModal} handleReject={handleReject}/>}
-      
     </div>
   );
 };
-
 
 const ReportRow = (props) => {
   const { report, categories, offices, onClick, handleAssign, setReportToReject } = props;
@@ -79,6 +75,14 @@ const ReportRow = (props) => {
 
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
+  };
+
+  const handleAccept = () => {
+    if(selectedOfficer && selectedOffice && selectedCategory) {
+      handleAssign(report.id, report.user.id, selectedCategory, selectedOffice, selectedOfficer);
+    } else {
+      alert('Please select an officer to assign the report to.'); 
+    }
   };
 
   return (
@@ -114,25 +118,25 @@ const ReportRow = (props) => {
         </Form.Select>
       </td>
 
-      <td>
-        <Button onClick={(e) => { 
+      <td className="actions-cell">
+        <button className="btn-accept-report" onClick={(e) => { 
           e.stopPropagation(); 
-          if(selectedOfficer && selectedOffice && selectedCategory)
-            handleAssign(report.id, report.user.id, selectedCategory, selectedOffice, selectedOfficer);
-          else
-            alert('Please select an officer to assign the report to.'); 
-          }}>Accept</Button>
-      </td>
-      <td>
-        <Button onClick={(e) => { 
+          handleAccept();
+        }}>
+          <i className="bi bi-check-circle-fill"></i>
+          Accept
+        </button>
+        <button className="btn-reject-report" onClick={(e) => { 
           e.stopPropagation();
           setReportToReject(report);
-        }}>Reject</Button>
+        }}>
+          <i className="bi bi-x-circle-fill"></i>
+          Reject
+        </button>
       </td>
     </tr>
   );
 };
-
 
 function ReportView(props) {
     const report = props.report;
@@ -143,38 +147,50 @@ function ReportView(props) {
             <div className="report-view">
                 <div className="report-view-header">
                     <h2>{props.report.title}</h2>
-                    <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
+                    <button className="close-button" onClick={props.onClose}>
+                        <i className="bi bi-x-lg"></i>
+                    </button>
                 </div>
                 <div className="report-view-content">
-                    <div className="wrapper">
-                        <Carousel>
-                            { props.report.images.map((image, index) => {
-                                return <Carousel.Item key={index}><img className="d-block" src={image.imageUrl} alt={`Image ${index+1}`} /></Carousel.Item>;
-                            }) }
-                        </Carousel>
-                        <Map lat={report.latitude} lng={report.longitude} />
+                    <div className="media-container">
+                        <div className="carousel-wrapper">
+                            <Carousel>
+                                {props.report.images.map((image, index) => {
+                                    return (
+                                        <Carousel.Item key={index}>
+                                            <img className="d-block w-100" src={image.imageUrl} alt={`Image ${index+1}`} />
+                                        </Carousel.Item>
+                                    );
+                                })}
+                            </Carousel>
+                        </div>
+                        <div className="map-container-popup">
+                            <Map lat={report.latitude} lng={report.longitude} />
+                        </div>
                     </div>
-                    <div className="fields">
-                        <div className="field user-field">
-                            <h3>Reported by</h3>
-                            <p><strong>Username: </strong>{report.user.username}</p> 
-                        </div>
-                        <div className="field">
-                            <h3>Reported on</h3>
-                            <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
-                        </div>
-                        <div className="field">
-                            <h3>Address</h3>
-                            <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
-                        </div>
-                        <div className="field">
-                            <h3>Original Category</h3>
-                            <p><strong>Report ID: </strong>{report.id}</p>
-                            <p><strong>Category: </strong>{report.category.categoryName}</p>
-                        </div>
-                        <div className="field" style={{ "gridColumn": "span 2" }}>
-                            <h3>Description</h3>
-                            <p>{report.description}</p>
+                    <div className="report-details">
+                        <div className="fields">
+                            <div className="field user-field">
+                                <h3>Reported by</h3>
+                                <p><strong>Username: </strong>{report.user.username}</p> 
+                            </div>
+                            <div className="field">
+                                <h3>Reported on</h3>
+                                <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
+                            </div>
+                            <div className="field">
+                                <h3>Address</h3>
+                                <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
+                            </div>
+                            <div className="field">
+                                <h3>Original Category</h3>
+                                <p><strong>Report ID: </strong>{report.id}</p>
+                                <p><strong>Category: </strong>{report.category.categoryName}</p>
+                            </div>
+                            <div className="field description-field">
+                                <h3>Description</h3>
+                                <p>{report.description}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -195,30 +211,15 @@ function RejectReportModal(props) {
     return (
         <>
             <div className="rp-backdrop" onClick={onClose}></div>
-            <div
-                className="reject-modal"
-                style={{
-                    width: '400px',
-                    background: '#fff',
-                    borderRadius: '10px',
-                    boxShadow: '0 2px 16px rgba(0,0,0,0.15)',
-                    padding: '2rem',
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 1000
-                }}
-            >
+            <div className="reject-modal">
                 <h3>Reason for rejection:</h3>
                 <textarea
                     value={reason}
                     onChange={e => setReason(e.target.value)}
                     rows={4}
-                    style={{ width: '100%', marginBottom: '1.5rem', resize: 'vertical', borderRadius: '6px', border: '1px solid #ccc', padding: '0.5rem' }}
                     placeholder="Write the reason here..."
                 />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                <div>
                     <Button variant="secondary" onClick={onClose}>Cancel</Button>
                     <Button variant="danger" onClick={handleRejectClick} disabled={!reason.trim()}>Reject</Button>
                 </div>
