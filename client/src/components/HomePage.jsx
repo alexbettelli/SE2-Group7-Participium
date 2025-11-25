@@ -1,5 +1,6 @@
 import CitizenPage from './CitizenPage';
 import AdminPage from './AdminPage';
+import PrOfficerPage from './PrOfficerPage';
 import NotFound from './NotFound';
 import {Navigate} from 'react-router';
 import '../styles/commonStyle.css';
@@ -14,6 +15,8 @@ export default function  HomePage (props) {
       return <CitizenPage user={props.user}/>;
     case 2:
       return <AdminPage user={props.user}/>;
+    case 3:
+      return <PrOfficerPage user={props.user}/>;
     case 4:
       return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} />;
     default:
