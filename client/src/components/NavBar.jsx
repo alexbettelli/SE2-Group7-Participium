@@ -52,6 +52,7 @@ function NavHeader(props){
         
         <div className="navbar-left">
           <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
+            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />
             PARTICIPIUM
           </Navbar.Brand>
           

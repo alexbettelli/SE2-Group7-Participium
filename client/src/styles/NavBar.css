@@ -46,8 +46,8 @@
     z-index: 1;
     max-width: 100% !important;
     margin: 0 auto;
-    padding: 1rem 2rem;
-    min-height: 70px;
+    padding: 0.5rem 2rem;
+    height: 70px;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -92,6 +92,15 @@
 .navbar-brand-participium {
     flex-shrink: 0 !important;
     min-width: fit-content !important;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.navbar-logo {
+    height: 65px;
+    width: auto;
+    object-fit: contain;
 }
 
 /* Brand Styles */
