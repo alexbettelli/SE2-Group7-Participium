@@ -99,26 +99,28 @@ div.report-view{
 }
 
 div.report-view-header {
+    position: relative;
     border-bottom: 1px solid #ccc;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background-color: var(--color-wine-light);
 }
 
 div.report-view-header h2{
     padding: 10px 0 0 20px;
-    color: var(--color-wine-light);
+    color: var(--color-cream);
 }
 
 button.close-button{
-    width: 40px;
-    height: 40px;
-    margin-right: 1.1rem;
+    position: absolute;
+    width: 50px;
+    height: 100%;
+    right: 0;
+    top: 0;
     border: 0;
     background-color: var(--color-wine-light);
     color: #fff;
-    border-bottom-left-radius: 10px;
-    border-top-right-radius: 10px;
     cursor: pointer;
     transition: .3s;
 }
