@@ -351,3 +351,9 @@ Defines all the channels able to send messages.
 - **Thechnical Office staff member**
   **username** : giulia.rossi
   **password** : GiuliaRossi
+
+<br>
+
+- **Public Relations Municipal Officer**
+  **username** : carla.verdi
+  **password** : carlaverdi

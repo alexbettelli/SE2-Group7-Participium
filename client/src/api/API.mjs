@@ -99,12 +99,14 @@ const getOffices = async() => {
     });
     if (res.ok) {
         const offices = await res.json();
+        console.log(offices);
         return offices;
     } else {
         const errMessage = await res.json();
         throw new Error(errMessage.error || 'Error fetching offices');
     }
 };
+
 
 const getRoles = async() => {
     const res = await fetch(SERVER_URL + '/roles', {
@@ -225,6 +227,52 @@ const getCategories = async() => {
         throw new Error(errMessage.error || 'Error fetching categories');
     }
 };
+
+const getUnassignedReports = async() => {
+    const res = await fetch(SERVER_URL + '/reports/unassigned', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        console.log(reports);
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching unassigned reports');
+    }
+};
+
+const assignReportToOfficer = async (reportId, userId, categoryId, officeId, officerId) => {
+    const res = await fetch(SERVER_URL + '/reports/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reportId, userId, categoryId, officeId, officerId })
+    }); 
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error assigning report to officer');
+    }
+};
+
+const rejectReport = async (reportId, userId, reason) => {
+    const res = await fetch(SERVER_URL + '/reports/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({reportId, userId, reason})
+    });
+    if(res.ok){
+      return;
+    } else {
+      const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error rejecting report');
+    }
+}
 
 const updateProfile = async (formData)=> {
     try{
@@ -350,6 +398,9 @@ const API = {
     logOut, 
     getCategories,
     getAllReports, 
+    getUnassignedReports, 
+    assignReportToOfficer,
+    rejectReport,
     getMyReports, 
     getReportStatuses,
     updateReportStatus,

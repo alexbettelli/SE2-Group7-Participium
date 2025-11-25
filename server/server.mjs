@@ -200,6 +200,7 @@ app.get('/employees/unassigned', isLogged,async (req, res) => {
   }
 });
 
+
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
@@ -218,7 +219,7 @@ app.post('/employees/assign', isLogged, async (req, res) => {
 
 app.get('/offices', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (!req.user || req.user.role.id !== 2 && req.user.role.id !== 3) {  // typeId 2 = admin, typeId 3 = PR officer
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -306,6 +307,55 @@ app.get('/users/myreports', isLogged, async (req, res) => {
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json({ error: 'Error fetching user reports' });
+  }
+});
+
+app.get('/reports/unassigned', isLogged, async (req, res) => {
+  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await DAO.getUnassignedReports();
+    return res.status(200).json(reports);
+  }catch(ex){
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.post('/reports/assign', isLogged, async (req, res) => {
+  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { reportId, userId, categoryId, officeId, officerId } = req.body;
+    await DAO.assignReportToOfficer(reportId, categoryId, officeId, officerId);
+    await DAO.createNotification({
+      reportId: reportId,
+      senderId: null,
+      receiverId: userId,
+      text: `Your report has been approved, we will keep you updated.`,
+      channelId: 1,
+    });
+    return res.status(200).json();
+  } catch(err){
+    console.log(err);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.post('/reports/reject', isLogged, async (req, res) => {
+  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { reportId, userId, reason } = req.body;
+    await DAO.rejectReport(reportId, reason);
+    await DAO.createNotification({
+      reportId: reportId,
+      senderId: null,
+      receiverId: userId,
+      text: `Your report has been rejected. \n Reason: ${reason}`,
+      channelId: 1,
+    });
+    return res.status(200).json();
+  }
+  catch(err){
+    console.log(err);
+    return res.status(500).json(new errors.InternalServerError());
   }
 });
 
@@ -454,6 +504,17 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
     const statuses = await DAO.getReportStatuses();
     return res.status(200).json(statuses);
   } catch(e) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get("/reports/unassigned", isLogged, async (req, res) => {
+  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await DAO.getUnassignedReports();
+    return res.status(200).json(reports);
+  }catch(err){
+    console.log(err);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
