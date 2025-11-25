@@ -18,8 +18,16 @@ export default function ReportPreview(props){
     const [updateStatus, setUpdateStatus] = useState(false);
     const [selectedStatusId, setSelectedStatusId] = useState(null);
 
-    const handleClose = () => setShowStatusModal(false);
-    const handleShow = () => setShowStatusModal(true);
+    const handleClose = () => {
+        setShowStatusModal(false);
+        document.body.style.overflowY = 'auto';
+    }
+    
+    const handleShow = () => {
+        setShowStatusModal(true);
+        document.body.style.overflowY = 'hidden';
+    }
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -42,8 +50,8 @@ export default function ReportPreview(props){
                 if (result && result.notification) {
                     report.notifications = [...report.notifications, result.notification];
                     setSelectedReport({ ...report });
-                    props.updateReports();
                 }
+                if(result.ok) props.updateReports();
             } catch (error) {
                 console.error('Error updating report status:', error);
             }
@@ -67,6 +75,11 @@ export default function ReportPreview(props){
                 return 'status-default'; // Grigio/Default
         }
     };
+
+    useEffect(() => {
+        if(expanded) document.body.style.overflowY = 'hidden';
+        else document.body.style.overflowY = 'auto';
+    }, [expanded]);
 
     const getImage = () => {
         if(report && report.images && report.images.length > 0) return report.images[0].imageUrl;
@@ -120,7 +133,7 @@ export default function ReportPreview(props){
                 <Modal.Body>
                     <Form.Select aria-label="Default select example" defaultValue={report.status.id} onChange={(e) => setSelectedStatusId(e.target.value)}>
                         { statuses.map(status => {
-                            if(![1, 2].includes(status.id))
+                            if(![1, 2, 5].includes(status.id))
                                 return <option key={status.id} value={status.id} >{status.statusName}</option>;
                         }) }
                     </Form.Select>
@@ -141,13 +154,17 @@ export default function ReportPreview(props){
 function ReportView(props) {
     const report = props.report;
 
+    const closeReportView = () => {
+        props.onClose();
+    }
+
     return (
         <>
-            <div id="backdrop" onClick={props.onClose}></div>
+            <div id="backdrop" onClick={closeReportView}></div>
             <div className="report-view">
                 <div className="report-view-header">
                     <h2>{props.report.title}</h2>
-                    <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
+                    <button className="close-button" onClick={closeReportView}><i className="bi bi-x-lg"></i></button>
                 </div>
                 <div className="report-view-content">
                     <div className="media-container">

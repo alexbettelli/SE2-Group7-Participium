@@ -303,7 +303,7 @@ const updateReportStatus = async (reportId, statusId) => {
     const res = await fetch(`${SERVER_URL}/reports/${reportId}?statusId=${statusId}`, { method: 'PATCH', credentials: 'include' });
     if (res.ok) {
         const data = await res.json();
-        console.log("New notification API-side: " + data.notification.text);
+        console.log("New notification API-side: " + data && data.notification && data.notification.text);
         return {
             ok: data.ok || true,
             notification: data.notification || null
