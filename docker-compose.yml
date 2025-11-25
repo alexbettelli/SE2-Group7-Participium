@@ -1,0 +1,23 @@
+services:
+  server:
+    build: ./server
+    container_name: participium-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/uploads:/app/uploads
+      - ./server/database.db:/app/database.db
+    environment:
+      - NODE_ENV=production
+      - BASE_URL=http://localhost:3001
+      - CORS_ORIGIN=http://localhost:5173
+    restart: unless-stopped
+
+  client:
+    build: ./client
+    container_name: participium-client
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    restart: unless-stopped
