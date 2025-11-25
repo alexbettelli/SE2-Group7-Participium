@@ -483,6 +483,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
                         break;
                     default:
                         console.log(`Unknown statusId: ${statusId}`);
+                        reject(new Error(`Unknown statusId: ${statusId}`));
                 }
                 db.run(query3, [reportId, row.userId, message, 1], function(err) {
                     if (err) return reject(err);
