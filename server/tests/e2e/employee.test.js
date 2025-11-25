@@ -1,6 +1,8 @@
 import request from 'supertest';
 import app from '../../server.mjs';
-import { describe, expect, it } from 'vitest';
+import {describe, expect, it } from 'vitest';
+
+let idCreatedEmployee;
 
 describe('E2E Employee Routes', () => {  
     
@@ -43,6 +45,7 @@ describe('E2E Employee Routes', () => {
             expect(res.statusCode).toBe(201);
             expect(res.headers['content-type']).toMatch(/json/); 
             expect(typeof res.body).toBe('number');
+            idCreatedEmployee = res.body;
         })
     })  
     describe("GET /employees/unassigned", () => {
@@ -74,27 +77,24 @@ describe('E2E Employee Routes', () => {
                 expect(typeof employee.firstName).toBe('string');
                 expect(employee).toHaveProperty('lastName');
                 expect(typeof employee.lastName).toBe('string');
-                expect(employee).toHaveProperty('typeId');
-                expect(employee.typeId).toBe(5);
+                expect(employee).toHaveProperty('role');
+                expect(employee.role.id).toBe(5);
                 expect(employee).toHaveProperty('allowEmailNotification');
-                expect(typeof employee.typeId).toBe('number');
+                expect(typeof employee.role.id).toBe('number');
                 expect(employee).toHaveProperty('telegramUsername');
                 expect(employee).toHaveProperty('imageUrl');
             })     
         })
     })  
     describe("POST /employees/assign", () => {
-        let assignedEmployee = {
-            "employeeId" : 3,
-            "roleId": 4,
-            "officeId": 2
-        }
-        it("assign an employee without being authenticated", async () => {
+        it("assign an employee without being authenticated", async () => {  
+          let assignedEmployee = {"employeeId" : idCreatedEmployee, "roleId": 4, "officeId": 2}
            const res = await request(app).post('/employees/assign').send(assignedEmployee)
             
             expect(res.statusCode).toBe(401);
         })
         it("assing an employee without being an admin", async () => {
+            let assignedEmployee = {"employeeId" : idCreatedEmployee, "roleId": 4, "officeId": 2}
             const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
             const res = await request(app).post('/employees/assign').set('Cookie', auth.headers['set-cookie'] ?? []).send(assignedEmployee);
             
@@ -102,11 +102,41 @@ describe('E2E Employee Routes', () => {
         })
         
         it("assign an employee correctly", async () => {
+            let assignedEmployee = {
+              "employeeId" : idCreatedEmployee,
+              "roleId": 4,
+              "officeId": 2
+            }
             const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
             const res = await request(app).post('/employees/assign').set('Cookie', auth.headers['set-cookie'] ?? []).send(assignedEmployee);
             
             expect(res.statusCode).toBe(200);
             expect(res.headers['content-type']).toMatch(/json/); 
         })
-    })  
+    })
+    describe("DELETE /employees/:id", () => {
+        it("delete an employee without being authenticated", async () => {
+            const res = await request(app).delete(`/employees/${idCreatedEmployee}`);
+            expect(res.statusCode).toBe(401);
+        })
+        it("delete an employee without being an admin", async () => {
+            const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
+            const res = await request(app).delete(`/employees/${idCreatedEmployee}`).set('Cookie', auth.headers['set-cookie'] ?? []);
+            expect(res.statusCode).toBe(403);
+        })
+        it("delete a non-existing employee", async () => {
+            const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
+            const res = await request(app).delete(`/employees/99999`).set('Cookie', auth.headers['set-cookie'] ?? []);
+            expect(res.statusCode).toBe(400);
+        })
+
+        it("delete an employee correctly", async () => {
+            const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
+            const res = await request(app).delete(`/employees/${idCreatedEmployee}`).set('Cookie', auth.headers['set-cookie'] ?? []);
+            expect(res.statusCode).toBe(200);
+            expect(res.headers['content-type']).toMatch(/json/); 
+        })
+    })
 });
+
+
