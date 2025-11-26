@@ -1,11 +1,13 @@
 import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
 import Mapper from '../utils/mapper.mjs'
-import { Report } from '../model/model.mjs';
 
-const db = new sqlite.Database('./database.db', (err) => {
+const db = new sqlite.Database('./data/database.db', (err) => {
     if(err) throw err;
 })
+
+const PORT = process.env.PORT || 3001;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 
 const addNewUser = (data) => {
@@ -326,7 +328,7 @@ const addNewReport = (report) => {
 
             for(let i=0; i<report.images.length; i++){
                 const query2 = 'INSERT INTO report_image (reportId, imageUrl, uploadedAt) VALUES (?, ?, ?)'
-                const params2 = [ report.id, `http://localhost:3001/images/reports/${report.id}/${report.images[i]}`, now ]
+                const params2 = [ report.id, report.images[i], now ]
                 db.run(query2, params2, function(err){
                     if(err){
                         db.run('ROLLBACK');
