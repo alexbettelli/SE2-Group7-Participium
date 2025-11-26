@@ -5,6 +5,10 @@ import DAO from "../../dao/DAO.mjs";
 import path from "path";
 
 vi.spyOn(DAO, 'addNewReport');
+vi.spyOn(DAO, 'rejectReport');
+vi.spyOn(DAO, 'createNotification');
+vi.spyOn(DAO, 'assignReportToOfficer');
+
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -191,4 +195,72 @@ describe('PATCH /reports/:id', () => {
 
         expect(res.statusCode).toBe(200);
     });
+});
+
+describe('POST /reports/assign', () => {
+    it('401 Unauthorized when not logged in', async () => {
+        const res = await request(app).post('/reports/assign').send({ reportId: 1, technicianId: 2 });
+        expect(res.status).toBe(401);
+        expect(DAO.assignReportToOfficer).toHaveBeenCalledTimes(0);
+    });
+    it('403 Forbidden for non PR officer', async () => {
+        const auth = await request(app).post('/session').send({ username: 'mario.rossi', password: 'mariorossi' });
+        const res = await request(app)
+            .post('/reports/assign')
+            .set('Cookie', auth.headers['set-cookie'] ?? [])
+            .send({ reportId: 1, technicianId: 2 });
+        expect(res.status).toBe(403);
+        expect(DAO.assignReportToOfficer).toHaveBeenCalledTimes(0);
+    });
+
+    it('200 OK and triggers DAO.assignReportToOfficer for PR officer', async () => {
+        const auth = await request(app).post('/session').send({ username: 'carla.rossi', password: 'CarlaRossi' });
+        expect(auth.status).toBe(201);
+        const payload = { reportId : 1, userId : 1, categoryId: 1, officeId: 1, officerId: 1 };
+        const res = await request(app)
+            .post('/reports/assign')
+            .set('Cookie', auth.headers['set-cookie'] ?? [])
+            .send(payload);
+        expect(res.status).toBe(200);
+        
+        expect(DAO.assignReportToOfficer).toHaveBeenCalledTimes(1);
+    });
+});
+
+
+describe('POST /reports/reject', () => {
+  it('401 Unauthorized when not logged in', async () => {
+    const res = await request(app).post('/reports/reject').send({ reportId: 1, userId: 1, reason: 'reason' });
+    expect(res.status).toBe(401);
+    expect(DAO.rejectReport).toHaveBeenCalledTimes(0);
+    expect(DAO.createNotification).toHaveBeenCalledTimes(0);
+  });
+
+  it('403 Forbidden for non PR officer', async () => {
+    const auth = await request(app).post('/session').send({ username: 'mario.rossi', password: 'mariorossi' });
+    const res = await request(app)
+      .post('/reports/reject')
+      .set('Cookie', auth.headers['set-cookie'] ?? [])
+      .send({ reportId: 1, userId: 1, reason: 'reason' });
+
+    expect(res.status).toBe(403);
+    expect(DAO.rejectReport).toHaveBeenCalledTimes(0);
+    expect(DAO.createNotification).toHaveBeenCalledTimes(0);
+  });
+
+  it('200 OK and triggers DAO.rejectReport and DAO.createNotification for PR officer', async () => {
+    const auth = await request(app).post('/session').send({ username: 'carla.rossi', password: 'CarlaRossi' });
+    expect(auth.status).toBe(201);
+
+    const payload = { reportId: 1, userId: 1, reason: 'Not valid' };
+    const res = await request(app)
+      .post('/reports/reject')
+      .set('Cookie', auth.headers['set-cookie'] ?? [])
+      .send(payload);
+
+    expect(res.status).toBe(200);
+    expect(DAO.rejectReport).toHaveBeenCalledTimes(1);
+    expect(DAO.createNotification).toHaveBeenCalledTimes(1);
+  });
+
 });
