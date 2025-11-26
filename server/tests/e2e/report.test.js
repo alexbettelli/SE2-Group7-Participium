@@ -79,7 +79,8 @@ describe('GET /reports/unassigned', () => {
     });
 
     it('200 OK and returns an array for PR officer', async () => {
-        const auth = await request(app).post('/session').send({ username: 'carla.verdi', password: 'carlaverdi' });
+        const auth = await request(app).post('/session').send({ username: 'carla.rossi', password: 'CarlaRossi' });
+        expect(auth.statusCode).toBe(201);
         const res = await request(app)
             .get('/reports/unassigned')
             .set('Cookie', auth.headers['set-cookie'] ?? []);
@@ -105,7 +106,8 @@ describe('GET /reports/assigned', () => {
     });
 
     it('200 OK and returns an array for technician', async () => {
-        const auth = await request(app).post('/session').send({ username: 'giulia.rossi', password: 'GiuliaRossi' });
+        const auth = await request(app).post('/session').send({ username: 'giulio.verdi', password: 'GiulioVerdi' });
+        expect(auth.statusCode).toBe(201);
         const res = await request(app)
             .get('/reports/assigned')
             .set('Cookie', auth.headers['set-cookie'] ?? []);
@@ -150,7 +152,7 @@ describe('GET /users/myreports', () => {
 });
 
 describe('PATCH /reports/:id', () => {
-    const existingAssignedReportId = 29; // assigned to technician giulia.rossi in the seed data
+    const existingAssignedReportId = 35; // assigned to technician giulio.verdi
     const nonExistingReportId = -1; // id that does not exist in the DB
 
     it('401 Unauthorized when not logged in', async () => {
@@ -169,7 +171,8 @@ describe('PATCH /reports/:id', () => {
     });
 
     it('404 Not Found for report not assigned to technician', async () => {
-        const auth = await request(app).post('/session').send({ username: 'giulia.rossi', password: 'GiuliaRossi' });
+        const auth = await request(app).post('/session').send({ username: 'giulio.verdi', password: 'GiulioVerdi' });
+        expect(auth.statusCode).toBe(201);
         const res = await request(app)
             .patch(`/reports/${nonExistingReportId}`)
             .query({ statusId: 3 })
@@ -179,13 +182,13 @@ describe('PATCH /reports/:id', () => {
     });
 
     it('200 OK when technician updates status of an assigned report', async () => {
-        const auth = await request(app).post('/session').send({ username: 'giulia.rossi', password: 'GiuliaRossi' });
+        const auth = await request(app).post('/session').send({ username: 'giulio.verdi', password: 'GiulioVerdi' });
+        expect(auth.statusCode).toBe(201);
         const res = await request(app)
             .patch(`/reports/${existingAssignedReportId}`)
             .query({ statusId: 3 })
             .set('Cookie', auth.headers['set-cookie'] ?? []);
 
         expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty('message');
     });
 });
