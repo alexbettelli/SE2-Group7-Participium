@@ -625,6 +625,23 @@ const setNotificationsAsRead = (userId, reportId) => {
     });
 }
 
+function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+}
+
+function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
 
 
 const DAO = {
@@ -652,7 +669,9 @@ const DAO = {
     getReportStatuses,
     getUnreadNotifications,
     setNotificationsAsRead,
-    createNotification
+    createNotification,
+  run,
+  all
 };
 
 export default DAO;
