@@ -292,8 +292,8 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(assignedEmp).toBe(undefined);      
     })
   })
+
   describe('addNewReport', () => {
-    
     it('add a new report', async () => {
       const newReport = {
         title : "fake title", 
@@ -325,5 +325,152 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(report.images.length).toBe(2);
       }
     )
-  }) 
+  })
+
+  describe('rejectReport', () => {
+    it('updates report status and reason', async () => {
+      const calls = [];
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'run').mockImplementation(function (sql, params, cb) {
+        calls.push({ sql: String(sql), params });
+        cb && cb.call(this, null);
+      });
+
+      await expect(DAO.rejectReport(5, 'not valid')).resolves.toBeUndefined();
+
+      expect(calls.length).toBeGreaterThan(0);
+      const { sql, params } = calls[0];
+      expect(sql.toLowerCase()).toContain('update report');
+      expect(params[0]).toBe('not valid');
+      // report is the last parameter passed to db.run
+      expect(params[params.length - 1]).toBe(5);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('assignReportToOfficer', () => {
+    it('assigns report to officer with correct parameters', async () => {
+      const calls = [];
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'run').mockImplementation(function (sql, params, cb) {
+        calls.push({ sql: String(sql), params });
+        cb && cb.call(this, null);
+      });
+
+      await expect(DAO.assignReportToOfficer(10, 3, 2, 4)).resolves.toBeUndefined();
+
+      expect(calls.length).toBeGreaterThan(0);
+      const { sql, params } = calls[0];
+      expect(sql.toLowerCase()).toContain('update report');
+      expect(params[0]).toBe(4); // officer id
+      expect(params[1]).toBe(2); // office id
+      expect(params[2]).toBe(3); // category Id
+      expect(params[4]).toBe(10); // report Id
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getReportStatuses', () => {
+    it('returns list of report statuses from DB', async () => {
+      const fakeStatuses = [
+        { id: 1, statusName: 'Pending' },
+        { id: 2, statusName: 'Approved' }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, fakeStatuses);
+      });
+
+      const result = await DAO.getReportStatuses();
+      expect(result).toEqual(fakeStatuses);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getAllReports', () => {
+    it('maps DB rows to Report objects', async () => {
+      const rows = [
+        {
+          id: 1,
+          title: 'Test report',
+          description: 'Test description',
+          latitude: 12.34,
+          longitude: 56.78,
+          address: 'Corso Raffaello',
+          userId: 1,
+          username: 'user1',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 10,
+          imageUrl: 'http://example.com/img.png'
+        }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, rows);
+      });
+
+      const reports = await DAO.getAllReports();
+      expect(Array.isArray(reports)).toBe(true);
+      expect(reports.length).toBe(1);
+      expect(reports[0].title).toBe('Test report');
+      expect(reports[0].user.username).toBe('user1');
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getUnassignedReports', () => {
+    it('returns mapped reports for unassigned reports', async () => {
+      const rows = [
+        {
+          id: 2,
+          title: 'Unassigned',
+          description: 'desc',
+          latitude: 1,
+          longitude: 2,
+          address: 'Addr',
+          userId: 1,
+          username: 'citizen',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '1999-01-02T00:00:00.000Z',
+          updatedAt: '1999-01-02T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 20,
+          imageUrl: 'http://example.com/didem.png'
+        }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, rows);
+      });
+
+      const reports = await DAO.getUnassignedReports();
+      expect(Array.isArray(reports)).toBe(true);
+      expect(reports.length).toBe(1);
+      expect(reports[0].title).toBe('Unassigned');
+      expect(reports[0].user.username).toBe('citizen');
+
+      spy.mockRestore();
+    });
+  });
 });

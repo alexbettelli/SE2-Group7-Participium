@@ -92,7 +92,7 @@ const getRoles = () => {
       db.all(query, [], (err, rows) => {
           if (err) {
               return reject(err);
-          }          
+          }         
           const roles = Mapper.mapRowsToRoles(rows);
           console.log(roles);
           resolve(roles);
@@ -458,7 +458,9 @@ const updateReportStatus = (userId, reportId, statusId) => {
         const query1 = "SELECT * FROM report WHERE id = ? AND employeeId = ?";
         db.get(query1, [reportId, userId], (err, row) => {
             if (err) return reject(err);
-            if(row === undefined) resolve(false);
+            if (row === undefined) {
+                return resolve(false);
+            }
             const now = dayjs().toString();
             const query2 = "UPDATE report SET statusId = ?, updatedAt = ? WHERE id = ?";
             db.run(query2, [statusId, now, reportId], function(err) {
@@ -650,7 +652,6 @@ const DAO = {
     getUserById, 
     updateReportStatus,
     getReportStatuses,
-    createNotification,
     getUnreadNotifications,
     setNotificationsAsRead,
     createNotification
