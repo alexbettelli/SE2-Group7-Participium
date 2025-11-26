@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import dayjs from 'dayjs';
 
 beforeEach(() => vi.spyOn(console, 'log').mockImplementation(() => {}));
 afterEach(() => { console.log.mockRestore(); vi.restoreAllMocks(); });
@@ -25,6 +26,8 @@ vi.mock('sqlite3', () => {
       Database._nextUserId = 10;
       Database._nextOfficeId = 10;
       Database._nextReportId = 10;
+      Database._nextNotificationId = 10;
+
 
       Database._categories = [
         { id: 1, categoryName: 'Plumbing' },
@@ -37,6 +40,13 @@ vi.mock('sqlite3', () => {
         { id: 3, name: 'Municipal Public Relations Officer' },
         { id: 4, name: 'Technical Office Staff Member' },
         { id: 5, name: 'Unassigned Employee' },
+      ]
+      Database._notifications =  [
+        { id: 1, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 1', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 },
+        { id: 2, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 2', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 },
+        { id: 3, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 3', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 },
+        { id: 4, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 4', channelId: 1, sendAt: new dayjs().toString(), isRead: 1 },
+        { id: 5, reportId: 1, senderId: 1, receiverId: 1, text: 'Notification 5', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 }
       ]
     }
 
@@ -94,6 +104,29 @@ vi.mock('sqlite3', () => {
           const id = Database._nextReportId++;
           return cb && cb.call({ lastID: id }, null);
         }
+
+        //INSERT notification
+        if (q.includes('insert into notification')) {
+          const id = Database._nextNotificationId++;
+          const [reportId, senderId, receiverId, text, channelId, sendAt] = params;
+          Database._notifications.push({
+            id, reportId, senderId, receiverId, text, channelId, sendAt, isRead: 0
+          });
+          return cb && cb.call({ lastID: id }, null);
+        }
+
+        //UPDATE user profile
+        if (q.includes('update user') && q.includes('set')) {
+          const [telegramUsername, allowEmailNotification, imageUrl, userId] = params;
+          const user = Database._users.find(u => u.id === userId);
+          if (user) {
+            user.telegramUsername = telegramUsername;
+            user.allowEmailNotification = allowEmailNotification;
+            user.imageUrl = imageUrl;
+          }
+          return cb && cb(null);
+        }
+
         // default: success no-op
         return cb && cb(null);
       } catch (err) {
@@ -114,6 +147,11 @@ vi.mock('sqlite3', () => {
         if (q.includes('from user') && q.includes('where id')) {
           const id = Number(params[0]);
           const row = Database._users.find(u => u.id === id);
+          return cb && cb(null, row);
+        }
+        if(q.includes('from notification') || q.includes('join notification')) {
+          const id = Number(params[0]);
+          const row = Database._notifications.find(n => n.id === id);
           return cb && cb(null, row);
         }
 
@@ -155,7 +193,6 @@ vi.mock('sqlite3', () => {
 });
 
 import sqlite3 from 'sqlite3';
-
 let DAO;
 
 beforeEach(async () => {
@@ -325,5 +362,104 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(report.images.length).toBe(2);
       }
     )
-  }) 
+  });
+
+  describe('DAO - createNotification', () => {
+    it('creates a new notification successfully', async () => {
+      // arrange
+      const message = {
+        reportId: 1,
+        senderId: 1,
+        receiverId: 2,
+        text: 'This is a test notification',
+        channelId: 1
+      };
+
+      // act
+      const now = new dayjs().toString();
+      const result = await DAO.createNotification(message);
+      console.debug("RESULT: "+JSON.stringify(result));
+
+      // assert
+      expect(result.reportId).toBe(message.reportId);
+      expect(result.sender.id).toBe(message.senderId);
+      expect(result.receiver.id).toBe(message.receiverId);
+      expect(result.text).toBe(message.text);
+      expect(result.channel.id).toBe(message.channelId);
+      expect(result.isRead).toBe(false);
+      expect(result.sendAt.toString()).toBe(now);
+    });
+  });
+
+  describe('DAO - getUnreadNotifications', () => {
+    it('retrieves unread notifications for a user', async () => {
+      // arrange
+      const userId = 2;
+
+      // act
+      const notifications = await DAO.getUnreadNotifications(userId);
+
+      // assert
+      expect(Array.isArray(notifications)).toBe(true);
+      expect(notifications.length).toBe(3);
+    });
+  });
+
+  describe('DAO - UpdateUserProfile', () => {
+    it('updates user profile successfully', async () => {
+      // arrange
+      const userId = 1;
+      const telegramUsername = 'new_telegram';
+      const allowEmailNotification = 1;
+      const imageUrl = 'http://example.com/image.png';
+
+      // act
+      const result = await DAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
+
+      // assert
+      expect(result.id).toBe(userId);
+      expect(result.username).toBe('existing');
+      expect(result).toHaveProperty('telegramUsername', telegramUsername);
+      expect(result).toHaveProperty('allowEmailNotification', allowEmailNotification);
+      expect(result).toHaveProperty('imageUrl', imageUrl);
+    });
+
+    it('handles updating non-existing user gracefully', async () => {
+      // arrange
+      const userId = 999; // non-existing user
+      const telegramUsername = 'ghost_telegram';
+      const allowEmailNotification = 0;
+      const imageUrl = 'http://example.com/ghost_image.png';
+
+      // act
+      const result = await DAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
+      
+      // assert
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('DAO - getUsernameByUserId', () => {
+    it('returns username when user exists', async () => {
+      // arrange
+      const userId = 1;
+
+      // act
+      const username = await DAO.getUsernameByUserId(userId);
+
+      // assert
+      expect(username).toBe('existing');
+    });
+
+    it('returns null when user does not exist', async () => {
+      // arrange
+      const userId = 999;
+
+      // act
+      const username = await DAO.getUsernameByUserId(userId);
+
+      // assert
+      expect(username).toBeNull();
+    });
+  });
 });
