@@ -607,7 +607,7 @@ const createNotification = (message) => {
 
 const getUnreadNotifications = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM notification WHERE receiverId = ?`; //!TODO: missing isRead field in the DB
+        const query = `SELECT * FROM notification WHERE receiverId = ? AND isRead = 0`;
         db.all(query, [userId], async (err, rows) => {
             if (err) {
               return reject(err);
