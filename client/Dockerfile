@@ -3,6 +3,7 @@ FROM node:20 AS builder
 
 WORKDIR /app
 
+# Copy package.json and install dependencies
 COPY package*.json ./
 RUN npm install
 

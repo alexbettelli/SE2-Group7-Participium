@@ -2,7 +2,7 @@ import sqlite from 'sqlite3'
 import dayjs from 'dayjs';
 import Mapper from '../utils/mapper.mjs'
 
-const db = new sqlite.Database('./database.db', (err) => {
+const db = new sqlite.Database('./data/database.db', (err) => {
     if(err) throw err;
 })
 
