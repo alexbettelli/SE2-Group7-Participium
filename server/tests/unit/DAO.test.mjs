@@ -115,6 +115,19 @@ vi.mock('sqlite3', () => {
           return cb && cb.call({ lastID: id }, null);
         }
 
+        //UPDATE notification SET isRead = 1 WHERE ...
+        if (q.includes('update notification set isread')) {
+          const [reportId, receiverId] = params;
+          let changes = 0;
+          const notifications = Database._notifications.filter(n => n.receiverId === receiverId && n.reportId === reportId && n.isRead === 0);
+          for (const n of notifications) {
+            n.isRead = 1;
+            changes++;
+          }
+
+          return cb && cb.call({ changes }, null);
+        }
+
         //UPDATE user profile
         if (q.includes('update user') && q.includes('set')) {
           const [telegramUsername, allowEmailNotification, imageUrl, userId] = params;
@@ -162,7 +175,7 @@ vi.mock('sqlite3', () => {
     }
 
     all(sql, maybeParams, maybeCb) {
-      const { cb } = norm(maybeParams, maybeCb);
+      const { params, cb } = norm(maybeParams, maybeCb);
       const q = String(sql).toLowerCase();
       try {
         if (q.includes('from user') && q.includes('typeid')) {
@@ -178,6 +191,11 @@ vi.mock('sqlite3', () => {
         }
         if (q.includes('from user_type')) {
            return cb && cb(null, Database.roles.filter(r => [3, 4].includes(r.id)));
+        }
+        if(q.includes('from notification')) {
+          const receiverId = Number(params[0]);
+          const rows = Database._notifications.filter(n => n.receiverId === receiverId && n.isRead === 0);
+          return cb && cb(null, rows);
         }
         return cb && cb(null, []);
       } catch (err) {
@@ -401,6 +419,55 @@ describe('DAO (server/dao/DAO.mjs)', () => {
 
       // assert
       expect(notifications).toBe(3);
+    });
+
+    it('returns zero when user has no unread notifications', async () => {
+      // arrange
+      const userId = 3;
+
+      // act
+      const notifications = await DAO.getUnreadNotifications(userId);
+
+      // assert
+      expect(notifications).toBe(0);
+    });
+  });
+
+  describe('DAO - setNotificationsAsRead', () => {
+    it('marks a notification as read successfully', async () => {
+      // arrange
+      const userId = 2;
+      const reportId = 1;
+
+      // act
+      const result = await DAO.setNotificationsAsRead(userId, reportId);
+
+      // assert
+      expect(result).toBe(3);
+    });
+
+    it('marks a notification as read successfully for user 1', async () => {
+      // arrange
+      const userId = 1;
+      const reportId = 1;
+
+      // act
+      const result = await DAO.setNotificationsAsRead(userId, reportId);
+
+      // assert
+      expect(result).toBe(1);
+    });
+
+    it('marks a notification as read for non existing user', async () => {
+      // arrange
+      const userId = 999;
+      const reportId = 1;
+
+      // act
+      const result = await DAO.setNotificationsAsRead(userId, reportId);
+
+      // assert
+      expect(result).toBe(0);
     });
   });
 
