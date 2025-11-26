@@ -1,0 +1,32 @@
+services:
+  server:
+    image: 338059/se2-participium:server-latest
+    container_name: participium-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - participium-db:/app/data
+      - participium-uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - BASE_URL=${BASE_URL:-http://localhost:3001}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+    restart: unless-stopped
+
+  client:
+    image: 338059/se2-participium:client-latest
+    container_name: participium-client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
+    restart: unless-stopped
+    
+
+volumes:
+  participium-uploads:
+    driver: local
+  participium-db:
+    driver: local

@@ -30,22 +30,22 @@ validator.ajv.addSchema(schemas.notification, 'notification');
 addFormats(validator.ajv);
 const validate = validator.validate;
 
+const PORT = process.env.PORT || 3001;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/images', express.static(path.join(__dirname, 'uploads')));
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: CORS_ORIGIN,
   optionsSuccessStatus: 200,
   credentials: true
 };
 
 app.use(cors(corsOptions));
-
-app.use('/public', express.static('public'));
-
-const PORT = 3001;
 
 const upload = multer();
 const upload_dir = 'uploads';
@@ -78,8 +78,8 @@ const uploadProfile = multer({
 });
 
 app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
-  console.log(`Swagger documentation is available at http://localhost:${PORT}/api-docs`);
+  console.log(`Server listening at ${BASE_URL}`);
+  console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
 });
 
 app.use(session({
@@ -115,7 +115,7 @@ passport.deserializeUser(async function(user, cb){
     if (freshUser) {
       const userWithImageUrl = {
         ...freshUser,
-        imageUrl: freshUser.imageUrl ? `http://localhost:3001/images/profiles/${freshUser.imageUrl}` : null
+        imageUrl: freshUser.imageUrl
       };
       return cb(null, userWithImageUrl);
     }
@@ -311,6 +311,17 @@ app.delete('/sessions/current', (req, res) => {
 
 // REPORTS
 
+app.get('/reports', isLogged, async (req, res) => {
+  try {
+    const reports = await DAO.getAllReports();
+    console.log(reports);
+    return res.status(200).json(reports);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
 app.get('/users/myreports', isLogged, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -403,7 +414,7 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
       if(!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(path.join(__dirname, directory, uuids[idx]), images[idx].buffer);
     }
-    return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `http://localhost:3001/images/reports/${received.id}/${filename}`})) });
+    return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `${BASE_URL}/images/reports/${received.id}/${filename}`})) });
   }catch(e){
     console.log(e)
     return res.status(503).json(new errors.ServiceUnvailableError());
@@ -452,7 +463,7 @@ app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profileP
     
     const userResponse = {
       ...updatedUser,
-      imageUrl: updatedUser.imageUrl ? `http://localhost:3001/images/profiles/${updatedUser.imageUrl}` : null
+      imageUrl: updatedUser.imageUrl 
     };
     
     res.status(200).json(userResponse);
@@ -502,9 +513,11 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
 app.patch("/reports/:id", isLogged, async (req, res) => {
   if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
-    const result = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
-    if(!result) return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
-    return res.status(200).json({ message: "Report status updated successfully." });
+    const notification = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
+    console.log("New notification: ", notification);
+    if(!notification) 
+      return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
+    return res.status(200).json({ ok: true, notification });
   } catch(e) {
     return res.status(500).json(new errors.InternalServerError());
   }
