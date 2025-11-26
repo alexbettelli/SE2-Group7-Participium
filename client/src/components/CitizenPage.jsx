@@ -639,7 +639,7 @@ export default function CitizenPage({user}){
                                                 )}
                                             </div>
 
-                                            <div className="form-group">
+                                            {/* <div className="form-group">
                                                 <label className="checkbox-label">
                                                     <input
                                                         type="checkbox"
@@ -649,7 +649,7 @@ export default function CitizenPage({user}){
                                                     />
                                                     <span>Submit as anonymous (your name will not be visible in public reports)</span>
                                                 </label>
-                                            </div>
+                                            </div> */}
 
                                             {submitMessage && !submitMessage.includes('success') && (
                                                 <div className="error-message">
