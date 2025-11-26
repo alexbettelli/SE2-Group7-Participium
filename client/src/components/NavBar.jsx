@@ -24,7 +24,7 @@ function NavHeader(props){
   };
 
   useEffect(() => {
-      if(!user || !user?.id)
+      if(!user || !user?.id || (user?.role.id !== 1 && user?.role.id !== 4))
             return;
       const fetchUnreadNotifications = async () => {
         try {
@@ -83,7 +83,7 @@ function NavHeader(props){
         {/* Right side: Icons + Buttons */}
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto navbar-nav-custom">
-            {user && user.role?.id !== 2 && (
+            {user && (user.role?.id === 1 || user.role?.id === 4)  && (
               <div 
                 onClick={() => {
                   user.role.id === 1 ? navigate("/myreports") : navigate("/");
