@@ -348,7 +348,7 @@ Defines all the channels able to send messages.
 
 <br>
 
-- **Thechnical Office staff member**
+- **Technical Office staff member**
   **username** : giulia.rossi
   **password** : GiuliaRossi
 
@@ -360,7 +360,7 @@ Defines all the channels able to send messages.
 
 
 
-#   Running Docker Containers
+# Running Docker Containers
 
 This guide explains how to run the Docker containers for the repository `338059/se2-participium` using Docker Compose or individual Docker commands.
 

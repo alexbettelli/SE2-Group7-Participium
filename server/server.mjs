@@ -176,7 +176,6 @@ app.post('/employees', isLogged,async (req, res) => {
     const hashedPassword = await bcrypt.hash(employeeData.password, 8);
     employeeData.password = hashedPassword;
     employeeData.typeId = 5; // typeId 5 = unassigned employee
-    console.log("Creating new employee with data:", employeeData);
     const created = await DAO.addNewUser(employeeData);
 
     return res.status(201).json(created);
@@ -230,7 +229,6 @@ app.post('/employees/assign', isLogged, async (req, res) => {
     }
 
     const { employeeId, officeId, roleId } = req.body;
-    console.log(`Assigning employee ${employeeId} to office ${officeId} with role ${roleId}`);
     await DAO.assignEmployeeToOffice(employeeId, officeId, roleId);
     return res.status(200).json({ message: 'Employee assigned successfully' });
   } catch (error) {
@@ -255,7 +253,6 @@ app.get('/offices', isLogged, async (req, res) => {
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
-    console.log(req.user);
     if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
@@ -314,7 +311,6 @@ app.delete('/sessions/current', (req, res) => {
 app.get('/reports', isLogged, async (req, res) => {
   try {
     const reports = await DAO.getAllReports();
-    console.log(reports);
     return res.status(200).json(reports);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
@@ -326,7 +322,6 @@ app.get('/users/myreports', isLogged, async (req, res) => {
   try {
     const userId = req.user.id;
     const reports = await DAO.getReportsByUserId(userId);
-    console.log(reports);
     return res.status(200).json(reports);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
@@ -358,7 +353,6 @@ app.post('/reports/assign', isLogged, async (req, res) => {
     });
     return res.status(200).json();
   } catch(err){
-    console.log(err);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -378,7 +372,6 @@ app.post('/reports/reject', isLogged, async (req, res) => {
     return res.status(200).json();
   }
   catch(err){
-    console.log(err);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -407,8 +400,6 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
 
   try{
     const received = await DAO.addNewReport(report);
-    console.log(received);
-    console.log(images);
     for(const idx in images){
       const directory = `${upload_dir}/reports/${received.id}`;
       if(!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
@@ -416,7 +407,6 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
     }
     return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({imageUrl:  `${BASE_URL}/images/reports/${received.id}/${filename}`})) });
   }catch(e){
-    console.log(e)
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
       
@@ -445,7 +435,6 @@ app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profileP
         const oldPhotoPath = path.join(__dirname, 'uploads', 'profiles', oldImageUrl);
         try {
           await fsPromises.unlink(oldPhotoPath);
-          console.log(`Deleted old profile photo: ${oldPhotoPath}`);
         } catch (err) {
           console.error(`Error deleting old profile photo: ${err.message}`);
         }
@@ -485,7 +474,6 @@ app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
       const oldPhotoPath = path.join(__dirname, 'uploads', 'profiles', oldImageUrl);
       try {
         await fsPromises.unlink(oldPhotoPath);
-        console.log(`Deleted profile photo: ${oldPhotoPath}`);
       } catch (err) {
         console.error(`Error deleting profile photo: ${err.message}`);
       }
@@ -514,7 +502,6 @@ app.patch("/reports/:id", isLogged, async (req, res) => {
   if(req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
     const notification = await DAO.updateReportStatus(req.user.id, req.params.id, req.query.statusId);
-    console.log("New notification: ", notification);
     if(!notification) 
       return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
     return res.status(200).json({ ok: true, notification });
@@ -568,7 +555,6 @@ app.post('/notifications/read', async (req, res) => {
 
 app.use((err, req, res, next) => {
   if(err instanceof ValidationError){
-    console.log(err.validationErrors);
     res.status(400).json(new errors.BadRequestError());
   }
   next(err);
