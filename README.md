@@ -357,3 +357,109 @@ Defines all the channels able to send messages.
 - **Public Relations Municipal Officer**
   **username** : carla.verdi
   **password** : carlaverdi
+
+
+
+#   Running Docker Containers
+
+This guide explains how to run the Docker containers for the repository `338059/se2-participium` using Docker Compose or individual Docker commands.
+
+---
+
+## Prerequisites
+
+* [Docker](https://www.docker.com/) installed
+* [Docker Compose](https://docs.docker.com/compose/) installed (optional, only for the Compose method)
+*  Make a folder for the project
+```bash
+mkdir <folder_name>
+cd <folder_name>
+```
+---
+## Method 1: Docker Compose (recommended)
+
+### Step 1 - Download file docker-compose.yml
+
+* Direct download
+```bash
+curl -O https://github.com/alexbettelli/SE2-Group7-Participium/tree/main/docker-compose.yml
+```
+* Download manually by [GitHub](https://github.com/alexbettelli/SE2-Group7-Participium/tree/main)
+
+
+### Step 2 - Pull the Docker Compose
+```bash
+docker compose pull
+```
+
+### Step 3- Start the containers:
+
+```bash
+docker-compose up -d
+```
+### Step 4 -  Access the application
+Open the browser on http://localhost:5173
+
+### Step 5 - Stop and remove the containers:
+
+
+```bash
+docker-compose down
+docker-compose down -v
+```
+**Attention: `docker-compose down -v` removes all the volumes and data**
+
+---
+
+## Method 2: Individual Docker Commands
+
+If you prefer to run containers manually:
+
+### Step 1 Pull the Docker Images
+First, download the required Docker images:
+
+```bash
+docker pull 338059/se2-participium:server-latest
+docker pull 338059/se2-participium:client-latest
+```
+
+---
+### Step 2 Run the single Docker Images
+```bash
+# Start the server
+docker run -d --name participium-server -p 3001:3001 -v participium-db:/app/data -v participium-uploads:/app/uploads -e NODE_ENV=production -e BASE_URL=http://localhost:3001 -e CORS_ORIGIN=http://localhost:5173 338059/se2-participium:server-latest
+
+
+# Start the client
+docker run -d --name participium-client -p 5173:80 -e VITE_API_URL=http://localhost:3001 --link participium-server:server 338059/se2-participium:client-latest
+
+```
+### Step 3 - Access the application
+Open the browser on http://localhost:5173
+
+### Step 4 Stop and remove the containers:
+
+```bash
+docker stop participium-server participium-client
+docker rm participium-server participium-client
+```
+**Attention: `docker rm participium-server participium-client` removes all the volumes and data**
+
+---
+
+## 5. Notes
+
+* Default ports: **3001** for the server, **5173** for the client.
+* Volumes `participium-db` and `participium-uploads` persist data across container restarts(not removes).
+* Useful commands:
+
+```bash
+docker-compose restart
+docker logs participium-server
+docker logs participium-client
+```
+
+---
+
+These instructions allow you to easily run the project using either Docker Compose or standalone Docker commands.
+
