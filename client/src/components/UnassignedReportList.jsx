@@ -23,7 +23,8 @@ export default function UnassignedReportsList(props) {
 
   return (
     <div className="unassigned-reports-container">
-      <h2 style={{ textAlign: 'center', width: '100%' }}>New Reports: {reports.length === 0 ? " - None" : ` - ${reports.length}`}</h2>
+      <h2 className="unassigned-report-list-title">New Reports: {reports.length === 0 ? " None" : ` ${reports.length}`}</h2>
+      <p className="unassigned-report-list-subtitle">Click on a report to display the details.</p>
       <Table hover className="unassigned-reports-table">
         <thead>
           <tr>
