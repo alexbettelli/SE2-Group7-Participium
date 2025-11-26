@@ -7,28 +7,18 @@ function DefaultFooter(){
             <Container fluid className="py-5">
                 <Row className="justify-content-center text-center">
                     <Col lg={10} xl={8}>
-                        <Row className="align-items-start">
-                            <Col md={4} className="mb-5 mb-md-0">
-                                <div className="footer-brand">
-                                    <h5 className="footer-title mb-2">PARTICIPIUM</h5>
-                                    <p className="footer-subtitle">Digital Platform for Civic Participation</p>
-                                </div>
-                            </Col>
-                            
-                            <Col md={4} className="mb-5 mb-md-0">
-                                <div className="footer-city">
-                                    <h6 className="city-name mb-3">City of Turin</h6>
-                                </div>
-                            </Col>
-                            
-                            <Col md={4} className="mb-4 mb-md-0">
-                                <div className="footer-links">
-                                    <a href="#privacy" className="footer-link">Privacy Policy</a>
-                                    <a href="#terms" className="footer-link">Terms of Use</a>
-                                    <a href="#contact" className="footer-link">Contact</a>
-                                </div>
-                            </Col>
-                        </Row>
+                        <div className="footer-brand">
+                            <h5 className="footer-title mb-2">PARTICIPIUM</h5>
+                            <p className="footer-subtitle">Digital Platform for Civic Participation</p>
+                        </div>
+                        <div className="footer-city">
+                            <h6 className="city-name mb-3">City of Turin</h6>
+                        </div>
+                        <div className="footer-links">
+                            <a href="#privacy" className="footer-link">Privacy Policy</a>
+                            <a href="#terms" className="footer-link">Terms of Use</a>
+                            <a href="#contact" className="footer-link">Contact</a>
+                        </div>
                     </Col>
                 </Row>
                 

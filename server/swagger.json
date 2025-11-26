@@ -876,12 +876,12 @@
                 "additionalProperties": false,
                 "properties": {
                     "reportId": { "type": "integer" },
-                    "senderId": { "type": "integer" },
+                    "senderId": { "type": ["integer", "null"] },
                     "receiverId": { "type": "integer" },
                     "text": { "type": "string" },
                     "channelId": { "type": "integer" }
                 },
-                "required": [ "senderId", "receiverId", "text", "channelId" ]
+                "required": [ "receiverId", "text", "channelId" ]
             },
             "public_stats": {
                 "type": "object",

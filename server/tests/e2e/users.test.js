@@ -68,7 +68,7 @@ describe('E2E User Routes', () => {
     const res = await agent.post('/user').send(testUser);
     expect([201,409]).toContain(res.statusCode); // 409 if user already exists
     if(res.statusCode === 409) {
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     } else {
       expect(res.body).toBeDefined();
     }
@@ -105,6 +105,53 @@ describe('E2E User Routes', () => {
   test('GET /session/current - after logout should be unauthorized', async () => {
   const res = await agent.get('/session/current');
   expect(res.statusCode).toBe(401);
-  expect(res.body).toHaveProperty('message');
+  expect(res.body).toHaveProperty('error');
+  });
+
+  
+  test('PUT /api/user/profile - update profile with photo', async () => {
+    const a = request.agent(app);
+    const login = await a.post('/session').send({
+      username: testUser.username,
+      password: testUser.password
+    });
+    
+    expect([201,401]).toContain(login.statusCode);
+    if (login.statusCode !== 201) return;
+
+    const res = await a.put('/api/user/profile')
+      .field('telegramUsername', '@e2e_tele')
+      .field('allowEmailNotification', '1')
+      .attach('profilePhoto', Buffer.from('fakeimage'), 'photo.jpg');
+
+      
+    expect([200,400,500]).toContain(res.statusCode);
+    if (res.statusCode === 200) {
+      expect(res.body).toBeDefined();
+      
+      expect(res.body).toHaveProperty('imageUrl');
+    } else {
+      expect(res.body).toHaveProperty('error');
+    }
+  });
+
+  test('DELETE /api/user/profile/photo - delete profile photo', async () => {
+    const a = request.agent(app);
+    const login = await a.post('/session').send({
+      username: testUser.username,
+      password: testUser.password
+    });
+    expect([201,401]).toContain(login.statusCode);
+    if (login.statusCode !== 201) return;
+
+    const res = await a.delete('/api/user/profile/photo');
+    expect([200,401,500]).toContain(res.statusCode);
+    if (res.statusCode === 200) {
+      expect(res.body).toHaveProperty('message');
+    } else {
+      expect(res.body).toHaveProperty('error');
+    }
   });
 });
+
+

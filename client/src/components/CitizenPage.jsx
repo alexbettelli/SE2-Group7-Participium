@@ -2,8 +2,18 @@ import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
+import '@fortawesome/fontawesome-free/css/all.css';
+import * as turf from '@turf/turf';
 import '../styles/CitizenPage.css';
 import API from '../api/API.mjs';
+import ReportOverview from './ReportOverview.jsx';
+import ReportPopup from './ReportPopUp.jsx';
+import ReactDOM from "react-dom/client";
 
 
 
@@ -12,7 +22,9 @@ export default function CitizenPage({user}){
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
-    const abortControllerRef = useRef(null);
+    const abortControllerRef = useRef(null);    
+    const clusterGroupRef = useRef(null);
+
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [address, setAddress] = useState('');
     const [loadingAddress, setLoadingAddress] = useState(false);
@@ -25,7 +37,92 @@ export default function CitizenPage({user}){
     const [submitMessage, setSubmitMessage] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [activeTab, setActiveTab] = useState('reports');
+    const [submittedReport, setSubmittedReport] = useState(null);
+    const [reports, setReports] = useState([]);
+    const [approvedReports, setApprovedReports] = useState([]);
+    const [reportDetails, setReportDetails] = useState({})
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Resolved':
+                return 'status-completed'; // Verde
+            case 'Pending Approval':
+                return 'status-pending'; // Giallo/Arancione
+            case 'Rejected':
+                return 'status-rejected'; // Rosso
+            case 'In Progress':
+                return 'status-in-progress'; // Blu/Azzurro
+            default:
+                return 'status-default'; // Grigio/Default
+        }
+    };
+    const categoryColors = {
+        "Roads and Infrastructure": "lightblue",
+        "Waste and Cleanliness": "black",
+        "Green Areas and Public Parks": "darkred",
+        "Public Transport and Mobility": "purple"
+    };
+    const  getMarkerIcon = (categoryName) => {
+        const color = categoryColors[categoryName] || "blue"; // Default color        
+        return L.AwesomeMarkers.icon({
+            icon: 'fa-circle',     
+            markerColor: color,
+            prefix: 'fa',
+            iconColor: 'white'
+        });
+    }
+    const addLegendToMap = (map, categoryColors) => {
+        const legend = L.control({ position: "topright" });
+        legend.onAdd = function () {
+            const div = L.DomUtil.create("div", "map-legend-collapsible");
+            let listItems = "";
+            for (const [category, color] of Object.entries(categoryColors)) {
+                listItems += `<li><span style="background:${color}"></span> ${category}</li>`;
+            }
 
+            div.innerHTML = `
+                <button class="legend-toggle-btn" aria-label="Show/hide legend">Show Legend</button>
+                <div class="legend-content">
+                    <h4>Legend</h4>
+                    <ul>
+                        ${listItems}
+                    </ul>
+                </div>
+            `;
+            L.DomEvent.disableClickPropagation(div);
+            L.DomEvent.disableScrollPropagation(div);
+
+            // Collapse by default
+            div.querySelector('.legend-content').style.display = 'none';
+            div.querySelector('.legend-toggle-btn').onclick = function() {
+                const content = div.querySelector('.legend-content');
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    this.textContent = 'Hide Legend';
+                } else {
+                    content.style.display = 'none';
+                    this.textContent = 'Legenda';
+                }
+            };
+            return div;
+        };
+        legend.addTo(map);
+    };
+    useEffect(() => {
+        getAllReports();
+    }, []);
+    
+    const getAllReports = async () =>{
+        try {
+            const reports = await API.getAllReports();            
+            setReports(reports);
+            console.log(reports)
+            const approvedReports = reports.filter(report => [2, 3, 4].includes(report.status.id));
+            setApprovedReports(approvedReports);
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+        }
+    }
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -45,8 +142,44 @@ export default function CitizenPage({user}){
                 attribution: '© OpenStreetMap contributors'
             }).addTo(mapInstanceRef.current);
 
+            // Add categpory legend
+            addLegendToMap(mapInstanceRef.current, categoryColors);
+            // Load Turin boundary
+            fetch('/geo/torino.geojson')
+                .then(res => res.json())
+                .then(geojson => {
+                    const boundaryLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: '#539987',
+                            weight: 3,
+                            fillOpacity: 0,
+                        }
+                    }).addTo(mapInstanceRef.current);
+
+                    mapInstanceRef.current.fitBounds(boundaryLayer.getBounds());
+                    mapInstanceRef.current.setView([45.0703, 7.6868], 10);
+                    mapInstanceRef.current._turinBoundary = boundaryLayer;
+                })
+                .catch(err => console.error("Error loading Turin boundary:", err));
+
             mapInstanceRef.current.on('click', async (e) => {
                 const { lat, lng } = e.latlng;
+
+                // Check if inside Turin boundary
+                const boundary = mapInstanceRef.current._turinBoundary;
+                if (boundary) {
+                    const point = turf.point([lng, lat]);
+                    const boundaryGeoJSON = boundary.toGeoJSON();
+                    const inside = boundaryGeoJSON.features.some(feature =>
+                        turf.booleanPointInPolygon(point, feature)
+                    );
+
+                    if (!inside) {
+                        alert("Please select a location inside the City of Turin.");
+                        return;
+                    }
+                }
+
 
                 if (abortControllerRef.current) {
                     abortControllerRef.current.abort();
@@ -56,10 +189,12 @@ export default function CitizenPage({user}){
                     mapInstanceRef.current.removeLayer(markerRef.current);
                 }
 
-                markerRef.current = L.marker([lat, lng]).addTo(mapInstanceRef.current);
+                
+                markerRef.current = L.marker([lat, lng], {icon : getMarkerIcon()}).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
                 setAddress('');
                 setLoadingAddress(true);
+                setActiveTab('form');
 
                 abortControllerRef.current = new AbortController();
 
@@ -95,10 +230,77 @@ export default function CitizenPage({user}){
         };
     }, []);
 
+    useEffect(() => {
+        if (!mapInstanceRef.current) return;
+
+        // Rimuovi cluster precedente
+        if (clusterGroupRef.current) {
+        mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+        }
+
+        // Crea il gruppo cluster
+        const clusterGroup = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            disableClusteringAtZoom: 17,
+            zoomToBoundsOnClick: true,
+            iconCreateFunction: (cluster) => {
+                const count = cluster.getChildCount();
+                let color;
+                 if (count < 10) color = "#4caf50";  
+                else if (count < 15) color = "#f1c40f";  
+                else if (count < 20) color = "#e67e22";  
+                else color = "#e74c3c";
+
+                return L.divIcon({
+                    html: `<div style="
+                        background:${color};
+                        width:35px;
+                        height:35px;
+                        border-radius:50%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        color:#fff;
+                        font-weight:600;
+                        font-size:14px;
+                        border:2px solid white;
+                    ">${count}</div>`,
+                    className: "clusterGroup",
+                    iconSize: [35, 35]
+                });
+            }
+        });
+
+        // Aggiungi marker al gruppo
+        approvedReports.forEach((report) => {
+        if (report.latitude && report.longitude) {
+            const popupContainer = document.createElement("div");    
+            ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
+
+            const marker = L.marker([report.latitude, report.longitude], {
+                icon: getMarkerIcon(report.category.categoryName)
+            }).bindPopup(popupContainer);            
+            clusterGroup.addLayer(marker); 
+        }
+        });
+
+        // Aggiungi il gruppo alla mappa
+        clusterGroup.addTo(mapInstanceRef.current);
+        clusterGroupRef.current = clusterGroup;
+
+        // Cleanup
+        return () => {
+        if (mapInstanceRef.current && clusterGroupRef.current) {
+            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+        }
+        };
+    }, [approvedReports]);
+    
+
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
         const totalFiles = images.length + newFiles.length;
-        
+
         if (totalFiles > 3) {
             const remainingSlots = 3 - images.length;
             if (remainingSlots > 0) {
@@ -113,7 +315,7 @@ export default function CitizenPage({user}){
             e.target.value = '';
             return;
         }
-        
+
         const newPreviews = newFiles.map(file => URL.createObjectURL(file));
         setImages([...images, ...newFiles]);
         setImagePreviews([...imagePreviews, ...newPreviews]);
@@ -145,7 +347,7 @@ export default function CitizenPage({user}){
             setSubmitMessage('Title must be between 5 and 100 characters');
             return;
         }
-        
+
         const trimmedDescription = description.trim();
         if (!trimmedDescription) {
             setSubmitMessage('Description is required');
@@ -189,23 +391,33 @@ export default function CitizenPage({user}){
                 latitude: reportData.latitude,
                 longitude: reportData.longitude,
                 address: reportData.address,
-                photos: result.images || [], 
-                author: isAnonymous || !user ? 'Anonymous' : `${user.firstName} ${user.lastName}`,
+                images: result.images || [],
+                username: isAnonymous || !user ? 'Anonymous' : `${user.username}`,
                 isAnonymous: isAnonymous || !user,
                 status: 'Pending Approval',
                 createdAt: result.createdAt || new Date().toISOString()
-            };   
+            };
 
-            navigate('/report-overview', { state: { report: reportForOverview } });
-            
+            setSubmittedReport(reportForOverview);
+            setActiveTab('form');
+            clearSelection(true);
+            setTitle('');
+            setDescription('');
+            setCatId('');
+            setImages([]);
+            setImagePreviews([]);
+            setIsAnonymous(false);
+            setSubmitMessage('Report submitted successfully!');
+
         } catch (error) {
             setSubmitMessage(error.message || 'Error submitting report');
         } finally {
             setSubmitting(false);
+            getAllReports();
         }
     };
 
-    const clearSelection = () => {
+    const clearSelection = (keepTab = false) => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
@@ -216,151 +428,250 @@ export default function CitizenPage({user}){
         setSelectedLocation(null);
         setAddress('');
         setLoadingAddress(false);
-        
-        // Scroll to map
-        if (mapRef.current) {
-            mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!keepTab) {
+            setActiveTab('reports');
         }
     };
 
+    const resetForm = () => {
+        setSubmittedReport(null);
+        clearSelection(true);
+        setTitle('');
+        setDescription('');
+        setCatId('');
+        setImages([]);
+        setImagePreviews([]);
+        setIsAnonymous(false);
+        setSubmitMessage('');
+    };
+
+    const handleTabClick = (tab) => {
+        setActiveTab(tab);
+        setSubmitMessage('');
+        setReportDetails({});
+        resetForm();
+        //ResetZoom();
+    };
+    const zoomToReportLocation = (report) =>{
+        if (report.latitude && report.longitude && mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17,{
+                animate: true,      
+                duration: 1.5
+            });
+        }
+    }
+    const showReportDetails = (report) => {
+        const normalizedReport = {
+            ...report,
+            status: report.status?.statusName ?? "N/A",
+            category: report.category?.categoryName ?? "N/A",
+            username : report.user?.username ?? "Anonymous"
+        };
+        setActiveTab('details');        
+        setReportDetails(normalizedReport);    
+        zoomToReportLocation(normalizedReport);
+    }    
+    const handlePopUpDetailsClick = (report) => {
+        showReportDetails(report);
+    }
+    const ResetZoom = () => {
+         mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, {animate: true,  duration: 1});
+    }
     return (
         <div className="citizen-page-container">
             <div className="citizen-page-header">
-                <h2>Welcome to Participium - City of Turin</h2>
+                <h2 className="citizen-page-title">Welcome to Participium - City of Turin</h2>
                 <p>Report issues in your city and help make Turin a better place for everyone.</p>
-                {!selectedLocation && (
-                    <p className="location-instruction">📍 Click on the map to select the location for your report.</p>
-                )}
             </div>
-
-            {submitMessage && submitMessage.includes('success') && (
-                <div className="success-message">
-                    {submitMessage}
-                </div>
-            )}
 
             <div className="citizen-page-content">
                 <div className="map-section">
                     <div className="map-container-wrapper">
                         <div ref={mapRef} className="map-container" />
-                        {selectedLocation && (
-                            <div className="map-overlay">
-                                <div className="map-overlay-content">
-                                    <p>Location set successfully!</p>
-                                    <p>Scroll down to complete your report</p>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                <div className="sidebar-container">
-                    {selectedLocation && (
-                        <>
-                            <div className="location-info-box">
-                                <strong>Selected Location</strong>
-                                <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
-                                <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
-                                <button className="reset-button" onClick={clearSelection}>
-                                    Reset Location
-                                </button>
-                            </div>
+                <div className="right-panel">
+                    <div className="tabbar">
+                        <button
+                            className={`tab-button ${activeTab === 'reports' ? 'active' : ''}`}
+                            onClick={() => handleTabClick('reports')}
+                        >
+                            Reports
+                        </button>
+                        <button
+                            className={`tab-button ${activeTab === 'details' ? 'active' : ''}`}
+                            onClick={() => handleTabClick('details')}
+                        >
+                            Report Details
+                        </button>
+                        <button
+                            className={`tab-button ${activeTab === 'form' ? 'active' : ''}`}
+                            onClick={() => handleTabClick('form')}
+                        >
+                            New Report
+                        </button>
+                    </div>
 
-                            <form className="report-form" onSubmit={handleSubmit}>
-                                <h3>Report Details</h3>
-
-                                <div className="form-group">
-                                    <label>Title <span>*</span></label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Description <span>*</span></label>
-                                    <textarea
-                                        className="form-textarea"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Category <span>*</span></label>
-                                    <select
-                                        className="form-select"
-                                        value={catId}
-                                        onChange={(e) => setCatId(e.target.value)}
-                                        size="1"
-                                        required
-                                    >
-                                        <option value="">Select a category</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Photos (1-3 required) <span>*</span></label>
-                                    <input
-                                        type="file"
-                                        className="file-input"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleImageChange}
-                                    />
-                                    {imagePreviews.length > 0 && (
-                                        <div className="image-previews">
-                                            {imagePreviews.map((preview, index) => (
-                                                <div key={index} className="preview-item">
-                                                    <img src={preview} alt={`Preview ${index + 1}`} />
-                                                    <button
-                                                        type="button"
-                                                        className="remove-image-button"
-                                                        onClick={() => removeImage(index)}
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="checkbox-label">
-                                        <input
-                                            type="checkbox"
-                                            checked={isAnonymous}
-                                            onChange={(e) => setIsAnonymous(e.target.checked)}
-                                            className="checkbox-input"
-                                        />
-                                        <span>Submit as anonymous (your name will not be visible in public reports)</span>
-                                    </label>
-                                </div>
-
-                                {submitMessage && !submitMessage.includes('success') && (
-                                    <div className="error-message">
-                                        {submitMessage}
+                    <div className="tab-content">
+                        {activeTab === 'reports' && (
+                            <div>
+                                {approvedReports.length === 0 ? (
+                                    <p className="empty-message">THERE ARE NO REPORTS IN PROGRESS</p>
+                                ) : (
+                                    approvedReports.map((report) => (
+                                    <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
+                                        <h3>{report.title}</h3>
+                                        <p>
+                                        <strong>Category:</strong> {report.category?.categoryName}<br />
+                                        <strong>Address:</strong> {report.address}
+                                         <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
+                                        </p>
                                     </div>
+                                    ))
                                 )}
+                            </div>
+                        )}
 
-                                <button
-                                    type="submit"
-                                    className="submit-button"
-                                    disabled={submitting}
-                                >
-                                    {submitting ? 'Submitting...' : 'Submit Report'}
-                                </button>
-                            </form>
-                        </>
-                    )}
+                        {activeTab === 'details' && (
+                            <div className="report-details">
+                                {Object.keys(reportDetails).length === 0 ? (
+                                    <p className="empty-message">Select a report to show details</p>
+                                ) : (
+                                    <ReportOverview user={user}
+                                        report={reportDetails}
+                                        onBackToHome={resetForm}
+                                        showSuccessBanner={false}
+                                        showNewReportBtn={false}
+                                    />
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'form' && (
+                            <>
+                                {submittedReport ? (
+                                    <ReportOverview user={user}
+                                        report={submittedReport}
+                                        onBackToHome={resetForm}
+                                        showSuccessBanner={true}
+                                    />
+                                ) : selectedLocation ? (
+                                    <>
+                                        <div className="location-info-box">
+                                            <div className="location-header">
+                                                <strong>Selected Location</strong>
+                                                <button className="reset-button" onClick={clearSelection}>
+                                                    Reset
+                                                </button>
+                                            </div>
+                                            <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                                            <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
+                                        </div>
+
+                                        <form className="report-form" onSubmit={handleSubmit}>
+                                            <h3>Report Details</h3>
+
+                                            <div className="form-group">
+                                                <label>Title <span>*</span></label>
+                                                <input
+                                                    type="text"
+                                                    className="form-input"
+                                                    value={title}
+                                                    onChange={(e) => setTitle(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Description <span>*</span></label>
+                                                <textarea
+                                                    className="form-textarea"
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Category <span>*</span></label>
+                                                <select
+                                                    className="form-select"
+                                                    value={catId}
+                                                    onChange={(e) => setCatId(e.target.value)}
+                                                    size="1"
+                                                    required
+                                                >
+                                                    <option value="">Select a category</option>
+                                                    {categories.map(cat => (
+                                                        <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Photos (1-3 required) <span>*</span></label>
+                                                <label className="file-input-label">
+                                                    <input
+                                                        type="file"
+                                                        className="file-input"
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={handleImageChange}
+                                                    />
+                                                    <span className="file-input-button">Choose Files</span>
+                                                </label>
+                                                {imagePreviews.length > 0 && (
+                                                    <div className="image-previews">
+                                                        {imagePreviews.map((preview, index) => (
+                                                            <div key={index} className="preview-item">
+                                                                <img src={preview} alt={`Preview ${index + 1}`} />
+                                                                <button
+                                                                    type="button"
+                                                                    className="remove-image-button"
+                                                                    onClick={() => removeImage(index)}
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* <div className="form-group">
+                                                <label className="checkbox-label">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isAnonymous}
+                                                        onChange={(e) => setIsAnonymous(e.target.checked)}
+                                                        className="checkbox-input"
+                                                    />
+                                                    <span>Submit as anonymous (your name will not be visible in public reports)</span>
+                                                </label>
+                                            </div> */}
+
+                                            {submitMessage && !submitMessage.includes('success') && (
+                                                <div className="error-message">
+                                                    {submitMessage}
+                                                </div>
+                                            )}
+
+                                            <button
+                                                type="submit"
+                                                className="submit-button"
+                                                disabled={submitting}
+                                            >
+                                                {submitting ? 'Submitting...' : 'Submit Report'}
+                                            </button>
+                                        </form>
+                                    </>
+                                ) : (
+                                    <p className="empty-message">Please select a location on the map first.</p>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

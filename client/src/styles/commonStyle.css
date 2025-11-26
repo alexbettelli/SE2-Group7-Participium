@@ -61,8 +61,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-secondary:hover {
-    background-color: var(--color-dark);
-    border-color: var(--color-dark);
+    background-color: var(--color-green);
+    border-color: var(--color-green);
     color: var(--color-cream);
 }
 
@@ -123,4 +123,21 @@ h1, h2, h3, h4, h5, h6 {
 .bg-wine-custom {
     background-color: var(--color-wine-light);
     color: var(--color-cream);
+}
+
+.page-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--color-wine-dark);
+    text-align: center;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+    letter-spacing: 1px;
+}
+
+.title-divider {
+	border: none;
+	border-top: 3px solid var(--color-wine-light);
+	width: 45%;
+	margin: 1.5rem auto 5rem;
 }

@@ -1,14 +1,17 @@
 import React from 'react';
 import '../styles/ReportOverview.css';
+import { Carousel } from 'react-bootstrap';
 
-const ReportOverview = ({ report, onBackToHome }) => {
+const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
 
     return (
         <div className="report-overview-container">
-            <div className="success-banner">
-                <h2 className="success-title">Report Submitted Successfully!</h2>
-                <p className="success-subtitle">Your report has been saved and will be reviewed by our team.</p>
-            </div>
+            {showSuccessBanner && (
+                <div className="success-banner">
+                    <h2 className="success-title">Report Submitted Successfully!</h2>
+                    <p className="success-subtitle">Your report has been saved and will be reviewed by our team.</p>
+                </div>
+            )}
             
             <div className="overview-card">
 
@@ -44,21 +47,21 @@ const ReportOverview = ({ report, onBackToHome }) => {
                     </div>
                 </div>
 
-                {report.photos && report.photos.length > 0 ? (
+                {report.images && report.images.length > 0 ? (
                     <div className="overview-section">
-                        <h4 className="section-label">Attached Photos ({report.photos.length})</h4>
+                        <h4 className="section-label">Attached Photos ({report.images.length})</h4>
                         <div className="photo-gallery">
-                            {report.photos.map((photo, index) => (
-                                <div key={index} className="photo-item">
-                                    <img 
-                                        src={photo.imageUrl || photo} 
-                                        alt={`Report photo ${index + 1}`}
-                                        onError={(e) => {
-                                            e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
-                                        }}
-                                    />
-                                </div>
-                            ))}
+                            <Carousel>
+                                {report.images.map((image, index) => (
+                                    <Carousel.Item key={index}>
+                                        <img 
+                                            className="d-block w-100" 
+                                            src={image.imageUrl} 
+                                            alt={`Report image ${index + 1}`} 
+                                        />
+                                    </Carousel.Item>
+                                ))}
+                            </Carousel>
                         </div>
                     </div>
                 ) : (
@@ -69,9 +72,9 @@ const ReportOverview = ({ report, onBackToHome }) => {
 
                 <div className="overview-footer">
                     <div className="report-meta">
-                        {!report.isAnonymous && report.author && (
+                        {!report.isAnonymous && report.username && (
                             <span className="author-info">
-                                Reported by: {report.author}
+                                Reported by: {report.username !==  user.username ? report.username : 'YOU'}
                             </span>
                         )}
                         {report.isAnonymous && (
@@ -88,11 +91,14 @@ const ReportOverview = ({ report, onBackToHome }) => {
                     </div>
                 </div>
 
+                {showNewReportBtn &&
                 <div className="overview-actions">
                     <button className="btn btn-primary" onClick={onBackToHome}>
-                        Back to Home
+                        Submit New Report
                     </button>
                 </div>
+                }
+                
             </div>
         </div>
     );

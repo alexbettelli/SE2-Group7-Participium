@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import dayjs from 'dayjs';
 
 beforeEach(() => vi.spyOn(console, 'log').mockImplementation(() => {}));
 afterEach(() => { console.log.mockRestore(); vi.restoreAllMocks(); });
@@ -25,11 +26,27 @@ vi.mock('sqlite3', () => {
       Database._nextUserId = 10;
       Database._nextOfficeId = 10;
       Database._nextReportId = 10;
+      Database._nextNotificationId = 10;
+
+      Database.report = {
+        id: 1,
+        title: 'Pothole on Main St',
+        description: 'There is a large pothole on Main St that needs fixing.',
+        statusId: 1,
+        catId: 1,
+        userId: 1,
+        latitude: 40.7128,
+        longitude: -74.0060,
+        address: 'Main St, Cityville',
+        createdAt: new dayjs().toString(),
+        anonymous: 0,
+        images: []
+      }
 
       Database._categories = [
-        { id: 1, name: 'Plumbing' },
-        { id: 2, name: 'Electrical'},
-        { id: 3, name: 'Landscaping' }
+        { id: 1, categoryName: 'Plumbing' },
+        { id: 2, categoryName: 'Electrical'},
+        { id: 3, categoryName: 'Landscaping' }
       ]
       Database.roles = [
         { id: 1, name: 'CItizen' },
@@ -37,6 +54,13 @@ vi.mock('sqlite3', () => {
         { id: 3, name: 'Municipal Public Relations Officer' },
         { id: 4, name: 'Technical Office Staff Member' },
         { id: 5, name: 'Unassigned Employee' },
+      ]
+      Database._notifications =  [
+        { id: 1, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 1', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 },
+        { id: 2, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 2', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 },
+        { id: 3, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 3', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 },
+        { id: 4, reportId: 1, senderId: 1, receiverId: 2, text: 'Notification 4', channelId: 1, sendAt: new dayjs().toString(), isRead: 1 },
+        { id: 5, reportId: 1, senderId: 1, receiverId: 1, text: 'Notification 5', channelId: 1, sendAt: new dayjs().toString(), isRead: 0 }
       ]
     }
 
@@ -94,6 +118,48 @@ vi.mock('sqlite3', () => {
           const id = Database._nextReportId++;
           return cb && cb.call({ lastID: id }, null);
         }
+
+        //UPDATE report status
+        if (q.includes('update report set statusid')) {
+          return cb && cb(null);
+        }
+
+        //INSERT notification
+        if (q.includes('insert into notification')) {
+          const id = Database._nextNotificationId++;
+          const [reportId, senderId, receiverId, text, channelId, sendAt] = params;
+          Database._notifications.push({
+            id, reportId, senderId, receiverId, text, channelId, sendAt, isRead: 0
+          });
+          return cb && cb.call({ lastID: id }, null);
+        }
+        
+
+        //UPDATE notification SET isRead = 1 WHERE ...
+        if (q.includes('update notification set isread')) {
+          const [reportId, receiverId] = params;
+          let changes = 0;
+          const notifications = Database._notifications.filter(n => n.receiverId === receiverId && n.reportId === reportId && n.isRead === 0);
+          for (const n of notifications) {
+            n.isRead = 1;
+            changes++;
+          }
+
+          return cb && cb.call({ changes }, null);
+        }
+
+        //UPDATE user profile
+        if (q.includes('update user') && q.includes('set')) {
+          const [telegramUsername, allowEmailNotification, imageUrl, userId] = params;
+          const user = Database._users.find(u => u.id === userId);
+          if (user) {
+            user.telegramUsername = telegramUsername;
+            user.allowEmailNotification = allowEmailNotification;
+            user.imageUrl = imageUrl;
+          }
+          return cb && cb(null);
+        }
+
         // default: success no-op
         return cb && cb(null);
       } catch (err) {
@@ -116,6 +182,11 @@ vi.mock('sqlite3', () => {
           const row = Database._users.find(u => u.id === id);
           return cb && cb(null, row);
         }
+        if(q.includes('from notification') || q.includes('join notification')) {
+          const id = Number(params[0]);
+          const row = Database._notifications.find(n => n.id === id);
+          return cb && cb(null, row);
+        }
 
         return cb && cb(null, undefined);
       } catch (err) {
@@ -124,7 +195,7 @@ vi.mock('sqlite3', () => {
     }
 
     all(sql, maybeParams, maybeCb) {
-      const { cb } = norm(maybeParams, maybeCb);
+      const { params, cb } = norm(maybeParams, maybeCb);
       const q = String(sql).toLowerCase();
       try {
         if (q.includes('from user') && q.includes('typeid')) {
@@ -141,6 +212,11 @@ vi.mock('sqlite3', () => {
         if (q.includes('from user_type')) {
            return cb && cb(null, Database.roles.filter(r => [3, 4].includes(r.id)));
         }
+        if(q.includes('from notification')) {
+          const receiverId = Number(params[0]);
+          const rows = Database._notifications.filter(n => n.receiverId === receiverId && n.isRead === 0);
+          return cb && cb(null, rows);
+        }
         return cb && cb(null, []);
       } catch (err) {
         return cb && cb(err);
@@ -155,7 +231,6 @@ vi.mock('sqlite3', () => {
 });
 
 import sqlite3 from 'sqlite3';
-
 let DAO;
 
 beforeEach(async () => {
@@ -266,7 +341,7 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       const categories = await DAO.getCategories();
       expect(Array.isArray(categories)).toBe(true);
       expect(categories.length).toBe(3);
-      const names = categories.map(c => c.name);
+      const names = categories.map(c => c.categoryName);
       expect(names).toEqual(expect.arrayContaining(['Plumbing', 'Electrical', 'Landscaping']));
       }
     )
@@ -276,8 +351,8 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       const roles = await DAO.getRoles();
       expect(Array.isArray(roles)).toBe(true);
       expect(roles.length).toBe(2);
-      const names = roles.map(c => c.name);
-      expect(names).toEqual(expect.arrayContaining(['Municipal Public Relations Officer', 'Technical Office Staff Member']));
+      const names = roles.map(c => c.id);
+      expect(names).toEqual([3, 4]);
       }
     )
   })
@@ -292,8 +367,8 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(assignedEmp).toBe(undefined);      
     })
   })
+
   describe('addNewReport', () => {
-    
     it('add a new report', async () => {
       const newReport = {
         title : "fake title", 
@@ -323,7 +398,473 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(report.anonymous).toBe(1);
       expect(Array.isArray(report.images)).toBe(true);
       expect(report.images.length).toBe(2);
-      }
-    )
-  }) 
-});
+      });
+    });
+  });
+
+  describe('DAO - createNotification', () => {
+    it('creates a new notification successfully', async () => {
+      // arrange
+      const message = {
+        reportId: 1,
+        senderId: 1,
+        receiverId: 2,
+        text: 'This is a test notification',
+        channelId: 1
+      };
+
+      // act
+      const now = new dayjs().toString();
+      const result = await DAO.createNotification(message);
+      console.debug("RESULT: "+JSON.stringify(result));
+
+      // assert
+      expect(result.reportId).toBe(message.reportId);
+      expect(result.sender.id).toBe(message.senderId);
+      expect(result.receiver.id).toBe(message.receiverId);
+      expect(result.text).toBe(message.text);
+      expect(result.channel.id).toBe(message.channelId);
+      expect(result.isRead).toBe(false);
+      expect(result.sendAt.toString()).toBe(now);
+    });
+  });
+
+  describe('DAO - getUnreadNotifications', () => {
+    it('retrieves unread notifications for a user', async () => {
+      // arrange
+      const userId = 2;
+
+      // act
+      const notifications = await DAO.getUnreadNotifications(userId);
+
+      // assert
+      expect(notifications).toBe(3);
+    });
+
+    it('returns zero when user has no unread notifications', async () => {
+      // arrange
+      const userId = 3;
+
+      // act
+      const notifications = await DAO.getUnreadNotifications(userId);
+
+      // assert
+      expect(notifications).toBe(0);
+    });
+  });
+
+  describe('DAO - setNotificationsAsRead', () => {
+    it('marks a notification as read successfully', async () => {
+      // arrange
+      const userId = 2;
+      const reportId = 1;
+
+      // act
+      const result = await DAO.setNotificationsAsRead(userId, reportId);
+
+      // assert
+      expect(result).toBe(3);
+    });
+
+    it('marks a notification as read successfully for user 1', async () => {
+      // arrange
+      const userId = 1;
+      const reportId = 1;
+
+      // act
+      const result = await DAO.setNotificationsAsRead(userId, reportId);
+
+      // assert
+      expect(result).toBe(1);
+    });
+
+    it('marks a notification as read for non existing user', async () => {
+      // arrange
+      const userId = 999;
+      const reportId = 1;
+
+      // act
+      const result = await DAO.setNotificationsAsRead(userId, reportId);
+
+      // assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('DAO - UpdateUserProfile', () => {
+    it('updates user profile successfully', async () => {
+      // arrange
+      const userId = 1;
+      const telegramUsername = 'new_telegram';
+      const allowEmailNotification = 1;
+      const imageUrl = 'image.png';
+
+      // act
+      const result = await DAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
+
+      // assert
+      expect(result.id).toBe(userId);
+      expect(result.username).toBe('existing');
+      expect(result).toHaveProperty('telegramUsername', telegramUsername);
+      expect(result).toHaveProperty('allowEmailNotification', allowEmailNotification);
+      expect(result).toHaveProperty('imageUrl', `//images/profiles/${imageUrl}`);
+    });
+
+    it('handles updating non-existing user gracefully', async () => {
+      // arrange
+      const userId = 999; // non-existing user
+      const telegramUsername = 'ghost_telegram';
+      const allowEmailNotification = 0;
+      const imageUrl = 'http://example.com/ghost_image.png';
+
+      // act
+      const result = await DAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
+      
+      // assert
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('DAO - getUsernameByUserId', () => {
+    it('returns username when user exists', async () => {
+      // arrange
+      const userId = 1;
+
+      // act
+      const username = await DAO.getUsernameByUserId(userId);
+
+      // assert
+      expect(username).toBe('existing');
+    });
+
+    it('returns null when user does not exist', async () => {
+      // arrange
+      const userId = 999;
+
+      // act
+      const username = await DAO.getUsernameByUserId(userId);
+
+      // assert
+      expect(username).toBeNull();
+    });
+  });
+
+  describe('rejectReport', () => {
+    it('updates report status and reason', async () => {
+      const calls = [];
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'run').mockImplementation(function (sql, params, cb) {
+        calls.push({ sql: String(sql), params });
+        cb && cb.call(this, null);
+      });
+
+      await expect(DAO.rejectReport(5, 'not valid')).resolves.toBeUndefined();
+
+      expect(calls.length).toBeGreaterThan(0);
+      const { sql, params } = calls[0];
+      expect(sql.toLowerCase()).toContain('update report');
+      expect(params[0]).toBe('not valid');
+      // report is the last parameter passed to db.run
+      expect(params[params.length - 1]).toBe(5);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('assignReportToOfficer', () => {
+    it('assigns report to officer with correct parameters', async () => {
+      const calls = [];
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'run').mockImplementation(function (sql, params, cb) {
+        calls.push({ sql: String(sql), params });
+        cb && cb.call(this, null);
+      });
+
+      await expect(DAO.assignReportToOfficer(10, 3, 2, 4)).resolves.toBeUndefined();
+
+      expect(calls.length).toBeGreaterThan(0);
+      const { sql, params } = calls[0];
+      expect(sql.toLowerCase()).toContain('update report');
+      expect(params[0]).toBe(4); // officer id
+      expect(params[1]).toBe(2); // office id
+      expect(params[2]).toBe(3); // category Id
+      expect(params[4]).toBe(10); // report Id
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getReportStatuses', () => {
+    it('returns list of report statuses from DB', async () => {
+      const fakeStatuses = [
+        { id: 1, statusName: 'Pending' },
+        { id: 2, statusName: 'Approved' }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, fakeStatuses);
+      });
+
+      const result = await DAO.getReportStatuses();
+      expect(result).toEqual(fakeStatuses);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getCategoryById', () => {
+    it('returns category for a given id', async () => {
+      const fakeCategory = { id: 1, categoryName: 'Plumbing' };
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'get').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, fakeCategory);
+      });
+      
+
+      const category = await DAO.getCategoryById(1);
+      expect(category).toEqual(fakeCategory);
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getStatusById', () => {
+    it('returns status for a given id', async () => {
+      const fakeStatus = { id: 1, statusName: 'Pending' };
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'get').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, fakeStatus);
+      });
+
+      const status = await DAO.getStatusById(1);
+      expect(status).toEqual(fakeStatus);
+      spy.mockRestore();
+    });
+  });
+  
+  describe('updateReportStatus', () => {
+    it('exectues UPDATE report SET statusId with correct parameters', async () => {
+      const reportId = 1;
+      const employeeId = 5;
+      const reporterUserId = 1;
+
+      const reportRow = { id: reportId, employeeId: employeeId, userId: reporterUserId };
+      const notificationRow = {
+        id: 999,
+        reportId,
+        senderId: null,
+        receiverId: reporterUserId,
+        text: 'stub',
+        channelId: 1,
+        sendAt: new dayjs().toString()
+      };
+
+      const getSpy = vi.spyOn(sqlite3.Database.prototype, 'get')
+        .mockImplementationOnce(function (_sql, _params, cb) { cb && cb(null, reportRow); })
+        .mockImplementationOnce(function (_sql, _params, cb) { cb && cb(null, notificationRow); });
+
+      const runCalls = [];
+      
+      const originalRun = sqlite3.Database.prototype.run;
+
+      const runSpy = vi.spyOn(sqlite3.Database.prototype, 'run').mockImplementation(function (sql, params, cb) {
+        const q = String(sql).toLowerCase();
+        
+        if (q.includes('insert into notification')) {
+          return originalRun.call(this, sql, params, cb);
+        }
+        
+        runCalls.push({ sql: String(sql), params });
+        return cb && cb(null);
+      });
+
+      const newStatus = 3;
+      await DAO.updateReportStatus(employeeId, reportId, newStatus);
+
+      const updateCall = runCalls.find(c => c.sql.toLowerCase().includes('update report set statusid'));
+      expect(updateCall).toBeTruthy();
+      expect(updateCall.params[0]).toBe(newStatus);
+      expect(updateCall.params[2]).toBe(reportId);
+
+      getSpy.mockRestore();
+      runSpy.mockRestore();
+    });
+  });
+
+  describe('getReportsByUserId', () => {
+    it('return reports for a given user id', async () => {
+      const rows = [
+        {
+          id: 1,
+          title: 'Test report 1',
+          description: 'Test description',
+          latitude: 12.34,
+          longitude: 56.78,
+          address: 'Corso Raffaello',
+          userId: 1,
+          username: 'user1',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 10,
+          imageUrl: 'http://example.com/img.png'
+        },
+        {
+          id: 2,
+          title: 'Test report 2',
+          description: 'Test description',
+          latitude: 12.34,
+          longitude: 56.78,
+          address: 'Corso Raffaello',
+          userId: 1,
+          username: 'user1',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 10,
+          imageUrl: 'http://example.com/img.png'
+        },
+        {
+          id: 3,
+          title: 'Test report',
+          description: 'Test description',
+          latitude: 12.34,
+          longitude: 56.78,
+          address: 'Corso Raffaello',
+          userId: 1,
+          username: 'user1',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 10,
+          imageUrl: 'http://example.com/img.png'
+        }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, rows);
+      });
+
+      const reports = await DAO.getReportsByUserId(1);
+      expect(Array.isArray(reports)).toBe(true);
+      expect(reports.length).toBe(3);
+      expect(reports[0].title).toBe('Test report 1');
+      expect(reports[1].title).toBe('Test report 2');
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('getAllReports', () => {
+    it('maps DB rows to Report objects', async () => {
+      const rows = [
+        {
+          id: 1,
+          title: 'Test report',
+          description: 'Test description',
+          latitude: 12.34,
+          longitude: 56.78,
+          address: 'Corso Raffaello',
+          userId: 1,
+          username: 'user1',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 10,
+          imageUrl: 'http://example.com/img.png'
+        }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, rows);
+      });
+
+      const reports = await DAO.getAllReports();
+      expect(Array.isArray(reports)).toBe(true);
+      expect(reports.length).toBe(1);
+      expect(reports[0].title).toBe('Test report');
+      expect(reports[0].user.username).toBe('user1');
+
+      spy.mockRestore();
+    });
+  });
+
+  
+
+  describe('getUnassignedReports', () => {
+    it('returns mapped reports for unassigned reports', async () => {
+      const rows = [
+        {
+          id: 2,
+          title: 'Unassigned',
+          description: 'desc',
+          latitude: 1,
+          longitude: 2,
+          address: 'Addr',
+          userId: 1,
+          username: 'citizen',
+          employeeId: null,
+          employeeUsername: null,
+          catId: 1,
+          categoryName: 'Category',
+          statusId: 1,
+          statusName: 'Pending',
+          officeId: null,
+          officeName: null,
+          createdAt: '1999-01-02T00:00:00.000Z',
+          updatedAt: '1999-01-02T00:00:00.000Z',
+          rejectReason: null,
+          anonymous: 0,
+          imageId: 20,
+          imageUrl: 'http://example.com/didem.png'
+        }
+      ];
+
+      const spy = vi.spyOn(sqlite3.Database.prototype, 'all').mockImplementation(function (_sql, _params, cb) {
+        cb && cb(null, rows);
+      });
+
+      const reports = await DAO.getUnassignedReports();
+      expect(Array.isArray(reports)).toBe(true);
+      expect(reports.length).toBe(1);
+      expect(reports[0].title).toBe('Unassigned');
+      expect(reports[0].user.username).toBe('citizen');
+
+      spy.mockRestore();
+    });
+  });
+
+  

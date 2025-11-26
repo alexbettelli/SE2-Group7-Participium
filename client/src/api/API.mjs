@@ -106,6 +106,7 @@ const getOffices = async() => {
     }
 };
 
+
 const getRoles = async() => {
     const res = await fetch(SERVER_URL + '/roles', {
         method: 'GET',
@@ -160,7 +161,7 @@ const submitReport = async(reportData) => {
     formData.append('images', image);
   });
 
-  const res = await fetch(SERVER_URL + '/reports', {
+  const res = await fetch(SERVER_URL + '/users/reports', {
     method: 'POST',
     credentials: 'include',
     body: formData
@@ -173,6 +174,41 @@ const submitReport = async(reportData) => {
     const errDetails = await res.json();
     throw new Error(errDetails.message || 'Error submitting report');
   }
+};
+
+const getAllReports = async() => {
+    const res = await fetch(SERVER_URL + '/reports', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching reports');
+    }
+}
+const getMyReports = async () => {
+    const res = await fetch(SERVER_URL + '/users/myreports', {
+        method: 'GET',
+        credentials: 'include'
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        return reports;
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error fetching user reports');
+    }
+};
+
+const getAssignedReports = async () => {
+    const res = await fetch(`${SERVER_URL}/reports/assigned`, { credentials: 'include' });
+    const json = await res.json();
+    if (res.ok) return json;
+    else return { error: json.error || 'Error fetching assigned reports' };
 };
 
 const getCategories = async() => {
@@ -190,5 +226,185 @@ const getCategories = async() => {
     }
 };
 
-const API = {login, registrate, createNewEmployee, getUnassignedEmployees, getOffices, getRoles, assignEmployeeToOffice, getUserInfo, submitReport, logOut, getCategories };
+const getUnassignedReports = async() => {
+    const res = await fetch(SERVER_URL + '/reports/unassigned', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching unassigned reports');
+    }
+};
+
+const assignReportToOfficer = async (reportId, userId, categoryId, officeId, officerId) => {
+    const res = await fetch(SERVER_URL + '/reports/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reportId, userId, categoryId, officeId, officerId })
+    }); 
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error assigning report to officer');
+    }
+};
+
+const rejectReport = async (reportId, userId, reason) => {
+    const res = await fetch(SERVER_URL + '/reports/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({reportId, userId, reason})
+    });
+    if(res.ok){
+      return;
+    } else {
+      const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error rejecting report');
+    }
+}
+
+const updateProfile = async (formData)=> {
+    try{
+        const res = await fetch(SERVER_URL + '/api/user/profile', {
+            method: 'PUT',
+            credentials: 'include',
+            body: formData
+        });
+
+        if (!res.ok){
+            const errMessage = await res.json();
+            throw new Error (errMessage.error || 'Error updating profile');
+        }
+
+        return await res.json();
+    } catch (error) {
+        throw error;
+    }
+}
+
+const getReportStatuses = async () => {
+    const res = await fetch(`${SERVER_URL}/reports/statuses`, { credentials: "include" });
+    if(res.ok) return await res.json();
+    else throw new Error('Error fetching report statuses');
+};
+
+const updateReportStatus = async (reportId, statusId) => {
+    const res = await fetch(`${SERVER_URL}/reports/${reportId}?statusId=${statusId}`, { method: 'PATCH', credentials: 'include' });
+    if (res.ok) {
+        const data = await res.json();
+        return {
+            ok: data.ok || true,
+            notification: data.notification || null
+        };
+    } else {
+        throw new Error('Error updating report status');
+    }
+};
+
+const deleteProfilePhoto = async () => {
+  const response = await fetch(`${SERVER_URL}/api/user/profile/photo`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const errDetails = await response.text();
+    throw new Error(errDetails);
+  }
+  
+  return response.json();
+};
+
+
+
+/*
+
+export const getReportChatMessages = async (reportId) => {
+    const res = await fetch(`${SERVER_URL}/reports/${reportId}/chat`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.message || 'Error fetching report messages');
+    }
+};
+*/
+
+const submitNotification = async (notificationData) => {
+  const res = await fetch(SERVER_URL + '/notifications', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(notificationData)
+  });
+
+  if (res.ok) {
+    return await res.json();
+  } else {
+    const errDetails = await res.json();
+    throw new Error(errDetails.message || 'Error submitting notification');
+  }
+};
+
+const setReadNotifications = async (reportId) => {
+    const res = await fetch(SERVER_URL + '/notifications/read', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({reportId})
+    });
+    if (res.ok) {
+        const data = await res.json();
+        return data.readNotifications;
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error setting notifications as read');
+    }
+};
+
+
+const API = {
+    login, 
+    registrate, 
+    createNewEmployee, 
+    getUnassignedEmployees, 
+    getOffices, 
+    getRoles,
+    assignEmployeeToOffice, 
+    getUserInfo, 
+    submitReport, 
+    logOut, 
+    getCategories,
+    getAllReports, 
+    getUnassignedReports, 
+    assignReportToOfficer,
+    rejectReport,
+    getMyReports, 
+    getReportStatuses,
+    updateReportStatus,
+    updateProfile, 
+    getAssignedReports, 
+    deleteProfilePhoto,
+    setReadNotifications,
+    submitNotification
+};
+
 export default API;

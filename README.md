@@ -81,6 +81,7 @@ current status, and responsible office.
 - **`catId`** (INTEGER, FK → report_category.id): Type of issue reported.
 - **`statusId`** (INTEGER, FK → report_status.id): Current lifecycle status of the report.
 - **`officeId`** (INTEGER, FK → office.id, NULLABLE): Office currently handling the report.Null if report is not yet assigned
+- **`employeeId`** (INTEGER, FK → user.id, NULLABLE): ID of the employee assigned to handle the report. Null if no employee is assigned yet.
 - **`createdAt`** (TEXT, DEFAULT CURRENT_TIMESTAMP): Creation timestamp.
 - **`updatedAt`** (TEXT, DEFAULT CURRENT_TIMESTAMP): Last modification timestamp.
 - **`rejectReason`** (TEXT, NULLABLE): mandatory reason in case of rejection
@@ -113,11 +114,12 @@ or administrative actions occur.
 
 - **`id`** (INTEGER, PK, AUTOINCREMENT): Unique identifier for the notification.
 - **`reportId`** (INTEGER, FK → report.id): Optional reference to a related report.
-- **`senderId`** (INTEGER, FK → user.id): The user or system actor who sent the notification.
+- **`senderId`** (INTEGER, FK → user.id, NULLABLE): The user who sent the notification. NULL for automatic/system messages.
 - **`receiverId`** (INTEGER, FK → user.id): The user receiving the notification.
 - **`text`** (TEXT): Content of the notification.
 - **`channelId`** (INTEGER): Delivery channel id (platform, email, Telegram).
 - **`sendAt`** (TEXT, DEFAULT CURRENT_TIMESTAMP): Timestamp when notification was sent.
+- **`isRead`** (INTEGER, DEFAULT 0): Flag indicating if the notification has been read (1 = read, 0 = unread).
 
 ### TABLE: channel
 
@@ -312,9 +314,9 @@ Defines all the channels able to send messages.
 
   - **Scope**: Main interface for citizens to submit reports about city issues. This component integrates three key features:
 
-- **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city.
+- **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city. The component loads and displays the official administrative boundaries of the City of Turin using a GeoJSON file (`/geo/torino.geojson`) based on OpenStreetMap relation [44880](https://www.openstreetmap.org/relation/44880). The boundary is displayed as a green outlined polygon with semi-transparent fill, and the map automatically adjusts its view to fit the city boundaries when loaded.
 
-- **Location Selection**: When users click anywhere on the map, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
+- **Location Selection**: When users click on the map, the component first validates that the selected location is within the City of Turin boundaries using Turf.js for point-in-polygon checking. If a user attempts to select a location outside the city boundaries, an alert message is displayed: "Please select a location inside the City of Turin." Only clicks within the official city boundaries are processed. Once a valid location is selected, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
 
 - **Submit Report Form**: Once a location is selected, a comprehensive form appears that allows users to provide details about the issue. The form includes:
 
@@ -343,3 +345,121 @@ Defines all the channels able to send messages.
 - **Employee user**
   **username** : maria.bianchi
   **password** : mariabianchi
+
+<br>
+
+- **Technical Office staff member**
+  **username** : giulia.rossi
+  **password** : GiuliaRossi
+
+<br>
+
+- **Public Relations Municipal Officer**
+  **username** : carla.verdi
+  **password** : carlaverdi
+
+
+
+# Running Docker Containers
+
+This guide explains how to run the Docker containers for the repository `338059/se2-participium` using Docker Compose or individual Docker commands.
+
+---
+
+## Prerequisites
+
+* [Docker](https://www.docker.com/) installed
+* [Docker Compose](https://docs.docker.com/compose/) installed (optional, only for the Compose method)
+*  Make a folder for the project
+```bash
+mkdir <folder_name>
+cd <folder_name>
+```
+---
+## Method 1: Docker Compose (recommended)
+
+### Step 1 - Download file docker-compose.yml
+
+* Direct download
+```bash
+curl -L -o docker-compose.yml https://raw.githubusercontent.com/alexbettelli/SE2-Group7-Participium/tree/main/docker-compose.yml
+```
+* Download manually by [GitHub](https://github.com/alexbettelli/SE2-Group7-Participium/tree/main)
+
+
+### Step 2 - Pull the Docker Compose
+```bash
+docker compose pull
+```
+
+### Step 3- Start the containers:
+
+```bash
+docker-compose up -d
+```
+### Step 4 -  Access the application
+Open the browser on http://localhost:5173
+
+### Step 5 - Stop and remove the containers:
+
+
+```bash
+docker-compose down
+docker-compose down -v
+```
+**Attention: `docker-compose down -v` removes all the volumes and data**
+
+---
+
+## Method 2: Individual Docker Commands
+
+If you prefer to run containers manually:
+
+### Step 1 Pull the Docker Images
+First, download the required Docker images:
+
+```bash
+docker pull 338059/se2-participium:server-latest
+docker pull 338059/se2-participium:client-latest
+```
+
+---
+### Step 2 Run the single Docker Images
+```bash
+# Start the server
+docker run -d --name participium-server -p 3001:3001 -v participium-db:/app/data -v participium-uploads:/app/uploads -e NODE_ENV=production -e BASE_URL=http://localhost:3001 -e CORS_ORIGIN=http://localhost:5173 338059/se2-participium:server-latest
+
+
+# Start the client
+docker run -d --name participium-client -p 5173:80 -e VITE_API_URL=http://localhost:3001 --link participium-server:server 338059/se2-participium:client-latest
+
+```
+### Step 3 - Access the application
+Open the browser on http://localhost:5173
+
+### Step 4 Stop and remove the containers:
+
+```bash
+docker stop participium-server participium-client
+docker rm participium-server participium-client
+```
+**Attention: `docker rm participium-server participium-client` removes all the volumes and data**
+
+---
+
+## 5. Notes
+
+* Default ports: **3001** for the server, **5173** for the client.
+* Volumes `participium-db` and `participium-uploads` persist data across container restarts(not removes).
+* Useful commands:
+
+```bash
+docker-compose restart
+docker logs participium-server
+docker logs participium-client
+```
+
+---
+
+These instructions allow you to easily run the project using either Docker Compose or standalone Docker commands.
+

@@ -11,10 +11,15 @@
     "test": "jest --coverage"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@turf/turf": "^7.3.0",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
     "dayjs": "^1.11.19",
     "leaflet": "^1.9.4",
+    "leaflet.awesome-markers": "^2.0.5",
+    "leaflet.markercluster": "^1.5.3",
     "react": "^19.1.1",
-    "bootstrap-icons": "^1.13.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
     "react-router": "^7.9.5",
