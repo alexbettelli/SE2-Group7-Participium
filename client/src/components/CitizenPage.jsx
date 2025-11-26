@@ -517,7 +517,7 @@ export default function CitizenPage({user}){
                         {activeTab === 'reports' && (
                             <div>
                                 {approvedReports.length === 0 ? (
-                                    <p className="empty-message">THERE ARE NO REPORT IN PROGRESS</p>
+                                    <p className="empty-message">THERE ARE NO REPORTS IN PROGRESS</p>
                                 ) : (
                                     approvedReports.map((report) => (
                                     <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
