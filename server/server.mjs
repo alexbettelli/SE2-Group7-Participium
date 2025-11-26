@@ -534,7 +534,7 @@ app.post('/notifications', validate({ body: schemas.notification }), async (req,
   }
 });
 
-app.post('/notifications/read', async (req, res) => {
+app.post('/notifications/read', isLogged, async (req, res) => {
   const { reportId } = req.body;
   const userId = req.user.id;
   let readNotifications = 0;
