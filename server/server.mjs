@@ -519,16 +519,7 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
   }
 });
 
-app.get("/reports/unassigned", isLogged, async (req, res) => {
-  if(req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
-  try {
-    const reports = await DAO.getUnassignedReports();
-    return res.status(200).json(reports);
-  }catch(err){
-    console.log(err);
-    return res.status(500).json(new errors.InternalServerError());
-  }
-});
+
 
 //NOTIFICATIONS
 
