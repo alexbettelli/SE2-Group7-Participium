@@ -44,7 +44,7 @@ export default function CitizenPage({user}){
     const [reportDetails, setReportDetails] = useState({})
     const getStatusClass = (status) => {
         switch (status) {
-            case 'Completed':
+            case 'Resolved':
                 return 'status-completed'; // Verde
             case 'Pending Approval':
                 return 'status-pending'; // Giallo/Arancione

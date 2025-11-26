@@ -20,36 +20,28 @@ export default function ProfilePage({ user, setUser }) {
       navigate('/');
       return;
     }
-
     setTelegramUsername(user.telegramUsername || '');
     setAllowEmailNotification(user.allowEmailNotification === 1);
-    if (user.imageUrl) {
-      setPhotoPreview(user.imageUrl);
-    }
+    if (user.imageUrl) setPhotoPreview(user.imageUrl);
   }, [user, navigate]);
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
       setError('Please select a valid image file');
       return;
     }
-
-    //file size max 5MB
     if (file.size > 5 * 1024 * 1024) {
       setError('Image size must be less than 5MB');
       return;
     }
-
     if(photoPreview && photoPreview.startsWith('blob:')){
       URL.revokeObjectURL(photoPreview);
     }
-
     setProfilePhoto(file);
     setPhotoPreview(URL.createObjectURL(file));
-    setPhotoRemoved(false); // Reset removal flag if uploading new photo
+    setPhotoRemoved(false);
     setError('');
   };
 
@@ -67,31 +59,24 @@ export default function ProfilePage({ user, setUser }) {
     setLoading(true);
     setMessage('');
     setError('');
-
     try {
-      // If user clicked remove and there was an existing photo, delete it
       if (photoRemoved && user.imageUrl) {
         await API.deleteProfilePhoto();
         setPhotoPreview(null);
         setUser(prevUser => ({ ...prevUser, imageUrl: null }));
       }
-      
-      // Update profile with new data
       if(!photoRemoved || profilePhoto){
-      const formData = new FormData();
-      if (profilePhoto && !photoRemoved) {
-        formData.append('profilePhoto', profilePhoto); 
-      }
-      formData.append('telegramUsername', telegramUsername.trim());
-      formData.append('allowEmailNotification', allowEmailNotification ? 1 : 0);
-
-      const updatedUser = await API.updateProfile(formData);
-      
-      setUser(updatedUser);
+        const formData = new FormData();
+        if (profilePhoto && !photoRemoved) {
+          formData.append('profilePhoto', profilePhoto); 
+        }
+        formData.append('telegramUsername', telegramUsername.trim());
+        formData.append('allowEmailNotification', allowEmailNotification ? 1 : 0);
+        const updatedUser = await API.updateProfile(formData);
+        setUser(updatedUser);
       }  
-      setPhotoRemoved(false); // Reset flag after successful save
+      setPhotoRemoved(false);
       setMessage('Profile updated successfully!');
-      
     } catch (err) {
       setError(err.message || 'Error updating profile');
     } finally {
@@ -107,80 +92,102 @@ export default function ProfilePage({ user, setUser }) {
         <h2>Profile Settings</h2>
         <p>Manage your account preferences and notifications</p>
       </div>
-
       <form className="profile-form" onSubmit={handleSubmit}>
-        
-        <div className="form-section">
-          <h3>Profile Photo</h3>
-          <div className="photo-upload-area">
-            <div className="photo-preview-container">
-              {photoPreview ? (
-                <img src={photoPreview} alt="Profile preview" className="photo-preview" />
-              ) : (
-                <i className="bi bi-person-circle photo-placeholder"></i>
-              )}
+        {/* Due colonne: foto | info */}
+        <div className="profile-grid">
+          {/* Colonna sinistra: Foto */}
+          <div className="profile-col profile-col-photo">
+            <div className="photo-upload-area">
+              <div className="photo-preview-container">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Profile preview" className="photo-preview" />
+                ) : (
+                  <i className="bi bi-person-circle photo-placeholder"></i>
+                )}
+              </div>
+              <div className="photo-upload-controls-row">
+                <label htmlFor="photo-input" className="upload-button">
+                  {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                </label>
+                <input
+                  id="photo-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  style={{ display: 'none' }}
+                />
+                {photoPreview && (
+                  <button
+                    type="button"
+                    className="remove-photo-button"
+                    onClick={handleRemovePhoto}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="photo-hint">Max size: 5MB</p>
             </div>
-            
-            <div className="photo-upload-controls">
-              <label htmlFor="photo-input" className="upload-button">
-                {photoPreview ? 'Change Photo' : 'Upload Photo'}
-              </label>
-              <input
-                id="photo-input"
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                style={{ display: 'none' }}
-              />
-              {photoPreview && (
-                <button
-                  type="button"
-                  className="remove-photo-button"
-                  onClick={handleRemovePhoto}
-                >
-                  Remove
-                </button>
-              )}
-              <p className="photo-hint">Max size: 2MB</p>
+          </div>
+          {/* Colonna destra: Info utente */}
+          <div className="profile-col profile-col-info">
+            <div className="info-display">
+              <div className="info-item">
+                <label>Full Name</label>
+                <div className="info-value">
+                  <i className="bi bi-person-fill"></i>
+                  {user.firstName} {user.lastName}
+                </div>
+              </div>
+              <div className="info-item">
+                <label>Username</label>
+                <div className="info-value">
+                  <i className="bi bi-at"></i>
+                  {user.username}
+                </div>
+              </div>
+              <div className="info-item">
+                <label>Email</label>
+                <div className="info-value">
+                  <i className="bi bi-envelope-fill"></i>
+                  {user.email}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/*telegram section */}
-        <div className="form-section">
-          <h3>Telegram</h3>
-          <label htmlFor="telegram">Telegram Username (optional)</label>
-          <input
-            id="telegram"
-            type="text"
-            className="form-input"
-            placeholder="@yourusername"
-            value={telegramUsername}
-            onChange={(e) => setTelegramUsername(e.target.value)}
-          />
-          <p className="input-hint">
-            Link your Telegram account to receive notifications via telegram
-          </p>
-        </div>
-
-        {/*notifications section */}
-        <div className="form-section">
-          <h3>Notification Preferences</h3>
-          <label className="checkbox-label">
+        {/* telegram ad notificztions */}
+        <div className="profile-bottom">
+          <div className="form-section">
+            <h3>Telegram</h3>
+            <label htmlFor="telegram">Telegram Username (optional)</label>
             <input
-              type="checkbox"
-              checked={allowEmailNotification}
-              onChange={(e) => setAllowEmailNotification(e.target.checked)}
-              className="checkbox-input"
+              id="telegram"
+              type="text"
+              className="form-input"
+              placeholder="@yourusername"
+              value={telegramUsername}
+              onChange={(e) => setTelegramUsername(e.target.value)}
             />
-            <span>Receive email notifications for report updates</span>
-          </label>
+            <p className="input-hint">
+              Link your Telegram account to receive notifications via telegram
+            </p>
+          </div>
+          <div className="form-section">
+            <h3>Notification Preferences</h3>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={allowEmailNotification}
+                onChange={(e) => setAllowEmailNotification(e.target.checked)}
+                className="checkbox-input"
+              />
+              <span>Receive email notifications for report updates</span>
+            </label>
+          </div>
         </div>
-
-
         {message && <div className="success-message">{message}</div>}
         {error && <div className="error-message">{error}</div>}
-
         <div className="form-actions">
           <button
             type="button"

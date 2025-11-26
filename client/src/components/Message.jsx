@@ -1,10 +1,12 @@
+
 import { Container, Row, Image } from "react-bootstrap";
 import error from '../assets/error.png'
 import "../styles/Message.css";
+import dayjs from 'dayjs';
 
 export default function Message(props){
     const { message } = props;
-    const formattedSendAt = message.sendAt ? message.sendAt.slice(0, 16) : '';
+    const formattedSendAt = message.sendAt ? dayjs(message.sendAt).format('DD/MM/YYYY HH:mm') : '';
     return (
         <div className="message-container" style={{ minWidth: message.sender ? '140px' : '250px' }}>
             <div className="message-content" style={{ fontStyle: message.sender ? '' : 'italic' }}>

@@ -5,7 +5,11 @@ import '../styles/TechnicalOfficeStaffMember.css';
 
 export default function TechnicalOfficeStaffMemberPage(props) {
     const [reports, setReports] = useState([]);
+    const [retrieve, setRetrieve] = useState(true);
 
+    const updateReports = () => {
+        setRetrieve(true);
+    }
 
     useEffect(() => {
         async function getAssignedReports() {
@@ -17,8 +21,11 @@ export default function TechnicalOfficeStaffMemberPage(props) {
             });
         }
         
-        getAssignedReports();
-    }, []);
+        if(retrieve) {
+            getAssignedReports();
+            setRetrieve(false);
+        }
+    }, [retrieve]);
 
     return (
         <div className="office-member-container">
@@ -28,6 +35,7 @@ export default function TechnicalOfficeStaffMemberPage(props) {
                         user={props.user}
                         reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) - (a.unreadNotifications || 0))}
                         setSelectedReport={props.setSelectedReport}
+                        updateReports={updateReports}
                     />
         </div>
     )

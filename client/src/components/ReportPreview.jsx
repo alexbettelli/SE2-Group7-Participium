@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { Carousel, Modal, Form } from 'react-bootstrap';
 import Map from './Map.jsx';
 import dayjs from 'dayjs';
+import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import 'bootstrap-icons/font/bootstrap-icons.css'; 
 import '../styles/ReportPreview.css'
@@ -17,8 +18,16 @@ export default function ReportPreview(props){
     const [updateStatus, setUpdateStatus] = useState(false);
     const [selectedStatusId, setSelectedStatusId] = useState(null);
 
-    const handleClose = () => setShowStatusModal(false);
-    const handleShow = () => setShowStatusModal(true);
+    const handleClose = () => {
+        setShowStatusModal(false);
+        document.body.style.overflowY = 'auto';
+    }
+    
+    const handleShow = () => {
+        setShowStatusModal(true);
+        document.body.style.overflowY = 'hidden';
+    }
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -42,6 +51,7 @@ export default function ReportPreview(props){
                     report.notifications = [...report.notifications, result.notification];
                     setSelectedReport({ ...report });
                 }
+                if(result.ok) props.updateReports();
             } catch (error) {
                 console.error('Error updating report status:', error);
             }
@@ -66,9 +76,14 @@ export default function ReportPreview(props){
         }
     };
 
+    useEffect(() => {
+        if(expanded) document.body.style.overflowY = 'hidden';
+        else document.body.style.overflowY = 'auto';
+    }, [expanded]);
+
     const getImage = () => {
         if(report && report.images && report.images.length > 0) return report.images[0].imageUrl;
-        else return 'http://localhost:3001/images/not_found.jpg';
+        else return NotFoundImage.not_found_url;
     }
 
     const toggleExpanded = () => {
@@ -79,7 +94,7 @@ export default function ReportPreview(props){
         <>
             <div className='report-preview-card' onClick={toggleExpanded}>
                 <div className="card-section">
-                    <img src={getImage()} alt="Report image" />
+                    <img src={getImage()} alt="Report image" onError={(e) => NotFoundImage.setSrcToNotFound(e)} />
                     <div className='card-main-info'>
                         <h3>{report.title}</h3>
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
@@ -116,10 +131,10 @@ export default function ReportPreview(props){
                     <Modal.Title>Change status for report #{report.id}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form.Select aria-label="Default select example" onChange={(e) => setSelectedStatusId(e.target.value)}>
+                    <Form.Select aria-label="Default select example" defaultValue={report.status.id} onChange={(e) => setSelectedStatusId(e.target.value)}>
                         { statuses.map(status => {
-                            if(![1, 2].includes(status.id))
-                                return <option key={status.id} value={status.id} selected={status.id === report.status.id}>{status.statusName}</option>;
+                            if(![1, 2, 5].includes(status.id))
+                                return <option key={status.id} value={status.id} >{status.statusName}</option>;
                         }) }
                     </Form.Select>
                 </Modal.Body>
@@ -139,33 +154,38 @@ export default function ReportPreview(props){
 function ReportView(props) {
     const report = props.report;
 
+    const closeReportView = () => {
+        props.onClose();
+    }
+
     return (
         <>
-            <div id="backdrop" onClick={props.onClose}></div>
+            <div id="backdrop" onClick={closeReportView}></div>
             <div className="report-view">
                 <div className="report-view-header">
                     <h2>{props.report.title}</h2>
-                    <button className="close-button" onClick={props.onClose}><i className="bi bi-x-lg"></i></button>
+                    <button className="close-button" onClick={closeReportView}><i className="bi bi-x-lg"></i></button>
                 </div>
                 <div className="report-view-content">
-                    {/* Container per carousel e mappa affiancati */}
                     <div className="media-container">
-                        {/* Carousel immagini */}
                         <div className="carousel-wrapper">
-                            <Carousel>
+                            <Carousel controls={props.report.images.length > 1} indicators={props.report.images.length > 1}>
                                 { props.report.images.map((image, index) => {
-                                    return <Carousel.Item key={index}><img className="d-block w-100" src={image.imageUrl} alt={`Image ${index+1}`} /></Carousel.Item>;
+                                    return <Carousel.Item key={index}>
+                                                <img className="d-block" 
+                                                        src={image.imageUrl} 
+                                                        alt={`Image ${index+1}`} 
+                                                        onError={(e) => NotFoundImage.setSrcToNotFound(e)} 
+                                                />
+                                            </Carousel.Item>;
                                 }) }
                             </Carousel>
                         </div>
-                        
-                        {/* Mappa */}
                         <div className="map-container-popup">
                             <Map lat={report.latitude} lng={report.longitude} />
                         </div>
                     </div>
                     
-                    {/* Dettagli report */}
                     <div className="report-details">
                         <div className="fields">
                             <div className="field user-field">
@@ -186,6 +206,7 @@ function ReportView(props) {
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
+                                { report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p> }
                             </div>
                             <div className="field description-field">
                                 <h3>Description</h3>
@@ -198,146 +219,3 @@ function ReportView(props) {
         </>
     )
 }
-
-/*export default function ReportPreview(props){
-    const { user, report, setSelectedReport } = props;
-    const [isExpanded, setIsExpanded] = useState(false); 
-    const navigate = useNavigate();
-    
-    const imagesToDisplay = (report.images && report.images.length > 0) 
-        ? report.images.map(photo => photo.imageUrl || photo) 
-        : [];
-
-
-    const getStatusClass = (statusId) => {
-        switch (statusId) {
-            case 'Completed':
-                return 'status-completed'; // Verde
-            case 'Pending Approval':
-                return 'status-pending'; // Giallo/Arancione
-            case 'Rejected':
-                return 'status-rejected'; // Rosso
-            case 'In Progress':
-                return 'status-in-progress'; // Blu/Azzurro
-            default:
-                return 'status-default'; // Grigio/Default
-        }
-    };
-
-    const ExpandedContent = () => (
-        <>
-            <div className="overview-section">
-                <h4 className="section-label">Category</h4>
-                <p className="report-field">{report.category?.categoryName}</p>
-            </div>
-
-            <div className="overview-section">
-                <h4 className="section-label">Description</h4>
-                <p className="report-field">{report.description}</p>
-            </div>  
-            
-            {report.address && (
-                <div className="overview-section">
-                    <h4 className="section-label">Address</h4>
-                    <p className="report-field">{report.address}</p>
-                </div>
-            )}
-            
-            <div className="overview-section">
-                <h4 className="section-label">Location</h4>
-                <div className="location-info">
-                    <span>Lat: {report.latitude.toFixed(6)}, Lon: {report.longitude.toFixed(6)}</span>
-                </div>
-            </div>
-            
-            <div className="overview-footer">
-                <div className="report-meta">
-                    {!(report.anonymous === 1) && report.user?.id && (
-                        <span className="author-info">
-                            Reported by: {user.username}
-                        </span>
-                    )}
-                    {(report.anonymous === 1) && (
-                        <span className="author-info anonymous">
-                            Anonymous Report
-                        </span>
-                    )}
-                    {report.createdAt && (
-                        <span className="timestamp-info">
-                            Submitted on: {new Date(report.createdAt).toLocaleString('it-IT')}
-                        </span>
-                    )}
-                </div>
-            </div>
-        </>
-    );
-
-    return (
-            <div className="overview-card">
-
-                {/* Blocco 1: Titolo e Status (Sempre Visibili) *//*}
-                <div className="overview-header">
-                    <div className="header-content">
-                        <h3 className="report-title">{report.title}</h3>
-                        <div className="header-badges">
-                            <span className="report-id-badge">Report #{report.id}</span>
-                            <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Blocco 2: Mostra solo la prima immagine *//*}
-                <div className="overview-section">
-                    <h4 className="section-label">First photo of the report</h4>
-                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                        {imagesToDisplay.length > 0 ? (
-                            <img
-                                className="report-photo-img"
-                                src={imagesToDisplay[0]}
-                                alt="Report photo"
-                                onError={e => { e.target.src = 'https://via.placeholder.com/320x240?text=Image+Not+Found'; }}
-                            />
-                        ) : (
-                            <span className="no-photos-message">No photo available</span>
-                        )}
-                    </div>
-                </div>
-                
-                {/* Blocco 3: Contenuto espandibile *//*}
-                {isExpanded && <ExpandedContent />}
-
-                {/* Blocco 4: Azioni (Pulsante Chat e Toggle Espansione) *//*}
-                <div className="overview-actions">
-                    <div className="chat-action-wrapper">
-                        <Button className="btn btn-primary" onClick={() => { setSelectedReport(report); navigate('/chat'); }}>
-                            <span className="chat-btn-flex">
-                                {report.unreadNotifications > 0 ? (
-                                    <span className="notification-count-inline"><i className="bi bi-chat-dots-fill report-chat-icon"></i>{report.unreadNotifications}</span>
-                                ) : <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>}
-                                <span>Go to the chat</span>
-                            </span>
-                        </Button>
-                    </div>
-                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                        <Button 
-                            variant="link" 
-                            className="btn-expand-toggle"
-                            onClick={() => setIsExpanded(!isExpanded)}
-                        >
-                            {isExpanded ? (
-                                <>
-                                    Show Less <i className="bi bi-chevron-up"></i>
-                                </>
-                            ) : (
-                                <>
-                                    Show More Details <i className="bi bi-chevron-down"></i>
-                                </>
-                            )}
-                        </Button>
-                    </div>
-                </div>
-
-            </div>
-    );
-};
-*/

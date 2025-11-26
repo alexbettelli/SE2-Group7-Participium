@@ -76,6 +76,18 @@
     box-shadow: 0 2px 4px rgba(149, 165, 166, 0.4);
 }
 
+.report-id-badge {
+    background: #b312f3cf;
+    box-shadow: 0 2px 4px rgba(198, 18, 243, 0.4);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+}
+
 .wrapper {
     display: flex;
     align-items: center;
@@ -111,38 +123,41 @@ div.report-view{
     width: 90%;
     transform: translate(-50%, -50%);
     z-index: 999;
-    background-color: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 8px 0 rgba(0, 0, 0, .8);
-    overflow-y: auto;
     box-sizing: border-box;
 }
 
 div.report-view-header {
+    position: relative;
     border-bottom: 1px solid #ccc;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
+    padding: 1.5rem 1.5rem;
     position: sticky;
     top: 0;
-    background: #fff;
+    background-color: var(--color-wine-light) !important;
     z-index: 10;
 }
 
 div.report-view-header h2{
-    color: var(--color-wine-light);
     margin: 0;
     font-size: 1.5rem;
+    color: var(--color-cream);
 }
 
 button.close-button{
-    width: 40px;
-    height: 40px;
+    position: absolute;
+    width: 50px !important;
+    border-radius: 0 !important;
+    height: 100% !important;
+    top: 0;
+    right: 0;
     border: 0;
-    background-color: var(--color-wine-light);
-    color: #fff;
-    border-radius: 50%;
+    background-color: transparent !important;
+    color: var(--color-cream);
+    z-index: 10;
     cursor: pointer;
     transition: .3s;
     flex-shrink: 0;
@@ -150,7 +165,7 @@ button.close-button{
 
 button.close-button:hover{
     background-color: var(--color-wine-dark);
-    transform: scale(1.1);
+    transform: rotate(0) !important;
 }
 
 div.carousel {
@@ -642,8 +657,6 @@ div.report-details {
         rgba(255, 255, 250, 0.6) 0%, 
         rgba(255, 255, 250, 0.3) 100%);
     border-radius: 12px;
-    padding: 1.5rem;
-    border: 2px solid rgba(112, 38, 50, 0.1);
 }
 
 /* Description field fullwidth */
