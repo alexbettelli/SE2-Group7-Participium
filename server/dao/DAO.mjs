@@ -14,9 +14,6 @@ const addNewUser = (data) => {
         INSERT INTO user (username, password, email, firstName, lastName, typeId) 
         VALUES ( ?, ?, ?, ?, ?, ?)
         `;
-
-        console.log(data);
-        console.log("Adding new user to the database...");
         db.run(insertUsertSql,
             [data.username, data.password, data.email, data.firstName, data.lastName, data.typeId],
             function (err) {
@@ -92,7 +89,6 @@ const getRoles = () => {
               return reject(err);
           }         
           const roles = Mapper.mapRowsToRoles(rows);
-          console.log(roles);
           resolve(roles);
       });
   });
@@ -252,7 +248,6 @@ const getReportsByUserId = async (userId) =>{
             if (!rows || rows.length === 0) {
                 return resolve([]);
             }
-            console.log(rows)
             const reports = Mapper.mapRowsToReports(rows);
             resolve(reports);
         })
@@ -376,9 +371,7 @@ const updateUserProfile = (userId, telegramUsername, allowEmailNotification, ima
       if (err) {
         console.error('Error updating user profile:', err);
         return reject(err);
-      }
-      console.log(`User ${userId} profile updated`);
-      
+      }      
       getUserById(userId)
         .then(user => resolve(user))
         .catch(err => reject(err));
@@ -486,7 +479,6 @@ const updateReportStatus = (userId, reportId, statusId) => {
                         message += "has been resolved. Thank you for your contribution!";
                         break;
                     default:
-                        console.log(`Unknown statusId: ${statusId}`);
                         reject(new Error(`Unknown statusId: ${statusId}`));
                 }
                 db.run(query3, [reportId, row.userId, message, now, 1], function(err) {

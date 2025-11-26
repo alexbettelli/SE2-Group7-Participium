@@ -21,7 +21,6 @@ export default function ChatPage(props){
                 try {
                     const readNotifications = await API.setReadNotifications(report.id);
                     setUnreadNotifications(prev => prev - readNotifications);
-                    console.log("Notifiche aggiornate, ora sono: " , unreadNotifications);
                     setLoading(false)
                 } catch (err) {
                     setError(err.message);

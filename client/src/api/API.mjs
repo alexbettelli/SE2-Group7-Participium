@@ -99,7 +99,6 @@ const getOffices = async() => {
     });
     if (res.ok) {
         const offices = await res.json();
-        console.log(offices);
         return offices;
     } else {
         const errMessage = await res.json();
@@ -198,7 +197,6 @@ const getMyReports = async () => {
     });
     if (res.ok) {
         const reports = await res.json();
-        console.log(reports);
         return reports;
     } else {
         const errDetails = await res.json();
@@ -236,7 +234,6 @@ const getUnassignedReports = async() => {
     });
     if (res.ok) {
         const reports = await res.json();
-        console.log(reports);
         return reports;
     } else {
         const errMessage = await res.json();
@@ -303,7 +300,6 @@ const updateReportStatus = async (reportId, statusId) => {
     const res = await fetch(`${SERVER_URL}/reports/${reportId}?statusId=${statusId}`, { method: 'PATCH', credentials: 'include' });
     if (res.ok) {
         const data = await res.json();
-        console.log("New notification API-side: " + data && data.notification && data.notification.text);
         return {
             ok: data.ok || true,
             notification: data.notification || null

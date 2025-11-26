@@ -116,7 +116,6 @@ export default function CitizenPage({user}){
         try {
             const reports = await API.getAllReports();            
             setReports(reports);
-            console.log(reports)
             const approvedReports = reports.filter(report => report.status.id !== 1);
             setApprovedReports(approvedReports);
         } catch (error) {

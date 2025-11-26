@@ -40,7 +40,6 @@ function NavHeader(props){
   }, [user]);
 
   useEffect(() => {
-    console.log(user);
     if (user?.imageUrl) {
       setProfilePhoto(user.imageUrl);
     } else {

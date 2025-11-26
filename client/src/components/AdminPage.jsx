@@ -53,7 +53,6 @@ export default function AdminPage({user}) {
 
   const assignEmployeeToOffice = async (employeeId, officeId, roleId) => {
     try{
-      console.log(`Assigning employee ${employeeId} to role ${roleId}`);
       await API.assignEmployeeToOffice(employeeId, officeId, roleId);
       updateEmployeeList();
     } catch (error) {

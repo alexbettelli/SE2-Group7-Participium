@@ -15,7 +15,6 @@ export default function TechnicalOfficeStaffMemberPage(props) {
         async function getAssignedReports() {
             API.getAssignedReports().then(reports => {
                 setReports(reports);
-                console.log('Assigned Reports:', reports);
             }).catch(error => {
                 console.error('Error fetching assigned reports:', error);
             });

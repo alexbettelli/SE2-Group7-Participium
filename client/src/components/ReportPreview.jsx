@@ -46,7 +46,6 @@ export default function ReportPreview(props){
         const updateReportStatus = async () => {
             try {
                 const result = await API.updateReportStatus(report.id, selectedStatusId);
-                console.log('Report status updated:', result);
                 if (result && result.notification) {
                     report.notifications = [...report.notifications, result.notification];
                     setSelectedReport({ ...report });

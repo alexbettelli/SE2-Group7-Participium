@@ -15,7 +15,6 @@ export default function MyReportsPage(props){
         const fetchReports = async () => {
             try {
                 const data = await API.getMyReports();
-                console.log(data);
                 setReports(data);
             } catch (err) {
                 setError(err.message);
