@@ -382,7 +382,7 @@ cd <folder_name>
 
 * Direct download
 ```bash
-curl -O https://github.com/alexbettelli/SE2-Group7-Participium/tree/main/docker-compose.yml
+curl -L -o docker-compose.yml https://raw.githubusercontent.com/alexbettelli/SE2-Group7-Participium/tree/main/docker-compose.yml
 ```
 * Download manually by [GitHub](https://github.com/alexbettelli/SE2-Group7-Participium/tree/main)
 
