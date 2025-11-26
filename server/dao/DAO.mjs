@@ -53,7 +53,7 @@ const getUnassignedEmployees = () => {
             if (err) {
                 return reject(err);
             }
-            const employees = Mapper.mapRowsToUsers(rows); 
+            const employees = Mapper.mapRowsToUsers(rows);
             resolve(employees);
         });
     });
@@ -90,7 +90,7 @@ const getRoles = () => {
       db.all(query, [], (err, rows) => {
           if (err) {
               return reject(err);
-          }          
+          }
           const roles = Mapper.mapRowsToRoles(rows);
           console.log(roles);
           resolve(roles);
@@ -205,7 +205,7 @@ const getAllReports = () => {
             else {
                 const reports = Mapper.mapRowsToReports(rows);
                 resolve(reports);
-            }    
+            }
       });
     });
 }
@@ -366,11 +366,11 @@ const updateUserProfile = (userId, telegramUsername, allowEmailNotification, ima
           imageUrl = ?
       WHERE id = ?
     `;
-    
+
     db.run(sql, [
-      telegramUsername, 
-      allowEmailNotification ? 1 : 0, 
-      imageUrl, 
+      telegramUsername,
+      allowEmailNotification ? 1 : 0,
+      imageUrl,
       userId
     ], function (err) {
       if (err) {
@@ -378,7 +378,7 @@ const updateUserProfile = (userId, telegramUsername, allowEmailNotification, ima
         return reject(err);
       }
       console.log(`User ${userId} profile updated`);
-      
+
       getUserById(userId)
         .then(user => resolve(user))
         .catch(err => reject(err));
@@ -456,7 +456,9 @@ const updateReportStatus = (userId, reportId, statusId) => {
         const query1 = "SELECT * FROM report WHERE id = ? AND employeeId = ?";
         db.get(query1, [reportId, userId], (err, row) => {
             if (err) return reject(err);
-            if(row === undefined) resolve(false);
+            if (row === undefined) {
+                return resolve(false);
+            }
             const now = dayjs().toString();
             const query2 = "UPDATE report SET statusId = ?, updatedAt = ? WHERE id = ?";
             db.run(query2, [statusId, now, reportId], function(err) {
@@ -526,7 +528,7 @@ const getUnassignedReports = () => {
     const query = "SELECT R.*, RI.id AS imageId, RI.imageUrl, RC.categoryName, U.username FROM report R, report_image RI, report_category RC, user U WHERE R.statusId = 1 AND R.id = RI.reportId AND R.catId = RC.id AND R.userId = U.id";
     db.all(query, [], async (err, rows) => {
       if (err) return reject(err);
-      
+
       const reports = Mapper.mapRowsToReports(rows);
       resolve(reports);
     });
@@ -626,29 +628,28 @@ const setNotificationsAsRead = (userId, reportId) => {
 
 
 const DAO = {
-    getUserByUsername, 
-    getUnassignedEmployees, 
-    getOffices, 
-    getRoles, 
-    assignEmployeeToOffice, 
+    getUserByUsername,
+    getUnassignedEmployees,
+    getOffices,
+    getRoles,
+    assignEmployeeToOffice,
     addNewUser,
     deleteEmployeeById,
-    addNewReport, 
-    getCategories, 
+    addNewReport,
+    getCategories,
     getAllReports,
     getReportsByUserId,
-    getUnassignedReports, 
+    getUnassignedReports,
     assignReportToOfficer,
     rejectReport,
-    getCategoryById, 
-    getStatusById, 
-    getUsernameByUserId, 
-    getAssignedReports, 
-    updateUserProfile, 
-    getUserById, 
+    getCategoryById,
+    getStatusById,
+    getUsernameByUserId,
+    getAssignedReports,
+    updateUserProfile,
+    getUserById,
     updateReportStatus,
     getReportStatuses,
-    createNotification,
     getUnreadNotifications,
     setNotificationsAsRead,
     createNotification
