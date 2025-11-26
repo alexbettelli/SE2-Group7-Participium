@@ -599,7 +599,7 @@ const createNotification = (message) => {
 
 const getUnreadNotifications = (userId) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM notification WHERE receiverId = ?`; //!TODO: missing isRead field in the DB
+        const query = `SELECT * FROM notification WHERE receiverId = ? AND isRead = 0`;
         db.all(query, [userId], async (err, rows) => {
             if (err) {
               return reject(err);
@@ -619,6 +619,23 @@ const setNotificationsAsRead = (userId, reportId) => {
     });
 }
 
+function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+}
+
+function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
 
 
 const DAO = {
@@ -646,7 +663,9 @@ const DAO = {
     getReportStatuses,
     getUnreadNotifications,
     setNotificationsAsRead,
-    createNotification
+    createNotification,
+  run,
+  all
 };
 
 export default DAO;
