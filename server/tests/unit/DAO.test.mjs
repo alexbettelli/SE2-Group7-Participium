@@ -477,7 +477,7 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       const userId = 1;
       const telegramUsername = 'new_telegram';
       const allowEmailNotification = 1;
-      const imageUrl = 'http://example.com/image.png';
+      const imageUrl = 'image.png';
 
       // act
       const result = await DAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
@@ -487,7 +487,7 @@ describe('DAO (server/dao/DAO.mjs)', () => {
       expect(result.username).toBe('existing');
       expect(result).toHaveProperty('telegramUsername', telegramUsername);
       expect(result).toHaveProperty('allowEmailNotification', allowEmailNotification);
-      expect(result).toHaveProperty('imageUrl', imageUrl);
+      expect(result).toHaveProperty('imageUrl', `//images/profiles/${imageUrl}`);
     });
 
     it('handles updating non-existing user gracefully', async () => {

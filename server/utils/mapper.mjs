@@ -1,5 +1,8 @@
 import {User, Report, Message, Office, Role, Status, Image, Category, Channel}from '../model/model.mjs';
 
+const PORT = process.env.PORT || 3001;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const IMAGE_BASE_URL = `${BASE_URL}/images`;
 //map a single user
 function mapRowToUser(row) {
     if (!row) return null;
@@ -18,7 +21,7 @@ function mapRowToUser(row) {
         role,                    
         row.allowEmailNotification,
         row.telegramUsername,
-        row.imageUrl
+        row.imageUrl ? `${IMAGE_BASE_URL}/profiles/${row.imageUrl}` : null
     );
 }
 //map multiple users
@@ -124,7 +127,7 @@ const mapRowsToReports = (rows) => {
 
         // add image if it not exist
         if (row.imageId && !report.images.some(img => img.id === row.imageId)) {
-            report.images.push(new Image(row.imageId, row.imageUrl));
+            report.images.push(new Image(row.imageId, `${IMAGE_BASE_URL}/reports/${report.id}/${row.imageUrl}`));
         }
 
         // add message if it not exist
