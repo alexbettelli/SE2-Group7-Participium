@@ -331,32 +331,40 @@ Defines all the channels able to send messages.
 ## Users
 
 - **Admin user**
+
   **username** : admin
   **password** : adminpassword
 
 <br>
 
 - **Citizen user**
-  **username** : mario.rossi
-  **password** : mariorossi
 
-<br>
+  **username** : Itacyma
+  **password** : ClaudioMartini
 
-- **Employee user**
-  **username** : maria.bianchi
-  **password** : mariabianchi
-
-<br>
-
-- **Technical Office staff member**
-  **username** : giulia.rossi
-  **password** : GiuliaRossi
+  **username** : Bette99
+  **password** : alexbettelli
 
 <br>
 
 - **Public Relations Municipal Officer**
-  **username** : carla.verdi
-  **password** : carlaverdi
+
+  **username** : carla.rossi
+  **password** : CarlaRossi
+
+  <br>
+
+- **Technical Office staff member**
+
+  **username** : federico.romano
+  **password** : FedericoRomano
+
+  **username** : alessia.riva
+  **password** : AlessiaRiva
+
+<br>
+
+
 
 
 
@@ -382,7 +390,7 @@ cd <folder_name>
 
 * Direct download
 ```bash
-curl -L -o docker-compose.yml https://raw.githubusercontent.com/alexbettelli/SE2-Group7-Participium/tree/main/docker-compose.yml
+curl -L -o docker-compose.yml https://raw.githubusercontent.com/alexbettelli/SE2-Group7-Participium/main/docker-compose.yml
 ```
 * Download manually by [GitHub](https://github.com/alexbettelli/SE2-Group7-Participium/tree/main)
 
