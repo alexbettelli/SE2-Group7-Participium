@@ -181,7 +181,7 @@ function ReportView(props) {
                             </Carousel>
                         </div>
                         <div className="map-container-popup">
-                            <Map lat={report.latitude} lng={report.longitude} />
+                            <Map lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
                         </div>
                     </div>
                     

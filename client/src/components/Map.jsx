@@ -2,13 +2,31 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 export default function Map(props) {
-    const { lat, lng } = props;
+    const { lat, lng,  category } = props;
 
     const mapRef = useRef(null);
     const bufferLayerRef = useRef(null);
 
+    const categoryColors = {
+            "Roads and Infrastructure": "lightblue",
+            "Waste and Cleanliness": "black",
+            "Green Areas and Public Parks": "darkred",
+            "Public Transport and Mobility": "purple"
+    };
+    const  getMarkerIcon = (categoryName) => {
+        const color = categoryColors[categoryName] || "blue"; // Default color        
+        return L.AwesomeMarkers.icon({
+            icon: 'fa-circle',     
+            markerColor: color,
+            prefix: 'fa',
+            iconColor: 'white'
+        });
+    }
     useEffect(() => {
         if (!mapRef.current) return;
 
@@ -19,7 +37,7 @@ export default function Map(props) {
                 attribution: '&copy; OpenStreetMap contributors',
             }).addTo(map);
 
-            L.marker([lat, lng]).addTo(map);
+            L.marker([lat, lng], {icon : getMarkerIcon(category)}).addTo(map);
             mapRef.current._mapInstance = map;
         }
     
@@ -32,7 +50,7 @@ export default function Map(props) {
             }
         });
 
-        L.marker([lat, lng]).addTo(map);
+        L.marker([lat, lng], {icon : getMarkerIcon(category)}).addTo(map);        
 
         if(bufferLayerRef.current) map.removeLayer(bufferLayerRef.current);
         const point = turf.point([lng, lat]);
