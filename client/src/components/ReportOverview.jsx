@@ -1,4 +1,3 @@
-import React from 'react';
 import '../styles/ReportOverview.css';
 import { Carousel } from 'react-bootstrap';
 
@@ -12,7 +11,7 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                     <p className="success-subtitle">Your report has been saved and will be reviewed by our team.</p>
                 </div>
             )}
-            
+
             <div className="overview-card">
 
                 <div className="overview-header">
@@ -31,15 +30,15 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                 <div className="overview-section">
                     <h4 className="section-label">Description</h4>
                     <p className="report-field">{report.description}</p>
-                </div>  
-                
-            {report.address && (
+                </div>
+
+                {report.address && (
                     <div className="overview-section">
                         <h4 className="section-label">Address</h4>
                         <p className="report-field">{report.address}</p>
                     </div>
                 )}
-                
+
                 <div className="overview-section">
                     <h4 className="section-label">Location</h4>
                     <div className="location-info">
@@ -54,10 +53,10 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                             <Carousel>
                                 {report.images.map((image, index) => (
                                     <Carousel.Item key={index}>
-                                        <img 
-                                            className="d-block w-100" 
-                                            src={image.imageUrl} 
-                                            alt={`Report image ${index + 1}`} 
+                                        <img
+                                            className="d-block w-100"
+                                            src={image.imageUrl}
+                                            alt={`Report image ${index + 1}`}
                                         />
                                     </Carousel.Item>
                                 ))}
@@ -74,7 +73,7 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                     <div className="report-meta">
                         {!report.isAnonymous && report.username && (
                             <span className="author-info">
-                                Reported by: {report.username !==  user.username ? report.username : 'YOU'}
+                                Reported by: {report.username !== user.username ? report.username : 'YOU'}
                             </span>
                         )}
                         {report.isAnonymous && (
@@ -83,22 +82,22 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                             </span>
                         )}
 
-                 {report.createdAt && (
-                 <span className="timestamp-info">
-                        Submitted on: {new Date(report.createdAt).toLocaleString('it-IT')}
+                        {report.createdAt && (
+                            <span className="timestamp-info">
+                                Submitted on: {new Date(report.createdAt).toLocaleString('it-IT')}
                             </span>
                         )}
                     </div>
                 </div>
 
                 {showNewReportBtn &&
-                <div className="overview-actions">
-                    <button className="btn btn-primary" onClick={onBackToHome}>
-                        Submit New Report
-                    </button>
-                </div>
+                    <div className="overview-actions">
+                        <button className="btn btn-primary" onClick={onBackToHome}>
+                            Submit New Report
+                        </button>
+                    </div>
                 }
-                
+
             </div>
         </div>
     );

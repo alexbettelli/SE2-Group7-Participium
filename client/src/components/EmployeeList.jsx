@@ -1,12 +1,12 @@
-import { Table, Button, Form } from 'react-bootstrap';
+import { Table, Form } from 'react-bootstrap';
 import { useState } from 'react';
 import '../styles/EmployeeList.css';
 
-export default function UnassignedEmployeeList (props) {
+export default function UnassignedEmployeeList(props) {
     return (
         <div className="employee-list-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h2 className="employee-list-title" style={{ textAlign: 'center', width: '100%' }}>Unassigned Employees {props.employees.length === 0 ? " - None" : ` - ${props.employees.length}`}</h2>
-          <Table className="employee-list-table" hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
+            <h2 className="employee-list-title" style={{ textAlign: 'center', width: '100%' }}>Unassigned Employees {props.employees.length === 0 ? " - None" : ` - ${props.employees.length}`}</h2>
+            <Table className="employee-list-table" hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
                 <thead>
                     <tr style={{ textAlign: 'center' }}>
                         <th> Username </th>
@@ -18,10 +18,10 @@ export default function UnassignedEmployeeList (props) {
                     </tr>
                 </thead>
                 <tbody>
-                     {props.employees?.map((m)=>
-                        <EmployeeRow key={m.id} 
+                    {props.employees?.map((m) =>
+                        <EmployeeRow key={m.id}
                             employee={m}
-                            roles = {props.roles || []}
+                            roles={props.roles || []}
                             offices={props.offices || []}
                             onAssign={props.onAssign}
                         />
@@ -31,8 +31,8 @@ export default function UnassignedEmployeeList (props) {
         </div>
     );
 }
-          
-function EmployeeRow (props) {
+
+function EmployeeRow(props) {
     const { employee, roles, offices, onAssign } = props;
     const [selectedRole, setSelectedRole] = useState('');
     const [selectedOffice, setSelectedOffice] = useState('');
@@ -65,31 +65,31 @@ function EmployeeRow (props) {
             <td>{employee.lastName}</td>
 
             <td style={{ minWidth: 240 }}>
-                    <Form.Select
-                        size="sm"
-                        value={selectedRole}
-                        onChange={handleRoleChange}
-                        className={selectedRole === '' ? 'employee-select-unselected' : 'employee-select'}
-                    >
+                <Form.Select
+                    size="sm"
+                    value={selectedRole}
+                    onChange={handleRoleChange}
+                    className={selectedRole === '' ? 'employee-select-unselected' : 'employee-select'}
+                >
                     <option value="">-- choose role --</option>
                     {roles.map(r => (
                         <option key={r.id} value={r.id}>{r.type}</option>
                     ))}
                 </Form.Select>
             </td>
-            
+
             {selectedRole === '3' ? (
                 <td style={{ minWidth: 240, textAlign: 'center' }}>
-                  <span className="no-office-badge">— no office required —</span>
+                    <span className="no-office-badge">— no office required —</span>
                 </td>
             ) : (
                 <td style={{ minWidth: 240 }}>
-                        <Form.Select
-                            size="sm"
-                            value={selectedOffice}
-                            onChange={(e) => setSelectedOffice(e.target.value)}
-                            className={selectedOffice === '' ? 'employee-select-unselected' : 'employee-select'}
-                        >
+                    <Form.Select
+                        size="sm"
+                        value={selectedOffice}
+                        onChange={(e) => setSelectedOffice(e.target.value)}
+                        className={selectedOffice === '' ? 'employee-select-unselected' : 'employee-select'}
+                    >
                         <option value="">-- choose office --</option>
                         {offices.map(o => (
                             <option key={o.id} value={o.id}>{o.name}</option>
@@ -99,14 +99,14 @@ function EmployeeRow (props) {
             )}
 
             <td style={{ width: 120 }}>
-                    <button
-                        className="assign-button"
-                        onClick={handleAssign}
-                        disabled={
-                            !selectedRole ||
-                            (selectedRole !== '3' && !selectedOffice)
-                        }
-                    >
+                <button
+                    className="assign-button"
+                    onClick={handleAssign}
+                    disabled={
+                        !selectedRole ||
+                        (selectedRole !== '3' && !selectedOffice)
+                    }
+                >
                     Assign
                 </button>
             </td>
