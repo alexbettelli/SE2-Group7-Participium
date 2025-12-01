@@ -1,8 +1,9 @@
+import '../styles/NewEmployeeForm.css';
 
 import { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
-import API from '../api/API.mjs';
-import '../styles/NewEmployeeForm.css';
+
+import UserAPI from '../api/UserAPI.mjs';
 
 function NewEmployeeForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -35,15 +36,15 @@ function NewEmployeeForm({ onSuccess }) {
       setError('La password deve avere almeno 6 caratteri.');
       return;
     }
-    if( form.email.indexOf('@') === -1 ) {
+    if (form.email.indexOf('@') === -1) {
       setError('Inserisci un indirizzo email valido.');
       return;
     }
-    if( form.email.indexOf('.') === -1 ) {
+    if (form.email.indexOf('.') === -1) {
       setError('Inserisci un indirizzo email valido.');
       return;
     }
-    
+
 
     try {
       const data = {
@@ -54,14 +55,14 @@ function NewEmployeeForm({ onSuccess }) {
         lastName: form.lastName
       };
 
-      await API.createNewEmployee(data);
+      await UserAPI.createNewEmployee(data);
       setSuccess('Employee created successfully.');
       setForm({ username: '', password: '', email: '', firstName: '', lastName: '' });
       if (onSuccess) await onSuccess();
-      
+
     } catch (err) {
       setError(err?.message || String(err) || 'Error: employee not created.');
-    } 
+    }
   };
 
   return (

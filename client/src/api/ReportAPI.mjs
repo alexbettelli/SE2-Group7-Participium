@@ -1,38 +1,38 @@
 const SERVER_URL = 'http://localhost:3001';
 
-const submitReport = async(reportData) => {
-  const formData = new FormData();
-  formData.append('title', reportData.title);
-  formData.append('description', reportData.description);
-  formData.append('latitude', reportData.latitude);
-  formData.append('longitude', reportData.longitude);
-  formData.append('address', reportData.address);
-  formData.append('catId', reportData.catId);
-  formData.append('anonymous', reportData.anonymous ? 'true' : 'false');
-  
-  reportData.images.forEach(image => {
-    formData.append('images', image);
-  });
+const submitReport = async (reportData) => {
+    const formData = new FormData();
+    formData.append('title', reportData.title);
+    formData.append('description', reportData.description);
+    formData.append('latitude', reportData.latitude);
+    formData.append('longitude', reportData.longitude);
+    formData.append('address', reportData.address);
+    formData.append('catId', reportData.catId);
+    formData.append('anonymous', reportData.anonymous ? 'true' : 'false');
 
-  const res = await fetch(SERVER_URL + '/users/reports', {
-    method: 'POST',
-    credentials: 'include',
-    body: formData
-  });
+    reportData.images.forEach(image => {
+        formData.append('images', image);
+    });
 
-  if (res.ok) {
-    const data = await res.json();
-    return data;
-  } else {
-    const errDetails = await res.json();
-    throw new Error(errDetails.message || 'Error submitting report');
-  }
+    const res = await fetch(SERVER_URL + '/users/reports', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+    });
+
+    if (res.ok) {
+        const data = await res.json();
+        return data;
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.message || 'Error submitting report');
+    }
 };
-const getAllReports = async() => {
+const getAllReports = async () => {
     const res = await fetch(SERVER_URL + '/reports', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include' 
+        credentials: 'include'
     });
     if (res.ok) {
         const reports = await res.json();
@@ -60,18 +60,18 @@ const rejectReport = async (reportId, userId, reason) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({reportId, userId, reason})
+        body: JSON.stringify({ reportId, userId, reason })
     });
-    if(res.ok){
-      return;
+    if (res.ok) {
+        return;
     } else {
-      const errMessage = await res.json();
+        const errMessage = await res.json();
         throw new Error(errMessage.error || 'Error rejecting report');
     }
 }
 const getReportStatuses = async () => {
     const res = await fetch(`${SERVER_URL}/reports/statuses`, { credentials: "include" });
-    if(res.ok) return await res.json();
+    if (res.ok) return await res.json();
     else throw new Error('Error fetching report statuses');
 };
 const updateReportStatus = async (reportId, statusId) => {
@@ -92,11 +92,11 @@ const getAssignedReports = async () => {
     if (res.ok) return json;
     else return { error: json.error || 'Error fetching assigned reports' };
 };
-const getUnassignedReports = async() => {
+const getUnassignedReports = async () => {
     const res = await fetch(SERVER_URL + '/reports/unassigned', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include' 
+        credentials: 'include'
     });
     if (res.ok) {
         const reports = await res.json();
@@ -112,7 +112,7 @@ const assignReportToOfficer = async (reportId, userId, categoryId, officeId, off
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ reportId, userId, categoryId, officeId, officerId })
-    }); 
+    });
     if (res.ok) {
         return;
     } else {
@@ -121,7 +121,7 @@ const assignReportToOfficer = async (reportId, userId, categoryId, officeId, off
     }
 };
 
-export {
+const ReportAPI = {
     submitReport,
     getAllReports,
     getMyReports,
@@ -132,3 +132,5 @@ export {
     getUnassignedReports,
     assignReportToOfficer
 };
+
+export default ReportAPI;

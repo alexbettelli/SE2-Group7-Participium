@@ -43,8 +43,9 @@ const getRoles = async() => {
     }
 };  
 
-export {
+const GenericAPI = {
     getCategories,
     getOffices,
     getRoles
 };
+export default GenericAPI;

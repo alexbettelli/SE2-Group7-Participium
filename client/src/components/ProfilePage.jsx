@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import API from '../api/API.mjs';
 import '../styles/commonStyle.css';
 import '../styles/ProfilePage.css';
+
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+
+import UserAPI from '../api/UserAPI.mjs';
+
 
 export default function ProfilePage({ user, setUser }) {
   const navigate = useNavigate();
@@ -13,7 +16,7 @@ export default function ProfilePage({ user, setUser }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [photoRemoved, setPhotoRemoved] = useState(false); 
+  const [photoRemoved, setPhotoRemoved] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -36,7 +39,7 @@ export default function ProfilePage({ user, setUser }) {
       setError('Image size must be less than 5MB');
       return;
     }
-    if(photoPreview && photoPreview.startsWith('blob:')){
+    if (photoPreview && photoPreview.startsWith('blob:')) {
       URL.revokeObjectURL(photoPreview);
     }
     setProfilePhoto(file);
@@ -61,20 +64,20 @@ export default function ProfilePage({ user, setUser }) {
     setError('');
     try {
       if (photoRemoved && user.imageUrl) {
-        await API.deleteProfilePhoto();
+        await UserAPI.deleteProfilePhoto();
         setPhotoPreview(null);
         setUser(prevUser => ({ ...prevUser, imageUrl: null }));
       }
-      if(!photoRemoved || profilePhoto){
+      if (!photoRemoved || profilePhoto) {
         const formData = new FormData();
         if (profilePhoto && !photoRemoved) {
-          formData.append('profilePhoto', profilePhoto); 
+          formData.append('profilePhoto', profilePhoto);
         }
         formData.append('telegramUsername', telegramUsername.trim());
         formData.append('allowEmailNotification', allowEmailNotification ? 1 : 0);
-        const updatedUser = await API.updateProfile(formData);
+        const updatedUser = await UserAPI.updateProfile(formData);
         setUser(updatedUser);
-      }  
+      }
       setPhotoRemoved(false);
       setMessage('Profile updated successfully!');
     } catch (err) {
@@ -82,7 +85,7 @@ export default function ProfilePage({ user, setUser }) {
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
   if (!user) return null;
 

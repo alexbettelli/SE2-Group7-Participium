@@ -1,16 +1,18 @@
-import React, { use, useEffect, useState } from 'react';
-import { Button } from 'react-bootstrap'; 
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import '../styles/ReportPreview.css'
+
+import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router";
 import { Carousel, Modal, Form } from 'react-bootstrap';
-import Map from './Map.jsx';
+
 import dayjs from 'dayjs';
+
+import Map from './Map.jsx';
 import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
-import 'bootstrap-icons/font/bootstrap-icons.css'; 
-import '../styles/ReportPreview.css'
-import API from '../api/API.mjs';
+import ReportAPI from '../api/ReportAPI.mjs';
 
-export default function ReportPreview(props){
+export default function ReportPreview(props) {
     const { report, setSelectedReport } = props;
     const [expanded, setExpanded] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -22,7 +24,7 @@ export default function ReportPreview(props){
         setShowStatusModal(false);
         document.body.style.overflowY = 'auto';
     }
-    
+
     const handleShow = () => {
         setShowStatusModal(true);
         document.body.style.overflowY = 'hidden';
@@ -32,7 +34,7 @@ export default function ReportPreview(props){
 
     useEffect(() => {
         const getStatuses = async () => {
-            API.getReportStatuses().then((data) => {
+            ReportAPI.getReportStatuses().then((data) => {
                 setStatuses(data);
             }).catch((error) => {
                 console.error('Error fetching report statuses:', error);
@@ -45,12 +47,12 @@ export default function ReportPreview(props){
     useEffect(() => {
         const updateReportStatus = async () => {
             try {
-                const result = await API.updateReportStatus(report.id, selectedStatusId);
+                const result = await ReportAPI.updateReportStatus(report.id, selectedStatusId);
                 if (result && result.notification) {
                     report.notifications = [...report.notifications, result.notification];
                     setSelectedReport({ ...report });
                 }
-                if(result.ok) props.updateReports();
+                if (result.ok) props.updateReports();
             } catch (error) {
                 console.error('Error updating report status:', error);
             }
@@ -76,12 +78,12 @@ export default function ReportPreview(props){
     };
 
     useEffect(() => {
-        if(expanded) document.body.style.overflowY = 'hidden';
+        if (expanded) document.body.style.overflowY = 'hidden';
         else document.body.style.overflowY = 'auto';
     }, [expanded]);
 
     const getImage = () => {
-        if(report && report.images && report.images.length > 0) return report.images[0].imageUrl;
+        if (report && report.images && report.images.length > 0) return report.images[0].imageUrl;
         else return NotFoundImage.not_found_url;
     }
 
@@ -115,37 +117,37 @@ export default function ReportPreview(props){
                             </span>
                         </button>
                     </div>
-                    {  
-                        props.user.role.id === 4 && 
+                    {
+                        props.user.role.id === 4 &&
                         <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
                             <span><i className="bi bi-pencil-fill"></i> Change status</span>
                         </button>
                     }
                 </div>
             </div>
-            { expanded && <ReportView onClose={toggleExpanded} report={report} /> }
-            
+            {expanded && <ReportView onClose={toggleExpanded} report={report} />}
+
             <Modal show={showStatusModal} onHide={handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Change status for report #{report.id}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form.Select aria-label="Default select example" defaultValue={report.status.id} onChange={(e) => setSelectedStatusId(e.target.value)}>
-                        { statuses.map(status => {
-                            if(![1, 2, 5].includes(status.id))
+                        {statuses.map(status => {
+                            if (![1, 2, 5].includes(status.id))
                                 return <option key={status.id} value={status.id} >{status.statusName}</option>;
-                        }) }
+                        })}
                     </Form.Select>
                 </Modal.Body>
                 <Modal.Footer>
                     <button className="btn-close-modal" type="button" onClick={handleClose}>
                         Close
                     </button>
-                    <button className="btn-save-modal" type="button" onClick={() => {handleClose(); setUpdateStatus(true); }}>
+                    <button className="btn-save-modal" type="button" onClick={() => { handleClose(); setUpdateStatus(true); }}>
                         Save Changes
                     </button>
-            </Modal.Footer>
-        </Modal>
+                </Modal.Footer>
+            </Modal>
         </>
     )
 }
@@ -169,28 +171,28 @@ function ReportView(props) {
                     <div className="media-container">
                         <div className="carousel-wrapper">
                             <Carousel controls={props.report.images.length > 1} indicators={props.report.images.length > 1}>
-                                { props.report.images.map((image, index) => {
+                                {props.report.images.map((image, index) => {
                                     return <Carousel.Item key={index}>
-                                                <img className="d-block" 
-                                                        src={image.imageUrl} 
-                                                        alt={`Image ${index+1}`} 
-                                                        onError={(e) => NotFoundImage.setSrcToNotFound(e)} 
-                                                />
-                                            </Carousel.Item>;
-                                }) }
+                                        <img className="d-block"
+                                            src={image.imageUrl}
+                                            alt={`Image ${index + 1}`}
+                                            onError={(e) => NotFoundImage.setSrcToNotFound(e)}
+                                        />
+                                    </Carousel.Item>;
+                                })}
                             </Carousel>
                         </div>
                         <div className="map-container-popup">
                             <Map lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
                         </div>
                     </div>
-                    
+
                     <div className="report-details">
                         <div className="fields">
                             <div className="field user-field">
                                 <h3>Reported by</h3>
                                 <p><strong>User id: </strong>{report.user.id}</p>
-                                <p><strong>Username: </strong>{report.user.username}</p> 
+                                <p><strong>Username: </strong>{report.user.username}</p>
                             </div>
                             <div className="field">
                                 <h3>Reported on</h3>
@@ -205,7 +207,7 @@ function ReportView(props) {
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
-                                { report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p> }
+                                {report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p>}
                             </div>
                             <div className="field description-field">
                                 <h3>Description</h3>

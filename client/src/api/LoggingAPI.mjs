@@ -1,13 +1,13 @@
 const SERVER_URL = 'http://localhost:3001';
 
-const registrate = async(data) =>{
-     const res = await fetch(SERVER_URL + '/user', {
-        method : 'POST',
-        headers : { 'Content-Type' : 'application/json' },
-        body : JSON.stringify(data)
+const registrate = async (data) => {
+    const res = await fetch(SERVER_URL + '/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
     })
 
-    if (res.ok) {        
+    if (res.ok) {
         const user = await res.json();
         return user;
     } else {
@@ -22,12 +22,12 @@ const registrate = async(data) =>{
         throw new Error(errMessage);
     }
 }
-const login = async(credentials) => {
+const login = async (credentials) => {
     const response = await fetch(SERVER_URL + '/session', {
-        method : 'POST',
-        headers : { 'Content-Type' : 'application/json' },
-        credentials : 'include',
-        body : JSON.stringify(credentials)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(credentials)
     });
     if (!response.ok) {
         if (response.status === 401) {
@@ -41,17 +41,18 @@ const login = async(credentials) => {
         return user;
     }
 };
-const logOut = async() => {
-  const response = await fetch(SERVER_URL + '/sessions/current', {
-    method: 'DELETE',
-    credentials: 'include'
-  });
-  if (response.ok)
-    return null;
+const logOut = async () => {
+    const response = await fetch(SERVER_URL + '/sessions/current', {
+        method: 'DELETE',
+        credentials: 'include'
+    });
+    if (response.ok)
+        return null;
 };
 
-export { 
-    login, 
-    registrate, 
-    logOut 
+const LoggingAPI = {
+    login,
+    registrate,
+    logOut
 };
+export default LoggingAPI;
