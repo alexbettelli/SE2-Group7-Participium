@@ -255,7 +255,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
     });
 }
 
-export default ReportDAO = {
+const ReportDAO = {
     getAllReports,
     getReportsByUserId,
     addNewReport,
@@ -265,3 +265,4 @@ export default ReportDAO = {
     assignReportToOfficer,
     updateReportStatus
 }
+export default ReportDAO

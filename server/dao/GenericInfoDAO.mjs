@@ -81,9 +81,11 @@ const getReportStatuses = async () => {
     });
 }
 
-export default  GenericInfoDAO = {
+const GenericInfoDAO = {
     getOffices,
     getRoles,
     getCategories,
     getReportStatuses
 }
+
+export default GenericInfoDAO;

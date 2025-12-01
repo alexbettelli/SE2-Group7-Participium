@@ -58,8 +58,10 @@ const setNotificationsAsRead = (userId, reportId) => {
     });
 }
 
-export default NotificationDAO = {
+const NotificationDAO = {
     createNotification,
     //getUnreadNotifications,
     setNotificationsAsRead
 }
+
+export default NotificationDAO;

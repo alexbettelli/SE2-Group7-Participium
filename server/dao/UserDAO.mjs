@@ -148,7 +148,7 @@ const getUserById = (userId) => {
     });
 }; */
 
-export default UserDAO = {
+const UserDAO = {
     addNewUser,
     getUserByUsername,
     getUserById,
@@ -157,3 +157,4 @@ export default UserDAO = {
     deleteEmployeeById,
     updateUserProfile
 };
+export default UserDAO;

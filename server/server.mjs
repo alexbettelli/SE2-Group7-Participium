@@ -12,7 +12,7 @@ import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { Validator, ValidationError } from 'express-json-validator-middleware';
 import { fileURLToPath } from 'url';
-import UserDAO from './dao/ UserDAO.mjs';
+import UserDAO from './dao/UserDAO.mjs';
 import GenericInfoDAO from './dao/GenericInfoDAO.mjs';
 import NotificationDAO from './dao/NotificationDAO.mjs';
 import ReportDAO from './dao/ReportDAO.mjs';
