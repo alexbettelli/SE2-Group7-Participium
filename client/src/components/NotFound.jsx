@@ -2,7 +2,7 @@ import { Container, Row, Image } from "react-bootstrap";
 import { Link } from "react-router";
 import error from '../assets/error.png'
 
-export default function NotFound(){
+export default function NotFound() {
     return (
         <Container className="h-100 d-flex align-items-center flex-column justify-content-center">
             <Row className="mb-3 fs-4 fw-bold">
@@ -16,6 +16,6 @@ export default function NotFound(){
             </Row>
 
         </Container>
-        
+
     );
 }

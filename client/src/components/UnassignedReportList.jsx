@@ -1,8 +1,8 @@
 import { Table, Form, Button, Carousel } from 'react-bootstrap';
-import { useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import Map from './Map.jsx';
-import '../styles/UnassignedReportList.css'; 
+import '../styles/UnassignedReportList.css';
 
 export default function UnassignedReportsList(props) {
   const { reports, categories, offices, handleAssign, handleReject } = props;
@@ -37,19 +37,19 @@ export default function UnassignedReportsList(props) {
         </thead>
         <tbody>
           {reports?.map((r) =>
-            <ReportRow 
-              key={r.id} 
-              report={r} 
-              categories={categories || []} 
-              offices={offices || []} 
-              onClick={() => onClick(r)} 
+            <ReportRow
+              key={r.id}
+              report={r}
+              categories={categories || []}
+              offices={offices || []}
+              onClick={() => onClick(r)}
               handleAssign={handleAssign}
               setReportToReject={setReportToReject} />
           )}
         </tbody>
       </Table>
       {selectedReport && <ReportView report={selectedReport} onClose={closeReportView} />}
-      {reportToReject && <RejectReportModal report={reportToReject} onClose={closeRejectModal} handleReject={handleReject}/>}
+      {reportToReject && <RejectReportModal report={reportToReject} onClose={closeRejectModal} handleReject={handleReject} />}
     </div>
   );
 };
@@ -71,7 +71,7 @@ const ReportRow = (props) => {
     const filteredOffice = offices.find(o => String(o.category?.id) === catId);
     setSelectedOffice(filteredOffice?.id ?? 'no offices');
     setOfficers(filteredOffice?.employees ?? []);
-    setSelectedOfficer(''); 
+    setSelectedOfficer('');
   }, [selectedCategory, offices]);
 
   const handleCategoryChange = (e) => {
@@ -79,10 +79,10 @@ const ReportRow = (props) => {
   };
 
   const handleAccept = () => {
-    if(selectedOfficer && selectedOffice && selectedCategory) {
+    if (selectedOfficer && selectedOffice && selectedCategory) {
       handleAssign(report.id, report.user.id, selectedCategory, selectedOffice, selectedOfficer);
     } else {
-      alert('Please select an officer to assign the report to.'); 
+      alert('Please select an officer to assign the report to.');
     }
   };
 
@@ -120,14 +120,14 @@ const ReportRow = (props) => {
       </td>
 
       <td className="actions-cell">
-        <button className="btn-accept-report" onClick={(e) => { 
-          e.stopPropagation(); 
+        <button className="btn-accept-report" onClick={(e) => {
+          e.stopPropagation();
           handleAccept();
         }}>
           <i className="bi bi-check-circle-fill"></i>
           Accept
         </button>
-        <button className="btn-reject-report" onClick={(e) => { 
+        <button className="btn-reject-report" onClick={(e) => {
           e.stopPropagation();
           setReportToReject(report);
         }}>
@@ -140,91 +140,91 @@ const ReportRow = (props) => {
 };
 
 function ReportView(props) {
-    const report = props.report;
+  const report = props.report;
 
-    return (
-        <>
-            <div id="backdrop" onClick={props.onClose}></div>
-            <div className="report-view">
-                <div className="report-view-header">
-                    <h2>{props.report.title}</h2>
-                    <button className="close-button" onClick={props.onClose}>
-                        <i className="bi bi-x-lg"></i>
-                    </button>
-                </div>
-                <div className="report-view-content">
-                    <div className="media-container">
-                        <div className="carousel-wrapper">
-                            <Carousel>
-                                {props.report.images.map((image, index) => {
-                                    return (
-                                        <Carousel.Item key={index}>
-                                            <img className="d-block w-100" src={image.imageUrl} alt={`Image ${index+1}`} />
-                                        </Carousel.Item>
-                                    );
-                                })}
-                            </Carousel>
-                        </div>
-                        <div className="map-container-popup">
-                            <Map lat={report.latitude} lng={report.longitude} />
-                        </div>
-                    </div>
-                    <div className="report-details">
-                        <div className="fields">
-                            <div className="field user-field">
-                                <h3>Reported by</h3>
-                                <p><strong>Username: </strong>{report.user.username}</p> 
-                            </div>
-                            <div className="field">
-                                <h3>Reported on</h3>
-                                <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
-                            </div>
-                            <div className="field">
-                                <h3>Address</h3>
-                                <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
-                            </div>
-                            <div className="field">
-                                <h3>Original Category</h3>
-                                <p><strong>Report ID: </strong>{report.id}</p>
-                                <p><strong>Category: </strong>{report.category.categoryName}</p>
-                            </div>
-                            <div className="field description-field">
-                                <h3>Description</h3>
-                                <p>{report.description}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <>
+      <div id="backdrop" onClick={props.onClose}></div>
+      <div className="report-view">
+        <div className="report-view-header">
+          <h2>{props.report.title}</h2>
+          <button className="close-button" onClick={props.onClose}>
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div className="report-view-content">
+          <div className="media-container">
+            <div className="carousel-wrapper">
+              <Carousel>
+                {props.report.images.map((image, index) => {
+                  return (
+                    <Carousel.Item key={index}>
+                      <img className="d-block w-100" src={image.imageUrl} alt={`Image ${index + 1}`} />
+                    </Carousel.Item>
+                  );
+                })}
+              </Carousel>
             </div>
-        </>
-    )
+            <div className="map-container-popup">
+              <Map lat={report.latitude} lng={report.longitude} />
+            </div>
+          </div>
+          <div className="report-details">
+            <div className="fields">
+              <div className="field user-field">
+                <h3>Reported by</h3>
+                <p><strong>Username: </strong>{report.user.username}</p>
+              </div>
+              <div className="field">
+                <h3>Reported on</h3>
+                <p><strong>Creation: </strong>{dayjs(report.createdAt).format('DD/MM/YYYY HH:mm')}</p>
+              </div>
+              <div className="field">
+                <h3>Address</h3>
+                <p>{report.address.split("Piemonte")[0].split("Turin")[0].trimEnd().replace(/,$/, "")}</p>
+              </div>
+              <div className="field">
+                <h3>Original Category</h3>
+                <p><strong>Report ID: </strong>{report.id}</p>
+                <p><strong>Category: </strong>{report.category.categoryName}</p>
+              </div>
+              <div className="field description-field">
+                <h3>Description</h3>
+                <p>{report.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
 
 function RejectReportModal(props) {
-    const { report, onClose, handleReject } = props;
-    const [reason, setReason] = useState('');
+  const { report, onClose, handleReject } = props;
+  const [reason, setReason] = useState('');
 
-    const handleRejectClick = async () => {
-        await handleReject(report.id, report.user.id, reason);
-        onClose();
-    };
+  const handleRejectClick = async () => {
+    await handleReject(report.id, report.user.id, reason);
+    onClose();
+  };
 
-    return (
-        <>
-            <div className="rp-backdrop" onClick={onClose}></div>
-            <div className="reject-modal">
-                <h3>Reason for rejection:</h3>
-                <textarea
-                    value={reason}
-                    onChange={e => setReason(e.target.value)}
-                    rows={4}
-                    placeholder="Write the reason here..."
-                />
-                <div>
-                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button variant="danger" onClick={handleRejectClick} disabled={!reason.trim()}>Reject</Button>
-                </div>
-            </div>
-        </>
-    );
+  return (
+    <>
+      <div className="rp-backdrop" onClick={onClose}></div>
+      <div className="reject-modal">
+        <h3>Reason for rejection:</h3>
+        <textarea
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          rows={4}
+          placeholder="Write the reason here..."
+        />
+        <div>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="danger" onClick={handleRejectClick} disabled={!reason.trim()}>Reject</Button>
+        </div>
+      </div>
+    </>
+  );
 }

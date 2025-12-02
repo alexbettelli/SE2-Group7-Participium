@@ -1,10 +1,13 @@
-import { useRef, useEffect, useState } from "react";
 import '../styles/ChatPage.css';
+
+import { useRef, useEffect, useState } from "react";
+
 import Message from "./Message.jsx";
-import API from "../api/API.mjs";
+
+import NotificationAPI from '../api/NotificationAPI.mjs';
 
 
-export default function ChatPage(props){
+export default function ChatPage(props) {
     const { report, user, unreadNotifications, setUnreadNotifications } = props;
     const [messages, setMessages] = useState(report.notifications);
     const [loading, setLoading] = useState(null);
@@ -19,7 +22,7 @@ export default function ChatPage(props){
         const markNotificationsRead = async () => {
             if (report?.id && user?.id) {
                 try {
-                    const readNotifications = await API.setReadNotifications(report.id);
+                    const readNotifications = await NotificationAPI.setReadNotifications(report.id);
                     setUnreadNotifications(prev => prev - readNotifications);
                     setLoading(false)
                 } catch (err) {
@@ -48,15 +51,15 @@ export default function ChatPage(props){
         if (!notificationText.trim()) return;
         setSending(true);
         try {
-            const newMessage = await API.submitNotification({
+            const newMessage = await NotificationAPI.submitNotification({
                 reportId: report.id,
-                senderId: report.employee.id || 1, 
-                receiverId: report.user.id, 
+                senderId: report.employee.id || 1,
+                receiverId: report.user.id,
                 text: notificationText,
-                channelId: 1 
+                channelId: 1
             });
             setNotificationText("");
-            if(newMessage) {
+            if (newMessage) {
                 setMessages(prev => {
                     const updated = [...prev, newMessage];
                     setTimeout(() => {
@@ -80,7 +83,7 @@ export default function ChatPage(props){
 
     return (
         <div className="chat-page-container">
-            
+
             <div className="chat-header-row">
                 <div className="chat-officer-label">
                     {user.role.id !== 1 ? report.user.username : (report.employee ? report.employee.username : 'No officer assigned')}
@@ -95,27 +98,27 @@ export default function ChatPage(props){
                         <div>There are no messages in the chat yet</div>
                     ) : (
                         <>
-                        {messages.map(msg => (
-                            <div
-                                key={msg.id}
-                                style={{
-                                    display: 'flex',
-                                    justifyContent: ((msg.sender && msg.sender.id === user.id) || (!msg.sender && user.role.id !== 1)) ? 'flex-end' : 'flex-start',
-                                    width: '100%'
-                                }}
-                            >
+                            {messages.map(msg => (
                                 <div
-                                    className={`chat-message-wrapper ${(msg.sender && msg.sender.id === user.id) ? 'chat-message-right' : 'chat-message-left'}`}
+                                    key={msg.id}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: ((msg.sender && msg.sender.id === user.id) || (!msg.sender && user.role.id !== 1)) ? 'flex-end' : 'flex-start',
+                                        width: '100%'
+                                    }}
                                 >
-                                    <Message message={msg} user={user} />
+                                    <div
+                                        className={`chat-message-wrapper ${(msg.sender && msg.sender.id === user.id) ? 'chat-message-right' : 'chat-message-left'}`}
+                                    >
+                                        <Message message={msg} user={user} />
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                        <div ref={chatEndRef} />
+                            ))}
+                            <div ref={chatEndRef} />
                         </>
                     )}
                 </div>
-                {user.role.id !== 1 && ( 
+                {user.role.id !== 1 && (
                     <div className="chat-notification-form">
                         <input
                             type="text"

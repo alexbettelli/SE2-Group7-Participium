@@ -4,18 +4,18 @@ export default function ReportsTable(props) {
 
     return (
         <>
-            { props.reports.length === 0 ?
+            {props.reports.length === 0 ?
                 <p>There are no reports at the moment.</p> :
                 <div className="reports-table">
-                    { props.reports.map(report => {
-                            return <ReportRow 
-                                        key={report.id} 
-                                        report={report} 
-                                        user={props.user} 
-                                        setSelectedReport={props.setSelectedReport}
-                                        updateReports={props.updateReports} /> 
-                        } 
-                    )}    
+                    {props.reports.map(report => {
+                        return <ReportRow
+                            key={report.id}
+                            report={report}
+                            user={props.user}
+                            setSelectedReport={props.setSelectedReport}
+                            updateReports={props.updateReports} />
+                    }
+                    )}
                 </div>
             }
         </>

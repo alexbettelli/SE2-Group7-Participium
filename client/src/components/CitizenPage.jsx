@@ -1,5 +1,7 @@
-import {useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router';
+import '../styles/CitizenPage.css';
+
+import { useEffect, useRef, useState } from 'react';
+
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import "leaflet.markercluster";
@@ -9,20 +11,19 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 import * as turf from '@turf/turf';
-import '../styles/CitizenPage.css';
-import API from '../api/API.mjs';
+
 import ReportOverview from './ReportOverview.jsx';
 import ReportPopup from './ReportPopUp.jsx';
 import ReactDOM from "react-dom/client";
 
+import GenericAPI from '../api/GenericAPI.mjs';
+import ReportAPI from '../api/ReportAPI.mjs';
 
-
-export default function CitizenPage({user}){
-    const navigate = useNavigate();
+export default function CitizenPage({ user }) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
-    const abortControllerRef = useRef(null);    
+    const abortControllerRef = useRef(null);
     const clusterGroupRef = useRef(null);
 
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -62,10 +63,10 @@ export default function CitizenPage({user}){
         "Green Areas and Public Parks": "darkred",
         "Public Transport and Mobility": "purple"
     };
-    const  getMarkerIcon = (categoryName) => {
+    const getMarkerIcon = (categoryName) => {
         const color = categoryColors[categoryName] || "blue"; // Default color        
         return L.AwesomeMarkers.icon({
-            icon: 'fa-circle',     
+            icon: 'fa-circle',
             markerColor: color,
             prefix: 'fa',
             iconColor: 'white'
@@ -94,7 +95,7 @@ export default function CitizenPage({user}){
 
             // Collapse by default
             div.querySelector('.legend-content').style.display = 'none';
-            div.querySelector('.legend-toggle-btn').onclick = function() {
+            div.querySelector('.legend-toggle-btn').onclick = function () {
                 const content = div.querySelector('.legend-content');
                 if (content.style.display === 'none') {
                     content.style.display = 'block';
@@ -111,10 +112,10 @@ export default function CitizenPage({user}){
     useEffect(() => {
         getAllReports();
     }, []);
-    
-    const getAllReports = async () =>{
+
+    const getAllReports = async () => {
         try {
-            const reports = await API.getAllReports();            
+            const reports = await ReportAPI.getAllReports();
             setReports(reports);
             console.log(reports)
             const approvedReports = reports.filter(report => [2, 3, 4].includes(report.status.id));
@@ -126,7 +127,7 @@ export default function CitizenPage({user}){
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const cats = await API.getCategories();
+                const cats = await GenericAPI.getCategories();
                 setCategories(cats);
             } catch (error) {
                 console.error('Error fetching categories:', error);
@@ -189,8 +190,8 @@ export default function CitizenPage({user}){
                     mapInstanceRef.current.removeLayer(markerRef.current);
                 }
 
-                
-                markerRef.current = L.marker([lat, lng], {icon : getMarkerIcon()}).addTo(mapInstanceRef.current);
+
+                markerRef.current = L.marker([lat, lng], { icon: getMarkerIcon() }).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
                 setAddress('');
                 setLoadingAddress(true);
@@ -235,7 +236,7 @@ export default function CitizenPage({user}){
 
         // Rimuovi cluster precedente
         if (clusterGroupRef.current) {
-        mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
         }
 
         // Crea il gruppo cluster
@@ -246,9 +247,9 @@ export default function CitizenPage({user}){
             iconCreateFunction: (cluster) => {
                 const count = cluster.getChildCount();
                 let color;
-                 if (count < 10) color = "#4caf50";  
-                else if (count < 15) color = "#f1c40f";  
-                else if (count < 20) color = "#e67e22";  
+                if (count < 10) color = "#4caf50";
+                else if (count < 15) color = "#f1c40f";
+                else if (count < 20) color = "#e67e22";
                 else color = "#e74c3c";
 
                 return L.divIcon({
@@ -273,15 +274,15 @@ export default function CitizenPage({user}){
 
         // Aggiungi marker al gruppo
         approvedReports.forEach((report) => {
-        if (report.latitude && report.longitude) {
-            const popupContainer = document.createElement("div");    
-            ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
+            if (report.latitude && report.longitude) {
+                const popupContainer = document.createElement("div");
+                ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick} />);
 
-            const marker = L.marker([report.latitude, report.longitude], {
-                icon: getMarkerIcon(report.category.categoryName)
-            }).bindPopup(popupContainer);            
-            clusterGroup.addLayer(marker); 
-        }
+                const marker = L.marker([report.latitude, report.longitude], {
+                    icon: getMarkerIcon(report.category.categoryName)
+                }).bindPopup(popupContainer);
+                clusterGroup.addLayer(marker);
+            }
         });
 
         // Aggiungi il gruppo alla mappa
@@ -290,12 +291,12 @@ export default function CitizenPage({user}){
 
         // Cleanup
         return () => {
-        if (mapInstanceRef.current && clusterGroupRef.current) {
-            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
-        }
+            if (mapInstanceRef.current && clusterGroupRef.current) {
+                mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+            }
         };
     }, [approvedReports]);
-    
+
 
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
@@ -381,7 +382,7 @@ export default function CitizenPage({user}){
                 anonymous: isAnonymous
             };
 
-            const result = await API.submitReport(reportData);
+            const result = await ReportAPI.submitReport(reportData);
 
             const reportForOverview = {
                 id: result.reportId,
@@ -452,10 +453,10 @@ export default function CitizenPage({user}){
         resetForm();
         //ResetZoom();
     };
-    const zoomToReportLocation = (report) =>{
+    const zoomToReportLocation = (report) => {
         if (report.latitude && report.longitude && mapInstanceRef.current) {
-            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17,{
-                animate: true,      
+            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17, {
+                animate: true,
                 duration: 1.5
             });
         }
@@ -465,17 +466,17 @@ export default function CitizenPage({user}){
             ...report,
             status: report.status?.statusName ?? "N/A",
             category: report.category?.categoryName ?? "N/A",
-            username : report.user?.username ?? "Anonymous"
+            username: report.user?.username ?? "Anonymous"
         };
-        setActiveTab('details');        
-        setReportDetails(normalizedReport);    
+        setActiveTab('details');
+        setReportDetails(normalizedReport);
         zoomToReportLocation(normalizedReport);
-    }    
+    }
     const handlePopUpDetailsClick = (report) => {
         showReportDetails(report);
     }
     const ResetZoom = () => {
-         mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, {animate: true,  duration: 1});
+        mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, { animate: true, duration: 1 });
     }
     return (
         <div className="citizen-page-container">
@@ -520,14 +521,14 @@ export default function CitizenPage({user}){
                                     <p className="empty-message">THERE ARE NO REPORTS IN PROGRESS</p>
                                 ) : (
                                     approvedReports.map((report) => (
-                                    <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
-                                        <h3>{report.title}</h3>
-                                        <p>
-                                        <strong>Category:</strong> {report.category?.categoryName}<br />
-                                        <strong>Address:</strong> {report.address}
-                                         <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
-                                        </p>
-                                    </div>
+                                        <div key={report.id} className="report-card" onClick={() => showReportDetails(report)} style={{ cursor: "pointer", border: "1px solid grey" }}>
+                                            <h3>{report.title}</h3>
+                                            <p>
+                                                <strong>Category:</strong> {report.category?.categoryName}<br />
+                                                <strong>Address:</strong> {report.address}
+                                                <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
+                                            </p>
+                                        </div>
                                     ))
                                 )}
                             </div>

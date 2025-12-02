@@ -4,7 +4,7 @@ import ReportOverview from '../components/ReportOverview.jsx';
 export function ReportOverviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const report = location.state?.report;
 
   const handleBackToHome = () => {
@@ -12,7 +12,7 @@ export function ReportOverviewPage() {
   };
 
   return (
-    <ReportOverview 
+    <ReportOverview
       report={report}
       onBackToHome={handleBackToHome}
     />
