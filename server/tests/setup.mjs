@@ -22,8 +22,7 @@ const USERS = [
     { username: 'admin', password: 'adminpassword', email: 'admin@email.it', firstName: 'ad', lastName: 'min', typeId: 2, allowEmailNotification: 0 },
     { username: 'userPr', password: 'prpassword', email: 'userPr@email.it', firstName: 'user', lastName: 'Pr', typeId: 3, allowEmailNotification: 0 },
     { username: 'userOfficer', password: 'officerpassword', email: 'userOfficer@email.it', firstName: 'user', lastName: 'officer', typeId: 4, allowEmailNotification: 0 },
-    { username: 'unassigned_emp', password: 'unemppass', email: 'unemp@email.it', firstName: 'unassigned', lastName: 'emp', typeId: 5, allowEmailNotification: 0 }
-];
+ ];
 const REPORT_CATEGORIES = [
     'Roads and Infrastructure',
     'Waste and Cleanliness',
