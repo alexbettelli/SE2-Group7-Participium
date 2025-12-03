@@ -36,6 +36,23 @@ describe('UserDAO', () => {
             await expect(UserDAO.getUserByUsername(undefined)).resolves.toBeNull();
         });
     })
+    describe('getUserById', () => {
+        it('should returns user by ID successfully', async () => {
+            const userId = 1;
+
+            const user = await UserDAO.getUserById(userId);
+
+            expect(user).toBeDefined();
+            expect(user.id).toBe(userId);
+            expect(user).toHaveProperty('username', 'user');
+        });
+
+        it('should return null for non-existing user ID', async () => {
+            const userId = 999;
+            const user = await UserDAO.getUserById(userId);
+            expect(user).toBeNull();
+        })
+    });
     describe('addNewUser', async () => {
         const userData = {
             username: 'newuser',
@@ -59,7 +76,6 @@ describe('UserDAO', () => {
             await expect(UserDAO.addNewUser(userData)).rejects.toThrow();
         });
     })
-
     describe('getUnassignedEmployees', async () => {
         const unassigned_emp = {
             username: 'unassigned_emp',
@@ -83,34 +99,40 @@ describe('UserDAO', () => {
             expect(list.some(u => u.username === 'unassigned_emp')).toBe(true);
         });
     });
-    describe('assignEmployeeToOffice', () => {
-        it('should assing an employee to an office successfully', async () => {
-            const data = {
-                employeeId: 2,
-                officeId: 1,
-                roleId: 3
-            }
-            const assignedEmp = await UserDAO.assignEmployeeToOffice(data.employeeId, data.officeId, data.roleId);
+    describe('assignEmployeeToOffice', async () => {
+
+        it('should assing an employee to an PR office successfully', async () => {
+            const unassignedPR = {
+                username: 'newPR',
+                password: await bcrypt.hash('password123', 8),
+                email: 'newPR@example.com',
+                firstName: 'New',
+                lastName: 'PR',
+                typeId: 5
+            };
+            const newPRuserId = await UserDAO.addNewUser(unassignedPR);
+            const assignedEmp = await UserDAO.assignEmployeeToOffice(newPRuserId, null, 3);
             expect(assignedEmp).toBe(undefined);
+            const newPRuser = await UserDAO.getUserById(newPRuserId);
+            console.log(newPRuser);
+            expect(newPRuser.role.id).toBe(3);
         })
-    })
-    describe('getUserById', () => {
-        it('should returns user by ID successfully', async () => {
-            const userId = 1;
-
-            const user = await UserDAO.getUserById(userId);
-
-            expect(user).toBeDefined();
-            expect(user.id).toBe(userId);
-            expect(user).toHaveProperty('username', 'user');
-        });
-
-        it('should return null for non-existing user ID', async () => {
-            const userId = 999;
-            const user = await UserDAO.getUserById(userId);
-            expect(user).toBeNull();
+        it('should assing an employee to a technical office successfully', async () => {
+            const unassignedOfficer = {
+                username: 'newOfficer',
+                password: await bcrypt.hash('password123', 8),
+                email: 'newOfficer@example.com',
+                firstName: 'New',
+                lastName: 'Officer',
+                typeId: 5
+            };
+            const newOfficerId = await UserDAO.addNewUser(unassignedOfficer);
+            const assignedEmp = await UserDAO.assignEmployeeToOffice(newOfficerId, 2, 4);
+            expect(assignedEmp).toBe(undefined);
+            const newTechUser = await UserDAO.getUserById(newOfficerId);
+            expect(newTechUser.role.id).toBe(4);
         })
-    });
+    })    
     describe('updateUserProfile', () => {
         it('should updates user profile successfully', async () => {
             const userId = 1;
@@ -118,8 +140,10 @@ describe('UserDAO', () => {
             const allowEmailNotification = 1;
             const imageUrl = 'image.png';
 
-            const result = await UserDAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
+            await UserDAO.updateUserProfile(userId, telegramUsername, allowEmailNotification, imageUrl);
+            const result = await UserDAO.getUserById(userId);
 
+            expect(result).toBeDefined();
             expect(result.id).toBe(userId);
             expect(result.username).toBe('user');
             expect(result).toHaveProperty('telegramUsername', telegramUsername);
