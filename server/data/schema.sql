@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS comment (
 CREATE TABLE IF NOT EXISTS notification (
     id INTEGER PRIMARY KEY,
     reportId INTEGER,
-    senderId INTEGER NOT NULL,
+    senderId INTEGER NULL,
     receiverId INTEGER NOT NULL,
     text TEXT NOT NULL,
     channelId INTEGER NOT NULL,

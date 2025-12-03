@@ -347,14 +347,8 @@ app.post('/reports/assign', isLogged, async (req, res) => {
   if (req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
   try {
     const { reportId, userId, categoryId, officeId, officerId } = req.body;
-    await ReportDAO.assignReportToOfficer(reportId, categoryId, officeId, officerId);
-    await NotificationDAO.createNotification({
-      reportId: reportId,
-      senderId: null,
-      receiverId: userId,
-      text: `Your report has been approved, we will keep you updated.`,
-      channelId: 1,
-    });
+    await ReportDAO.assignReportToOfficer(reportId, categoryId, officeId, officerId, userId);
+    
     return res.status(200).json();
   } catch (err) {
     return res.status(500).json(new errors.InternalServerError());
@@ -365,14 +359,7 @@ app.post('/reports/reject', isLogged, async (req, res) => {
   if (req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
   try {
     const { reportId, userId, reason } = req.body;
-    await ReportDAO.rejectReport(reportId, userId, reason);
-    await NotificationDAO.createNotification({
-      reportId: reportId,
-      senderId: null,
-      receiverId: userId,
-      text: `Your report has been rejected. \n Reason: ${reason}`,
-      channelId: 1,
-    });
+    await ReportDAO.rejectReport(reportId, userId, reason);    
     return res.status(200).json();
   }
   catch (err) {

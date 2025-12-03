@@ -108,7 +108,7 @@ const addNewReport = (report) => {
     });
 
 }
-const rejectReport = (reportId, reason) => {
+const rejectReport = (reportId, userId, reason ) => {
     return new Promise((resolve, reject) => {
         const query = `UPDATE report 
                        SET statusId = 5,
@@ -118,7 +118,12 @@ const rejectReport = (reportId, reason) => {
         const now = dayjs().toString();
         db.run(query, [reason, now, reportId], function (err) {
             if (err) return reject(err);
-            resolve();
+            const query2 = `INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt) VALUES (?, ?, ?, ?, ?, ?)`;
+            const text = `Your report has been rejected. \n Reason: ${reason}`
+            db.run(query2, [reportId, null, userId, text, 1, now ], function (err) {
+                if (err) return reject(err);
+                resolve();
+            });
         });
     });
 };
@@ -177,7 +182,7 @@ const getUnassignedReports = () => {
         });
     });
 };
-const assignReportToOfficer = (reportId, categoryId, officeId, officerId) => {
+const assignReportToOfficer = (reportId, categoryId, officeId, officerId, userId) => {
     return new Promise((resolve, reject) => {
         const query = `UPDATE report 
                        SET employeeId = ?, 
@@ -189,7 +194,13 @@ const assignReportToOfficer = (reportId, categoryId, officeId, officerId) => {
         const now = dayjs().toString();
         db.run(query, [officerId, officeId, categoryId, now, reportId], function (err) {
             if (err) return reject(err);
-            resolve();
+
+            const query2 = `INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt) VALUES (?, ?, ?, ?, ?, ?)`;
+            const text = `Your report has been approved, we will keep you updated.`
+            db.run(query2, [reportId, null, userId, text, 1, now ], function (err) {
+                if (err) return reject(err);
+                resolve();
+            });
         });
     });
 };
@@ -210,20 +221,11 @@ const updateReportStatus = (userId, reportId, statusId) => {
                 const query3 = "INSERT INTO notification (reportId, receiverId, text, sendAt, channelId) VALUES (?, ?, ?, ?, ?)";
                 let message = "Your report ";
                 switch (+statusId) {
-                    case 1:
-                        message += "is waiting to be approved."
-                        break;
-                    case 2:
-                        message += "has been assigned to the corresponding office."
-                        break;
                     case 3:
                         message += "is being resolved";
                         break;
                     case 4:
                         message += "has been suspended.";
-                        break;
-                    case 5:
-                        message += "has been rejected.";
                         break;
                     case 6:
                         message += "has been resolved. Thank you for your contribution!";
