@@ -160,32 +160,32 @@ export const setupAgent = () => {
     return agent
 };
 export const login = async (agent, username, password) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username, password })
 };
 export const loginAsUser = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "user", password: "userpassword" })
 };
 export const loginAsAdmin = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "admin", password: "adminpassword" })
 };
 export const loginAsPR = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "userPR", password: "prpassword" })
 };
 export const loginAsOfficer = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "userOfficer", password: "officerpassword" })
 };
 export const logout = async (agent) => {
-    await agent.delete('/sessions/current');
+    return await agent.delete('/session/current');
 }
 
 export const resetReports = async () => {

@@ -1,52 +1,32 @@
-// e2e tests for /user, /session, /session/current, /sessions/current
-import request from 'supertest';
-import app from '../../server.mjs';
-import { expect } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  setupAgent,
+  loginAsUser,
+  loginAsAdmin,
+  logout,
+  login,
+} from '../setup.mjs';
 
 describe('E2E User Routes', () => {
-  test('POST /user - missing password', async () => {
-    const res = await agent.post('/user').send({
-      username: 'nouserpass',
-      email: 'nouserpass@example.com',
-      firstName: 'No',
-      lastName: 'Pass',
-      typeId: 1
-    });
-    expect([400,503]).toContain(res.statusCode);
-  });
 
-  test('POST /session - wrong username', async () => {
-    const res = await agent.post('/session').send({
-      username: 'wronguser',
-      password: 'e2epassword'
-    });
-    expect(res.statusCode).toBe(401);
-    expect(res.body).toHaveProperty('code')
-    expect(res.body.code).toBe(401);
-  });
-
-  test('POST /session - wrong password', async () => {
-    const res = await agent.post('/session').send({
-      username: testUser.username,
-      password: 'wrongpassword'
-    });
-    expect(res.statusCode).toBe(401);
-    expect(res.body).toHaveProperty('code')
-    expect(res.body.code).toBe(401);
-  });
-
-  test('POST /session - missing password', async () => {
-    const res = await agent.post('/session').send({
-      username: testUser.username
-    });
-    expect([400,401]).toContain(res.statusCode);
-  });
-
-  test('DELETE /sessions/current - logout without login', async () => {
-    const res = await request(app).delete('/sessions/current');
-    expect([200,401]).toContain(res.statusCode);
-  });
   let agent;
+
+  beforeAll(async () => {
+    await setupTestDatabase();
+    agent = await setupAgent();
+  });
+
+  beforeEach(async () => {
+    await logout(agent);
+  });
+
+  // Cleanup after all tests
+  afterAll(async () => {
+    await teardownTestDatabase();
+  });
+
   const testUser = {
     username: 'e2euser',
     password: 'e2epassword',
@@ -56,96 +36,91 @@ describe('E2E User Routes', () => {
     typeId: 1
   };
 
-  beforeAll(() => {
-    agent = request.agent(app);
+  it('POST /user - missing password', async () => {
+    const res = await agent.post('/user').send({
+      username: 'nouserpass',
+      email: 'nouserpass@example.com',
+      firstName: 'No',
+      lastName: 'Pass',
+      typeId: 1
+    });
+    expect([400, 503]).toContain(res.statusCode);
   });
 
-  afterAll(async () => {
-    await agent.delete(`/employees/${testUser.username}`);
+  it('POST /session - wrong username', async () => {
+    const res = await login(agent, 'wronguser', 'e2epassword');
+    expect(res.statusCode).toBe(401);
   });
 
-  test('POST /user - register new user', async () => {
+  it('POST /session - wrong password', async () => {
+    const res = await login(agent, 'user', 'e2epassword');
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('POST /session - missing password', async () => {
+    const res = await login(agent, 'user');
+    expect([400, 401]).toContain(res.statusCode);
+  });
+
+  it('POST /user - register new user successfully', async () => {
     const res = await agent.post('/user').send(testUser);
-    expect([201,409]).toContain(res.statusCode); // 409 if user already exists
-    if(res.statusCode === 409) {
-      expect(res.body).toHaveProperty('error');
-    } else {
-      expect(res.body).toBeDefined();
-    }
+    expect(res.statusCode).toBe(201);
+  });
+  it('POST /user - register new user with username already used', async () => {
+    const res = await agent.post('/user').send(testUser);
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toBeDefined();
+    expect(res.body).toHaveProperty('error');
+    
   });
 
-  test('POST /session - login with user', async () => {
+  it('POST /session - login with user successfully', async () => {
+    const res = await loginAsUser(agent);
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toHaveProperty('username', 'user');
+  });
+  it('POST /session - login with user successfully', async () => {
     const res = await agent.post('/session').send({
       username: testUser.username,
       password: testUser.password
     });
-    expect([201,401]).toContain(res.statusCode); // 401 if wrong password
-    if(res.statusCode === 201) {
-      expect(res.body).toHaveProperty('username', testUser.username);
-    } else {
-      expect(res.body).toHaveProperty('error');
-    }
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toHaveProperty('username', testUser.username);
   });
 
-  test('GET /session/current - get current session user', async () => {
+  it('GET /session/current - get current session for logged in user ', async () => {
+    await loginAsUser(agent);
     const res = await agent.get('/session/current');
-    expect([200,401]).toContain(res.statusCode);
-    if(res.statusCode === 200) {
-      expect(res.body).toHaveProperty('username', testUser.username);
-    } else {
-      expect(res.body).toHaveProperty('error');
-    }
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('username', 'user');
   });
 
-  test('DELETE /sessions/current - logout', async () => {
+  it('DELETE /sessions/current - logout', async () => {
+    await loginAsUser(agent);
     const res = await agent.delete('/sessions/current');
     expect(res.statusCode).toBe(200);
   });
 
-  test('GET /session/current - after logout should be unauthorized', async () => {
-  const res = await agent.get('/session/current');
-  expect(res.statusCode).toBe(401);
-  expect(res.body).toHaveProperty('error');
-  });
+  it('PUT /api/user/profile - update profile with photo successfully', async () => {
+    await loginAsUser(agent);
 
-  
-  test('PUT /api/user/profile - update profile with photo', async () => {
-    const a = request.agent(app);
-    const login = await a.post('/session').send({
-      username: testUser.username,
-      password: testUser.password
-    });
-    
-    expect([201,401]).toContain(login.statusCode);
-    if (login.statusCode !== 201) return;
-
-    const res = await a.put('/api/user/profile')
+    const res = await agent.put('/api/user/profile')
       .field('telegramUsername', '@e2e_tele')
       .field('allowEmailNotification', '1')
       .attach('profilePhoto', Buffer.from('fakeimage'), 'photo.jpg');
 
-      
-    expect([200,400,500]).toContain(res.statusCode);
-    if (res.statusCode === 200) {
-      expect(res.body).toBeDefined();
-      
-      expect(res.body).toHaveProperty('imageUrl');
-    } else {
-      expect(res.body).toHaveProperty('error');
-    }
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBeDefined();
+
+    expect(res.body).toHaveProperty('imageUrl');
+    
   });
 
-  test('DELETE /api/user/profile/photo - delete profile photo', async () => {
-    const a = request.agent(app);
-    const login = await a.post('/session').send({
-      username: testUser.username,
-      password: testUser.password
-    });
-    expect([201,401]).toContain(login.statusCode);
-    if (login.statusCode !== 201) return;
+  it('DELETE /api/user/profile/photo - delete profile photo', async () => {
+    await loginAsUser(agent);
 
-    const res = await a.delete('/api/user/profile/photo');
-    expect([200,401,500]).toContain(res.statusCode);
+    const res = await agent.delete('/api/user/profile/photo');
+    expect([200, 401, 500]).toContain(res.statusCode);
     if (res.statusCode === 200) {
       expect(res.body).toHaveProperty('message');
     } else {
