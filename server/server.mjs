@@ -232,6 +232,7 @@ app.post("/users/temporary", async (req, res, next) => {
 }, otpGeneration);
 
 app.post("/otp/resend", (req, res, next) => {
+  console.log(req.session.tempUser);
   if(!req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No temporary user data found. Please register first."));
   if(req.session.otp){
     const createdAt = dayjs(req.session.otp.expiresAt).subtract(10, 'minutes');
@@ -242,6 +243,7 @@ app.post("/otp/resend", (req, res, next) => {
 }, otpGeneration);
 
 app.post('/users/temporary/verify', async (req, res) => {
+  console.log(req.session.tempUser);
   if(!req.session.otp || !req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No OTP found. Please generate a new one."));
   const { code, expiresAt } = req.session.otp;
   const { otp } = req.body;
