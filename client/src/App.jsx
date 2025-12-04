@@ -11,6 +11,7 @@ import ReportOverviewPage from './components/ReportOverviewPage.jsx';
 import MyReportsPage from './components/MyReportsPage.jsx';
 import ChatPage from './components/ChatPage.jsx';
 import ProfilePage from './components/ProfilePage';
+import ExternalMaintainerPage from './components/ExternalMaintainerPage.jsx';
 
 
 function App() {

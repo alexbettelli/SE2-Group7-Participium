@@ -92,13 +92,44 @@ const assignEmployeeToOffice = async (employeeId, officeId, roleId) => {
     }
 };
 
+const getExternalMaintainerReports = async () => {
+    const res = await fetch(SERVER_URL + '/external/reports', {
+        credentials: 'include'
+    });
+    
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error fetching reports');
+    }
+};
+
+const updateExternalMaintainerReportStatus = async (reportId, statusId) => {
+    const res = await fetch(SERVER_URL + `/external/reports/${reportId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ statusId })
+    });
+    
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errDetails = await res.json();
+        throw new Error(errDetails.error || 'Error updating status');
+    }
+};
+
 const UserAPI = {
     getUserInfo,
     createNewEmployee,
     getUnassignedEmployees,
     assignEmployeeToOffice,
     updateProfile,
-    deleteProfilePhoto
+    deleteProfilePhoto,
+    getExternalMaintainerReports,
+    updateExternalMaintainerReportStatus
 };
 
 export default UserAPI;

@@ -553,9 +553,64 @@ app.post('/notifications/read', isLogged, async (req, res) => {
   }
 });
 
+// Get reports assigned to external maintainer
+app.get('/external/reports', isLogged, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRoleId = req.user.role.id;
+    
+    if (userRoleId !== 6) {
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+  
+    const reports = await ReportDAO.getAssignedReports(userId);
+    res.json(reports);
+  } catch (err) {
+    console.error('Error fetching external maintainer reports:', err);
+    res.status(500).json(new errors.InternalServerError());
+  }
+});
 
-
-
+// Update report status (external maintainer)
+app.patch('/external/reports/:id/status', isLogged, async (req, res) => {
+  try {
+    const reportId = parseInt(req.params.id);
+    const { statusId } = req.body;
+    const userId = req.user.id;
+    const userRoleId = req.user.role.id;
+    
+    if (userRoleId !== 6) {
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    
+    const report = await ReportDAO.getReportById(reportId);
+    if (!report) {
+      return res.status(404).json(new errors.NotFoundError("Report not found"));
+    }
+    
+    if (report.employeeId !== userId) {
+      return res.status(403).json(new errors.ForbiddenError("Report not assigned to you"));
+    }
+    
+    // External maintainer può solo: Assigned(2) -> In Progress(3) o Resolved(6)
+    const currentStatus = report.statusId;
+    if (currentStatus !== 2 && currentStatus !== 3) {
+      return res.status(400).json(new errors.BadRequestError("Cannot update from this status"));
+    }
+    
+    if (![3, 6].includes(statusId)) {
+      return res.status(400).json(new errors.BadRequestError("Invalid status transition"));
+    }
+    
+    // Usa la firma corretta: updateReportStatus(userId, reportId, statusId)
+    const notification = await ReportDAO.updateReportStatus(userId, reportId, statusId);
+    
+    res.json({ ok: true, message: 'Status updated successfully', notification });
+  } catch (err) {
+    console.error('Error updating report status:', err);
+    res.status(500).json(new errors.InternalServerError());
+  }
+});
 
 app.use((err, req, res, next) => {
   if (err instanceof ValidationError) {
