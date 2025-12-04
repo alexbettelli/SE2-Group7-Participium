@@ -55,3 +55,14 @@ div.otp-digit {
 p{
     text-align: center;
 }
+
+@media screen and(max-width: 600px) {
+    div#outer {
+        padding: 0;
+    }
+    
+    div#inner {
+        width: 100%;
+        padding: 10px;
+    }
+}

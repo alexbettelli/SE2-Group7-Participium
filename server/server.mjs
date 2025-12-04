@@ -173,7 +173,7 @@ const sendEmail = async (email, username, fullName, otp) => {
   };
 
   const mailOptions = {
-    from: "participium-g7@outlook.it",
+    from: "no-reply@participium.com",
     to: email,
     subject: "Participium account creation",
     html: juice.inlineContent(template(emailData), cssContent)
@@ -216,7 +216,7 @@ app.post("/users/temporary", async (req, res, next) => {
       return res.status(400).json(new errors.BadRequestError("An OTP has already been generated and is still valid."));
     }
   }
-  
+
   try {
     const data = req.body;
     const user = await UserDAO.getUserByUsername(data.username);
