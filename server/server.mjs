@@ -86,11 +86,6 @@ const uploadProfile = multer({
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening at ${BASE_URL}`);
-  console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
-});
-
 app.use(session({
   secret: 'Participium!',
   resave: false,
@@ -211,6 +206,7 @@ const otpGeneration = async (req, res) => {
 };
 
 app.post("/users/temporary", async (req, res, next) => {
+  console.log(req.session.tempUser, req.session.otp);
   if(req.session.otp){
     if(dayjs().isBefore(dayjs(req.session.otp.expiresAt))){
       return res.status(400).json(new errors.BadRequestError("An OTP has already been generated and is still valid."));
@@ -650,6 +646,11 @@ app.post('/notifications/read', isLogged, async (req, res) => {
   } catch (err) {
     res.status(500).json(new errors.InternalServerError());
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening at ${BASE_URL}`);
+  console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
 });
 
 

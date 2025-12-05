@@ -4,31 +4,59 @@ import { useState, useActionState, useRef, useEffect } from 'react'
 
 import LoggingAPI from '../api/LoggingAPI.mjs';
 import dayjs from "dayjs";
+import Loader from "./Loader";
 
-function AuthenticateForm(props) {
-    const [isLogin, setIsLogin] = useState(true);
+export default function AuthenticationScreen(props) {
+    const screen = Object.freeze({ LOGIN: 'login', REGISTER: 'register', VERIFY: 'verify' });
+    const [ currentScreen, setCurrentScreen ] = useState(screen.LOGIN);
+    const [ temporaryUser, setTemporaryUser ] = useState(null);
 
-    const handleToggle = () => {
-        setIsLogin(!isLogin);
-    };
+    const changeScreen = (screen) => {
+        setCurrentScreen(screen);
+    }
+
 
     return (
         <div className="auth-container">
-            <div className={`auth-form-wrapper ${isLogin ? 'login-form-wrapper' : 'register-form-wrapper'}`}>
-                {isLogin
-                    ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle} loginError={props.loginError} />
-                    : <RegistrationForm handleToggle={handleToggle} />}
-            </div>
+            { 
+                currentScreen === screen.LOGIN && (
+                    <div className={`auth-form-wrapper login-form-wrapper`}>
+                        <LogInForm 
+                            handleLogin={props.handleLogin} 
+                            redirectRegister={() => changeScreen(screen.REGISTER)} loginError={props.loginError} />
+                     </div>
+                )
+            }
+            {
+                currentScreen === screen.REGISTER && (
+                    <div className={`auth-form-wrapper register-form-wrapper`}>
+                        <RegistrationForm 
+                            redirectLogin={() => changeScreen(screen.LOGIN)} 
+                            redirectVerify={() => changeScreen(screen.VERIFY)}
+                            setTemporaryUser={setTemporaryUser} />
+                    </div>
+                )
+            }
+            {
+                currentScreen === screen.VERIFY && (
+                    <div className={`auth-form-wrapper otp-form-wrapper`}>
+                        <OTPForm 
+                            redirectLogin={() => changeScreen(screen.LOGIN)} 
+                            setTemporaryUser={setTemporaryUser}
+                            username={temporaryUser?.username} 
+                            email={temporaryUser?.email} 
+                            date={dayjs()} /> 
+                    </div>
+                )
+            }
         </div>
-    );
+    )
 }
 
 
 function LogInForm(props) {
-    const [state, formAction, isPending] = useActionState(
-        login,
-        { username: '', password: '' }
-    );
+    const [state, formAction, isPending] = useActionState(login,{ username: '', password: '' });
+
     async function login(prevState, formData) {
         const credentials = {
             username: formData.get('username'),
@@ -56,7 +84,7 @@ function LogInForm(props) {
                 </Form.Group>
                 <Form.Group className="auth-button-group">
                     <Button className='auth-btn-primary' type='submit'>Log In</Button>
-                    <Button className='auth-btn-link' variant="link" type="button" onClick={props.handleToggle}>Create new account</Button>
+                    <Button className='auth-btn-link' variant="link" type="button" onClick={props.redirectRegister}>Create new account</Button>
                 </Form.Group>
             </Form>
             {(state?.error || props.loginError) && (
@@ -67,15 +95,9 @@ function LogInForm(props) {
 }
 
 function RegistrationForm(props) {
-    const [verifyOTP, setVerifyOTP] = useState(false);
-    const [tempUser, setTempUser] = useState(null);
+    const [state, formAction, isPending] = useActionState(registrate, { username: '', password: '', email: '', firstName: '', lastName: '' });
 
-    const [state, formAction, isPending] = useActionState(
-        registrate,
-        { username: '', password: '', email: '', firstName: '', lastName: '' }
-    );
     async function registrate(prevState, formData) {
-
         const data = {
             username: formData.get('username'),
             password: formData.get('password'),
@@ -87,64 +109,58 @@ function RegistrationForm(props) {
 
         try {
             await LoggingAPI.registrate(data);
-            setVerifyOTP(true);
-            setTempUser({ username: data.username, email: data.email });
+            props.setTemporaryUser({ username: data.username, email: data.email });
+            props.redirectVerify();
             return { success: true }
         } catch (error) {
             return { error: 'Username already in use. Please choose another username or log in if you already have an account.' }
         }
     }
 
-    return (
-        <>
-            {
-                verifyOTP ? 
-                    <OTPForm handleToggle={props.handleToggle} username={tempUser?.username} email={tempUser?.email} date={dayjs()} /> 
-                        :             
-                    <div className="auth-form register-form">
-                        <h2 className="auth-title">Create new account</h2>
-                        <Form action={formAction} className="auth-form-element">
-                            <div className="auth-form-row">
-                                <Form.Group controlId='username' className='auth-form-group'>
-                                    <Form.Label className="auth-label">Username</Form.Label>
-                                    <Form.Control type='text' name='username' required className="auth-input" />
-                                </Form.Group>
-                                <Form.Group controlId='email' className='auth-form-group'>
-                                    <Form.Label className="auth-label">Email</Form.Label>
-                                    <Form.Control type='email' name='email' required className="auth-input" />
-                                </Form.Group>
-                            </div>
-                            <Form.Group controlId='password' className="auth-form-group">
-                                <Form.Label className="auth-label">Password</Form.Label>
-                                <Form.Control type='password' name='password' required minLength={6} className="auth-input" />
-                            </Form.Group>
-                            <div className="auth-form-row">
-                                <Form.Group controlId='firstName' className='auth-form-group'>
-                                    <Form.Label className="auth-label">First name</Form.Label>
-                                    <Form.Control type='text' name='firstName' required className="auth-input" />
-                                </Form.Group>
-                                <Form.Group controlId='lastName' className='auth-form-group'>
-                                    <Form.Label className="auth-label">Last name</Form.Label>
-                                    <Form.Control type='text' name='lastName' required className="auth-input" />
-                                </Form.Group>
-                            </div>
-                            <Form.Group className="auth-button-group">
-                                <Button className='auth-btn-primary' type='submit'>Create</Button>
-                                <SignInButton handleToggle={props.handleToggle} />
-                            </Form.Group>
-                        </Form>
-                        {state?.error && (
-                            <div className="auth-error-message">{state.error}</div>
-                        )}
-                        { isPending && <div className="auth-info-message">Processing your registration...</div>}
-                    </div>
-                }
-        </>
+    return ( 
+        <div className="auth-form register-form">
+            <h2 className="auth-title">Create new account</h2>
+            <Form action={formAction} className="auth-form-element">
+                <div className="auth-form-row">
+                    <Form.Group controlId='username' className='auth-form-group'>
+                        <Form.Label className="auth-label">Username</Form.Label>
+                        <Form.Control type='text' name='username' required className="auth-input" />
+                    </Form.Group>
+                    <Form.Group controlId='email' className='auth-form-group'>
+                        <Form.Label className="auth-label">Email</Form.Label>
+                        <Form.Control type='email' name='email' required className="auth-input" />
+                    </Form.Group>
+                </div>
+                <Form.Group controlId='password' className="auth-form-group">
+                    <Form.Label className="auth-label">Password</Form.Label>
+                    <Form.Control type='password' name='password' required minLength={6} className="auth-input" />
+                </Form.Group>
+                <div className="auth-form-row">
+                    <Form.Group controlId='firstName' className='auth-form-group'>
+                        <Form.Label className="auth-label">First name</Form.Label>
+                        <Form.Control type='text' name='firstName' required className="auth-input" />
+                    </Form.Group>
+                    <Form.Group controlId='lastName' className='auth-form-group'>
+                        <Form.Label className="auth-label">Last name</Form.Label>
+                        <Form.Control type='text' name='lastName' required className="auth-input" />
+                    </Form.Group>
+                </div>
+                <Form.Group className="auth-button-group">
+                    {
+                        isPending ? <Loader /> : <Button className='auth-btn-primary' type='submit' disabled={isPending}>Create</Button>
+                    }
+                    <SignInButton redirectLogin={props.redirectLogin} />
+                </Form.Group>
+            </Form>
+            {state?.error && (
+                <div className="auth-error-message">{state.error}</div>
+            )}
+        </div>
     )
 }
 
 function SignInButton(props) {
-    return <Button className="auth-btn-link" variant="link" type="button" onClick={props.handleToggle}>Do you already have an account?</Button>;
+    return <Button className="auth-btn-link" variant="link" type="button" onClick={props.redirectLogin}>Do you already have an account?</Button>;
 }
 
 function OTPForm(props) {
@@ -154,7 +170,7 @@ function OTPForm(props) {
             for (let i = 1; i <= 6; i++) otp += formData.get(`otp${i}`);
             otp = otp.toUpperCase();
             await LoggingAPI.verifyOTP(otp);
-            props.handleToggle();
+            props.redirectLogin();
         }catch(error) {
             return { error: error.message || 'OTP verification failed!'}
         }
@@ -165,6 +181,7 @@ function OTPForm(props) {
     const [error, setError] = useState(null);
     const [timer, setTimer] = useState(60);
     const [date, setDate] = useState(props.date);
+    const [resending, setResending] = useState(false);
 
     const handleChange = (e, index) => {
         if (e.target.value.length === 1 && index < 5) {
@@ -192,21 +209,24 @@ function OTPForm(props) {
         }
 
         try {
+            setResending(true);
             await LoggingAPI.resendOTP();
             setTimer(60);
             setDate(dayjs());
             setError(null);
             inputsRef.current[0].focus();
+            setResending(false);
         } catch(error) {
             inputsRef.current[0].focus();
             setError(error.message || 'OTP resend failed!');
+            setResending(false);
         }
     }
 
     return (
         <div className="auth-form otp-form">
-            <h2 className="auth-title">Welcome {props.username}!</h2>
-            <p className="auth-info-message" style={{ textAlign: "center" }}>A confirmation code has been sent to <strong>{props.email}</strong>. <br/>Please enter it below to verify your account.</p>
+            <h2 className="auth-title">Verify your account</h2>
+            <p className="auth-info-message" style={{ textAlign: "center" }}>Welcome {props.username}! A confirmation code has been sent to <strong>{props.email}</strong>. <br/>Please enter it below to verify your account.</p>
             <Form className="auth-form-element" action={formAction}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem" }}>
                     { Array.from({ length: 6 }).map((_, index) => (
@@ -227,9 +247,9 @@ function OTPForm(props) {
                 </div>
             
                 <Form.Group className="auth-button-group">
-                    <Button className='auth-btn-primary' type='submit'>Verify</Button>
-                    <Button className="auth-btn-link" variant="link" type="button" onClick={resendOTP} disabled={timer !== 0}>Email not received? Resend {timer !== 0 ? `in ${timer}s` : 'now'}</Button>
-                    <SignInButton handleToggle={props.handleToggle} />
+                    { isPending ? <Loader /> : <Button className='auth-btn-primary' type='submit'>Verify</Button> }
+                    { resending ? <Loader /> : <Button className="auth-btn-link" variant="link" type="button" onClick={resendOTP} disabled={timer !== 0}>Email not received? Resend {timer !== 0 ? `in ${timer}s` : 'now'}</Button> }
+                    <SignInButton redirectLogin={props.redirectLogin} />
                 </Form.Group>
                 {state?.error && (
                     <div className="auth-error-message">{state.error}</div>
@@ -238,5 +258,3 @@ function OTPForm(props) {
         </div>
     )
 }
-
-export default AuthenticateForm
