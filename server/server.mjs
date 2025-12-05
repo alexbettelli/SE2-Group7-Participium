@@ -89,7 +89,11 @@ const uploadProfile = multer({
 app.use(session({
   secret: 'Participium!',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: false
+  } // 1 day
 }));
 
 app.use(passport.initialize());
@@ -174,12 +178,11 @@ const sendEmail = async (email, username, fullName, otp) => {
     html: juice.inlineContent(template(emailData), cssContent)
   }
 
-  try {
+  try{
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent: ' + info.response);
+    console.log('OTP email sent to ' + email + ': ' + info.response);
   } catch(error) {
-    console.error('Error sending email: ' + error);
-    throw error;
+    console.error('Error sending OTP email: ' + error);
   }
 }
 
@@ -196,7 +199,7 @@ const otpGeneration = async (req, res) => {
     });
     const expiresAt = dayjs().add(10, 'minutes').toDate();
     req.session.otp = { code: otp, expiresAt };
-    await sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
+    sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
     res.status(201).json({ message: 'OTP generated and sent to email.' });
   } catch (error) {
     console.error('Error generating OTP: ' + error);
