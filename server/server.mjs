@@ -178,12 +178,13 @@ const sendEmail = async (email, username, fullName, otp) => {
     html: juice.inlineContent(template(emailData), cssContent)
   }
 
-  try{
-    const info = await transporter.sendMail(mailOptions);
-    console.log('OTP email sent to ' + email + ': ' + info.response);
-  } catch(error) {
-    console.error('Error sending OTP email: ' + error);
-  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email: ' + error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
 }
 
 const otpGeneration = async (req, res) => {
@@ -199,7 +200,7 @@ const otpGeneration = async (req, res) => {
     });
     const expiresAt = dayjs().add(10, 'minutes').toDate();
     req.session.otp = { code: otp, expiresAt };
-    await sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
+    sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
     res.status(201).json({ message: 'OTP generated and sent to email.' });
   } catch (error) {
     console.error('Error generating OTP: ' + error);
