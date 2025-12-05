@@ -1,7 +1,6 @@
 import ReportPreview from './ReportPreview.jsx';
 
 export default function ReportsTable(props) {
-
     return (
         <>
             {props.reports.length === 0 ?
@@ -13,7 +12,11 @@ export default function ReportsTable(props) {
                             report={report}
                             user={props.user}
                             setSelectedReport={props.setSelectedReport}
-                            updateReports={props.updateReports} />
+                            updateReports={props.updateReports}
+                            isExternalMaintainer={props.isExternalMaintainer}
+                            showAcceptButton={props.showAcceptButton}
+                            onAcceptReport={props.onAcceptReport}
+                        />
                     }
                     )}
                 </div>
@@ -27,7 +30,16 @@ function ReportRow(props) {
 
     return (
         <div className='reports-table-row'>
-            <ReportPreview key={report.id} report={report} user={props.user} setSelectedReport={setSelectedReport} updateReports={updateReports} />
+            <ReportPreview
+                key={report.id}
+                report={report}
+                user={props.user}
+                setSelectedReport={setSelectedReport}
+                updateReports={updateReports}
+                isExternalMaintainer={props.isExternalMaintainer}
+                showAcceptButton={props.showAcceptButton}
+                onAcceptReport={props.onAcceptReport}
+            />
         </div>
     )
 }

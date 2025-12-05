@@ -121,6 +121,53 @@ const assignReportToOfficer = async (reportId, userId, categoryId, officeId, off
     }
 };
 
+const getExternalOfficeAssignedReports = async () => {
+    const res = await fetch(SERVER_URL + '/reports/external-office-assigned', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching office assigned reports');
+    }
+};
+const getExternalMaintainerMyReports = async () => {
+    const res = await fetch(SERVER_URL + '/reports/external-maintainer-my', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching my reports');
+    }
+};
+const updateExternalMaintainerReportStatus = async (reportId, statusId) => {
+    const res = await fetch(`${SERVER_URL}/reports/external-maintainer/${reportId}?statusId=${statusId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        const data = await res.json();
+        return {
+            ok: data.ok || true,
+            notification: data.notification || null
+        };
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error updating report status');
+    }
+};
+
 const ReportAPI = {
     submitReport,
     getAllReports,
@@ -130,7 +177,10 @@ const ReportAPI = {
     updateReportStatus,
     getAssignedReports,
     getUnassignedReports,
-    assignReportToOfficer
+    assignReportToOfficer,
+    getExternalOfficeAssignedReports,
+    getExternalMaintainerMyReports,
+    updateExternalMaintainerReportStatus,
 };
 
 export default ReportAPI;
