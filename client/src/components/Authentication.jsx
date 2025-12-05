@@ -198,6 +198,7 @@ function OTPForm(props) {
             setError(null);
             inputsRef.current[0].focus();
         } catch(error) {
+            inputsRef.current[0].focus();
             setError(error.message || 'OTP resend failed!');
         }
     }
