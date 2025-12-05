@@ -172,7 +172,7 @@ const sendEmail = async (email, username, fullName, otp) => {
   };
 
   const mailOptions = {
-    from: "no-reply@participium.com",
+    from: "participium.g7@gmail.com",
     to: email,
     subject: "Participium account creation",
     html: juice.inlineContent(template(emailData), cssContent)
@@ -199,7 +199,7 @@ const otpGeneration = async (req, res) => {
     });
     const expiresAt = dayjs().add(10, 'minutes').toDate();
     req.session.otp = { code: otp, expiresAt };
-    sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
+    await sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
     res.status(201).json({ message: 'OTP generated and sent to email.' });
   } catch (error) {
     console.error('Error generating OTP: ' + error);
