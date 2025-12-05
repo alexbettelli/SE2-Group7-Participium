@@ -48,7 +48,7 @@ function Message({id, reportId, sender, receiver, text, channel, sendAt, isRead}
     this.sendAt = dayjs(sendAt);
     this.isRead = isRead;
 }
-function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications}){
+function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, externalOffice, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications}){
     this.id = id;
     this.title = title;
     this.description = description;
@@ -60,6 +60,7 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.category = category;//obj of type Category
     this.status = status;//obj of type Status
     this.office = office;//obj of type Office
+    this.externalOffice = externalOffice;//obj of type Office
     this.employee = employee;//obj of type User
     this.createdAt = dayjs(createdAt);
     this.updatedAt = dayjs(updatedAt);

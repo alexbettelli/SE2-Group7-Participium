@@ -28,6 +28,23 @@ const getOffices = async() => {
         throw new Error(errMessage.error || 'Error fetching offices');
     }
 };
+
+const getExternalOffices = async() => {
+    const res = await fetch(SERVER_URL + '/externalOffices', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' 
+    });
+    if (res.ok) {
+        const externalOffices = await res.json();
+        console.log(externalOffices);
+        return externalOffices;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching external offices');
+    }
+};
+
 const getRoles = async() => {
     const res = await fetch(SERVER_URL + '/roles', {
         method: 'GET',
@@ -46,6 +63,7 @@ const getRoles = async() => {
 const GenericAPI = {
     getCategories,
     getOffices,
+    getExternalOffices,
     getRoles
 };
 export default GenericAPI;

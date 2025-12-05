@@ -16,9 +16,11 @@ export default function ReportPreview(props) {
     const { report, setSelectedReport } = props;
     const [expanded, setExpanded] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
+    const [showExternalAssignmentModal, setShowExternalAssignmentModal] = useState(false);
     const [statuses, setStatuses] = useState([]);
     const [updateStatus, setUpdateStatus] = useState(false);
     const [selectedStatusId, setSelectedStatusId] = useState(null);
+    const [selectedExternalOfficeId, setSelectedExternalOfficeId] = useState(null);
 
     const handleClose = () => {
         setShowStatusModal(false);
@@ -29,6 +31,27 @@ export default function ReportPreview(props) {
         setShowStatusModal(true);
         document.body.style.overflowY = 'hidden';
     }
+
+    const handleCloseExternalAssignment = () => {
+        setShowExternalAssignmentModal(false);
+        document.body.style.overflowY = 'auto';
+    }
+
+    const handleShowExternalAssignment = () => {
+        const defaultId = props.externalOffices && props.externalOffices.length > 0 ? props.externalOffices[0].id : null;
+        setSelectedExternalOfficeId(defaultId);
+        setShowExternalAssignmentModal(true);
+        document.body.style.overflowY = 'hidden';
+    }
+
+    const handleExternalAssignment = async () => {
+        try {
+            await ReportAPI.assignReportToExternalOffice(report.id, selectedExternalOfficeId);
+            props.updateReports();
+        } catch (error) {
+            console.error('Error assigning report to external office:', error);
+        }
+    };
 
     const navigate = useNavigate();
 
@@ -123,6 +146,18 @@ export default function ReportPreview(props) {
                             <span><i className="bi bi-pencil-fill"></i> Change status</span>
                         </button>
                     }
+                    { report.externalOffice == null ? 
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleShowExternalAssignment(); }}>
+                            <span><i className="bi bi-building"></i> Assign to external company</span>
+                        </button>
+                        : 
+                        <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); }}>
+                            <span className="chat-btn-flex">
+                                <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
+                                <span> {report.externalOffice.name}</span>
+                            </span>
+                        </button>
+                    }
                 </div>
             </div>
             {expanded && <ReportView onClose={toggleExpanded} report={report} />}
@@ -145,6 +180,31 @@ export default function ReportPreview(props) {
                     </button>
                     <button className="btn-save-modal" type="button" onClick={() => { handleClose(); setUpdateStatus(true); }}>
                         Save Changes
+                    </button>
+                </Modal.Footer>
+            </Modal>
+            <Modal show={showExternalAssignmentModal} onHide={() => setShowExternalAssignmentModal(false)}>
+                {/* Modal content for external assignment */}
+                <Modal.Header closeButton>
+                    <Modal.Title>Assign Report #{report.id} to External Company</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Select
+                        aria-label="Default select example"
+                        value={selectedExternalOfficeId ?? (props.externalOffices[0] && props.externalOffices[0].id) ?? ''}
+                        onChange={(e) => setSelectedExternalOfficeId(Number(e.target.value))}
+                    >
+                        {props.externalOffices.map(office => {
+                                return <option key={office.id} value={office.id} >{office.name}</option>;
+                        })}
+                    </Form.Select>
+                </Modal.Body>
+                <Modal.Footer>
+                    <button className="btn-close-modal" type="button" onClick={handleCloseExternalAssignment}>
+                        Close
+                    </button>
+                    <button className="btn-save-modal" type="button" onClick={() => { handleCloseExternalAssignment(); handleExternalAssignment(); }}>
+                        Assign
                     </button>
                 </Modal.Footer>
             </Modal>

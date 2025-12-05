@@ -255,6 +255,16 @@ app.get('/offices', isLogged, async (req, res) => {
   }
 });
 
+app.get('/externalOffices', isLogged, async (req, res) => {
+  try {
+    const externalOffices = await GenericInfoDAO.getExternalOffices();
+    return res.status(200).json(externalOffices);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
 app.get('/roles', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
@@ -355,6 +365,17 @@ app.post('/reports/assign', isLogged, async (req, res) => {
       text: `Your report has been approved, we will keep you updated.`,
       channelId: 1,
     });
+    return res.status(200).json();
+  } catch (err) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.post('/reports/assignExternal', isLogged, async (req, res) => {
+  if (req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { reportId, externalOfficeId } = req.body;
+    await ReportDAO.assignReportToExternalOffice(reportId, externalOfficeId);
     return res.status(200).json();
   } catch (err) {
     return res.status(500).json(new errors.InternalServerError());

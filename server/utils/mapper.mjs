@@ -1,3 +1,4 @@
+import e from 'express';
 import {User, Report, Message, Office, Role, Status, Image, Category, Channel}from '../model/model.mjs';
 
 const PORT = process.env.PORT || 3001;
@@ -113,6 +114,7 @@ const mapRowsToReports = (rows) => {
                 category: new Category(row.catId, row.categoryName),
                 status: new Status(row.statusId, row.statusName),
                 office: row.officeId ? new Office(row.officeId, row.officeName) : null,
+                externalOffice: row.externalOfficeId ? new Office(row.externalOfficeId, row.externalOfficeName) : null,
                 createdAt: row.createdAt,
                 updatedAt: row.updatedAt,
                 rejectReason: row.rejectReason,
