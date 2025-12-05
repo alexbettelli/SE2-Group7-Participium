@@ -34,7 +34,7 @@ export default function ExternalMaintainerPage(props) {
 
     const handleAcceptReport = async (reportId) => {
         try {
-            await ReportAPI.updateExternalMaintainerReportStatus(reportId, 3);
+            await ReportAPI.updateExternalMaintainerReportStatus(reportId, 'accept');
             updateReports();
         } catch (error) {
             console.error('Error accepting report:', error);
