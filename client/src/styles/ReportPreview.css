@@ -299,6 +299,46 @@ div.field p {
     transform: scale(0.98);
 }
 
+.btn-assign-external {
+    background: linear-gradient(90deg, #2D9CDB 0%, #1572D6 100%);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.7rem 2.2rem;
+    box-shadow: 0 6px 18px rgba(21, 114, 214, 0.18);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    position: relative;
+    outline: none;
+    white-space: nowrap;
+}
+
+.btn-assign-external:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(21, 114, 214, 0.22);
+}
+
+.btn-assign-external:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(21, 114, 214, 0.14);
+}
+
+.assigned-external-info {
+    background: #dfe6e9;
+    color: #2d3436;
+    padding: 0.5rem 1rem;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+}
+
 .btn-close-modal {
     background: var(--color-wine-light);
     color: var(--color-cream);
@@ -703,4 +743,94 @@ div.field.description-field {
     div.map-container-popup {
         height: 200px;
     }
+}
+
+
+.external-assignment-backdrop {
+    background-color: rgba(0,0,0,0.48) !important;
+    backdrop-filter: blur(3px);
+}
+
+.external-assignment-dialog {
+    /* centra il dialog assolutamente nel viewport */
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: min(640px, calc(100% - 2rem));
+    z-index: 1060;
+    pointer-events: auto;
+}
+
+.external-assignment-dialog .modal-content,
+.external-assignment-content {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    border-radius: 12px;
+    margin: 0; /* evita spostamenti laterali */
+}
+
+/* fallback mobile: posiziona più in alto e non trasla verticalmente */
+@media (max-width: 480px) {
+    .external-assignment-dialog {
+        top: 10% !important;
+        transform: translateX(-50%) !important;
+        width: calc(100% - 1rem);
+    }
+}
+
+/* Header */
+.external-assignment-content .modal-header {
+    background: linear-gradient(90deg, rgba(250,250,252,1), rgba(245,247,250,1));
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 0.85rem 1rem;
+}
+
+/* Body */
+.external-assignment-content .modal-body {
+    padding: 1rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(250,250,252,0.98));
+}
+
+/* Select styling */
+.external-select {
+    width: 100%;
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(0,0,0,0.08);
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(21,21,21,0.03);
+    background: #fff;
+}
+
+/* Footer + buttons */
+.external-assignment-content .modal-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(0,0,0,0.04);
+    background: transparent;
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 0.56rem 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.modal-btn:hover { transform: translateY(-2px); }
+
+.modal-btn:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+
+/* small screen adjustments */
+@media (max-width: 480px) {
+    .external-assignment-dialog { margin: 1rem; }
+    .external-assignment-content .modal-body { padding: 0.75rem; }
+    .modal-btn { padding: 0.5rem 0.8rem; }
 }
