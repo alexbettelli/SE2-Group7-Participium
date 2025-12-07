@@ -15,11 +15,14 @@ import * as turf from '@turf/turf';
 import ReportOverview from './ReportOverview.jsx';
 import ReportPopup from './ReportPopUp.jsx';
 import ReactDOM from "react-dom/client";
+import { useNavigate } from 'react-router';
 
 import GenericAPI from '../api/GenericAPI.mjs';
 import ReportAPI from '../api/ReportAPI.mjs';
+import HelpIcon from './HelpIcon.jsx';
 
 export default function CitizenPage({ user }) {
+    const navigate = useNavigate();
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
@@ -42,7 +45,8 @@ export default function CitizenPage({ user }) {
     const [submittedReport, setSubmittedReport] = useState(null);
     const [reports, setReports] = useState([]);
     const [approvedReports, setApprovedReports] = useState([]);
-    const [reportDetails, setReportDetails] = useState({})
+    const [reportDetails, setReportDetails] = useState({});
+    const [locationError, setLocationError] = useState('');
     const getStatusClass = (status) => {
         switch (status) {
             case 'Resolved':
@@ -64,7 +68,7 @@ export default function CitizenPage({ user }) {
         "Public Transport and Mobility": "purple"
     };
     const getMarkerIcon = (categoryName) => {
-        const color = categoryColors[categoryName] || "blue"; // Default color        
+        const color = categoryColors[categoryName] || "blue"; // Default color
         return L.AwesomeMarkers.icon({
             icon: 'fa-circle',
             markerColor: color,
@@ -117,7 +121,6 @@ export default function CitizenPage({ user }) {
         try {
             const reports = await ReportAPI.getAllReports();
             setReports(reports);
-            console.log(reports)
             const approvedReports = reports.filter(report => [2, 3, 4].includes(report.status.id));
             setApprovedReports(approvedReports);
         } catch (error) {
@@ -166,22 +169,6 @@ export default function CitizenPage({ user }) {
             mapInstanceRef.current.on('click', async (e) => {
                 const { lat, lng } = e.latlng;
 
-                // Check if inside Turin boundary
-                const boundary = mapInstanceRef.current._turinBoundary;
-                if (boundary) {
-                    const point = turf.point([lng, lat]);
-                    const boundaryGeoJSON = boundary.toGeoJSON();
-                    const inside = boundaryGeoJSON.features.some(feature =>
-                        turf.booleanPointInPolygon(point, feature)
-                    );
-
-                    if (!inside) {
-                        alert("Please select a location inside the City of Turin.");
-                        return;
-                    }
-                }
-
-
                 if (abortControllerRef.current) {
                     abortControllerRef.current.abort();
                 }
@@ -193,9 +180,29 @@ export default function CitizenPage({ user }) {
 
                 markerRef.current = L.marker([lat, lng], { icon: getMarkerIcon() }).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
+                setActiveTab('form');
+
+                const boundary = mapInstanceRef.current._turinBoundary;
+                let isInside = true;
+
+                if (boundary) {
+                    const point = turf.point([lng, lat]);
+                    const boundaryGeoJSON = boundary.toGeoJSON();
+                    isInside = boundaryGeoJSON.features.some(feature =>
+                        turf.booleanPointInPolygon(point, feature)
+                    );
+                }
+
+                if (!isInside) {
+                    setLocationError("Please select a location inside the City of Turin.");
+                    setAddress('');
+                    setLoadingAddress(false);
+                    return;
+                }
+
+                setLocationError('');
                 setAddress('');
                 setLoadingAddress(true);
-                setActiveTab('form');
 
                 abortControllerRef.current = new AbortController();
 
@@ -429,8 +436,10 @@ export default function CitizenPage({ user }) {
         setSelectedLocation(null);
         setAddress('');
         setLoadingAddress(false);
+        setLocationError('');
         if (!keepTab) {
             setActiveTab('reports');
+            ResetZoom();
         }
     };
 
@@ -450,6 +459,7 @@ export default function CitizenPage({ user }) {
         setActiveTab(tab);
         setSubmitMessage('');
         setReportDetails({});
+        setLocationError('');
         resetForm();
         //ResetZoom();
     };
@@ -559,22 +569,32 @@ export default function CitizenPage({ user }) {
                                     />
                                 ) : selectedLocation ? (
                                     <>
+                                        {locationError && (
+                                            <div className="error-message">
+                                                {locationError}
+                                            </div>
+                                        )}
                                         <div className="location-info-box">
                                             <div className="location-header">
-                                                <strong>Selected Location</strong>
+                                                <strong>Selected Location
+                                                    <HelpIcon text="Make sure the location is inside Turin city boundaries. The address will be automatically retrieved." />
+                                                </strong>
                                                 <button className="reset-button" onClick={clearSelection}>
                                                     Reset
                                                 </button>
                                             </div>
                                             <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
-                                            <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
+                                            <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address || ''}</p>
                                         </div>
 
+                                        {!locationError && (
                                         <form className="report-form" onSubmit={handleSubmit}>
                                             <h3>Report Details</h3>
 
                                             <div className="form-group">
-                                                <label>Title <span>*</span></label>
+                                                <label>Title <span>*</span>
+                                                    <HelpIcon text="A brief, descriptive title for your report (5-100 characters)." />
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="form-input"
@@ -585,7 +605,9 @@ export default function CitizenPage({ user }) {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Description <span>*</span></label>
+                                                <label>Description <span>*</span>
+                                                    <HelpIcon text="Provide detailed information about the issue (10-255 characters)." />
+                                                </label>
                                                 <textarea
                                                     className="form-textarea"
                                                     value={description}
@@ -595,7 +617,9 @@ export default function CitizenPage({ user }) {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Category <span>*</span></label>
+                                                <label>Category <span>*</span>
+                                                    <HelpIcon text="Select the category that best matches your issue." />
+                                                </label>
                                                 <select
                                                     className="form-select"
                                                     value={catId}
@@ -611,7 +635,9 @@ export default function CitizenPage({ user }) {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Photos (1-3 required) <span>*</span></label>
+                                                <label>Photos (1-3 required) <span>*</span>
+                                                    <HelpIcon text="Upload 1 to 3 photos showing the issue. Clear photos help staff understand the problem better." />
+                                                </label>
                                                 <label className="file-input-label">
                                                     <input
                                                         type="file"
@@ -640,18 +666,6 @@ export default function CitizenPage({ user }) {
                                                 )}
                                             </div>
 
-                                            {/* <div className="form-group">
-                                                <label className="checkbox-label">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isAnonymous}
-                                                        onChange={(e) => setIsAnonymous(e.target.checked)}
-                                                        className="checkbox-input"
-                                                    />
-                                                    <span>Submit as anonymous (your name will not be visible in public reports)</span>
-                                                </label>
-                                            </div> */}
-
                                             {submitMessage && !submitMessage.includes('success') && (
                                                 <div className="error-message">
                                                     {submitMessage}
@@ -666,9 +680,12 @@ export default function CitizenPage({ user }) {
                                                 {submitting ? 'Submitting...' : 'Submit Report'}
                                             </button>
                                         </form>
+                                        )}
                                     </>
                                 ) : (
-                                    <p className="empty-message">Please select a location on the map first.</p>
+                                    <div className="empty-message" style={{ padding: '2rem', textAlign: 'center' }}>
+                                        Click on the map to select a location inside the City of Turin.
+                                    </div>
                                 )}
                             </>
                         )}
