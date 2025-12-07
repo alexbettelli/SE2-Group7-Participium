@@ -12,6 +12,7 @@ import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import ReportAPI from '../api/ReportAPI.mjs';
 import UserAPI from '../api/UserAPI.mjs';
+import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function ReportPreview(props) {
     const { report, setSelectedReport, isExternalMaintainer = false, showAcceptButton = false, onAcceptReport } = props;
@@ -252,10 +253,10 @@ export default function ReportPreview(props) {
                     <Form.Select
                         aria-label="Default select example"
                         className="external-select"
-                        value={selectedExternalOfficeId ?? (props.externalOffices[0] && props.externalOffices[0].id) ?? ''}
+                        value={selectedExternalOfficeId ?? (props.externalOffices && props.externalOffices[0] && props.externalOffices[0].id) ?? ''}
                         onChange={(e) => setSelectedExternalOfficeId(Number(e.target.value))}
                     >
-                        {props.externalOffices.map(office => {
+                        {props.externalOffices?.map(office => {
                                 return <option key={office.id} value={office.id} >{office.name}</option>;
                         })}
                     </Form.Select>

@@ -40,18 +40,8 @@
     line-height: 1.6;
 }
 
-.status-badge {
-    background: #f39c12;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
-    display: inline-block;
-}
 
-.status-badge.status-completed {
+/*.status-badge.status-completed {
     background: #2cc455;
     box-shadow: 0 2px 4px rgba(26, 188, 96, 0.4);
 }
@@ -74,7 +64,7 @@
 .status-badge.status-default {
     background: #95a5a6;
     box-shadow: 0 2px 4px rgba(149, 165, 166, 0.4);
-}
+}*/
 
 .report-id-badge {
     background: #b312f3cf;
