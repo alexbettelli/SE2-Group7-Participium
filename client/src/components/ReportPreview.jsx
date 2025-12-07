@@ -88,15 +88,17 @@ export default function ReportPreview(props) {
     const getStatusClass = (statusName) => {
         switch (statusName) {
             case 'Resolved':
-                return 'status-completed'; // Verde
+                return 'status-resolved';
             case 'Pending Approval':
-                return 'status-pending'; // Giallo/Arancione
+                return 'status-pending';
             case 'Rejected':
-                return 'status-rejected'; // Rosso
+                return 'status-rejected';
             case 'In Progress':
-                return 'status-in-progress'; // Blu/Azzurro
+                return 'status-in-progress'; 
+            case 'Assigned':
+                return 'status-assigned';
             default:
-                return 'status-default'; // Grigio/Default
+                return 'status-suspended';
         }
     };
 

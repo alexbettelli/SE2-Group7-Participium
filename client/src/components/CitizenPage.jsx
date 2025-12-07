@@ -47,18 +47,21 @@ export default function CitizenPage({ user }) {
     const [approvedReports, setApprovedReports] = useState([]);
     const [reportDetails, setReportDetails] = useState({});
     const [locationError, setLocationError] = useState('');
+    
     const getStatusClass = (status) => {
         switch (status) {
+            case 'Assigned':
+                return 'status-assigned';
             case 'Resolved':
-                return 'status-completed'; // Verde
+                return 'status-resolved';
             case 'Pending Approval':
-                return 'status-pending'; // Giallo/Arancione
+                return 'status-pending';
             case 'Rejected':
-                return 'status-rejected'; // Rosso
+                return 'status-rejected';
             case 'In Progress':
-                return 'status-in-progress'; // Blu/Azzurro
+                return 'status-in-progress';
             default:
-                return 'status-default'; // Grigio/Default
+                return 'status-suspended';
         }
     };
     const categoryColors = {
