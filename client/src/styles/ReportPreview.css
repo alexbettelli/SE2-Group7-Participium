@@ -328,16 +328,7 @@ div.field p {
     box-shadow: 0 4px 12px rgba(21, 114, 214, 0.14);
 }
 
-.assigned-external-info {
-    background: #dfe6e9;
-    color: #2d3436;
-    padding: 0.5rem 1rem;
-    border-radius: 16px;
-    font-size: 1rem;
-    font-weight: 600;
-    white-space: nowrap;
-    display: inline-block;
-}
+
 
 .btn-close-modal {
     background: var(--color-wine-light);
@@ -751,44 +742,46 @@ div.field.description-field {
     backdrop-filter: blur(3px);
 }
 
-.external-assignment-dialog {
-    /* centra il dialog assolutamente nel viewport */
+/* Both modals - centered positioning */
+.external-assignment-dialog,
+.status-modal-dialog {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     margin: 0 !important;
-    width: min(640px, calc(100% - 2rem));
-    z-index: 1060;
+    width: min(640px, calc(100% - 2rem)) !important;
+    z-index: 1060 !important;
     pointer-events: auto;
 }
 
-.external-assignment-dialog .modal-content,
-.external-assignment-content {
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-    border-radius: 12px;
-    margin: 0; /* evita spostamenti laterali */
+.external-assignment-content,
+.status-modal-content {
+    max-height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+    border-radius: 12px !important;
 }
 
-/* fallback mobile: posiziona più in alto e non trasla verticalmente */
 @media (max-width: 480px) {
-    .external-assignment-dialog {
+    .external-assignment-dialog,
+    .status-modal_dialog {
         top: 10% !important;
         transform: translateX(-50%) !important;
-        width: calc(100% - 1rem);
+        width: calc(100% - 1rem) !important;
     }
 }
 
-/* Header */
-.external-assignment-content .modal-header {
+/* Header - both modals */
+.external-assignment-content .modal-header,
+.status-modal-content .modal-header {
     background: linear-gradient(90deg, rgba(250,250,252,1), rgba(245,247,250,1));
     border-bottom: 1px solid rgba(0,0,0,0.05);
     padding: 0.85rem 1rem;
 }
 
-/* Body */
-.external-assignment-content .modal-body {
+/* Body - both modals */
+.external-assignment-content .modal-body,
+.status-modal-content .modal-body {
     padding: 1rem;
     background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(250,250,252,0.98));
 }
@@ -804,8 +797,9 @@ div.field.description-field {
     background: #fff;
 }
 
-/* Footer + buttons */
-.external-assignment-content .modal-footer {
+/* Footer + buttons - both modals */
+.external-assignment-content .modal-footer,
+.status-modal-content .modal-footer {
     padding: 0.75rem 1rem;
     border-top: 1px solid rgba(0,0,0,0.04);
     background: transparent;

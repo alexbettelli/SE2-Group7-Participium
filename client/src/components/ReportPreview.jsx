@@ -163,7 +163,13 @@ export default function ReportPreview(props) {
             </div>
             {expanded && <ReportView onClose={toggleExpanded} report={report} />}
 
-            <Modal show={showStatusModal} onHide={handleClose}>
+            <Modal 
+                show={showStatusModal} 
+                onHide={handleClose}
+                dialogClassName="status-modal-dialog"
+                contentClassName="status-modal-content"
+                backdropClassName="external-assignment-backdrop"
+            >
                 <Modal.Header closeButton>
                     <Modal.Title>Change status for report #{report.id}</Modal.Title>
                 </Modal.Header>
