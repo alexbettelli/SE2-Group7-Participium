@@ -11,7 +11,7 @@ export default function ReportsTable(props) {
                         return <ReportRow
                             key={report.id}
                             report={report}
-                            externalOffices={props.externalOffices.filter(office => office.category.id === report.category.id)}
+                            externalOffices={props.externalOffices?.filter(office => office.category.id === report.category.id)}
                             user={props.user}
                             setSelectedReport={props.setSelectedReport}
                             updateReports={props.updateReports} />

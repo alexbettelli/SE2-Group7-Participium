@@ -193,10 +193,10 @@ export default function ReportPreview(props) {
                     <Form.Select
                         aria-label="Default select example"
                         className="external-select"
-                        value={selectedExternalOfficeId ?? (props.externalOffices[0] && props.externalOffices[0].id) ?? ''}
+                        value={selectedExternalOfficeId ?? (props.externalOffices && props.externalOffices[0] && props.externalOffices[0].id) ?? ''}
                         onChange={(e) => setSelectedExternalOfficeId(Number(e.target.value))}
                     >
-                        {props.externalOffices.map(office => {
+                        {props.externalOffices?.map(office => {
                                 return <option key={office.id} value={office.id} >{office.name}</option>;
                         })}
                     </Form.Select>
