@@ -185,7 +185,7 @@ export const loginAsOfficer = async (agent) => {
         .send({ username: "userOfficer", password: "officerpassword" })
 };
 export const logout = async (agent) => {
-    return await agent.delete('/session/current');
+    return await agent.delete('/sessions/current');
 }
 
 export const resetReports = async () => {
