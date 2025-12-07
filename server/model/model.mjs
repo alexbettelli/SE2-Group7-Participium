@@ -48,7 +48,7 @@ function Message({id, reportId, sender, receiver, text, channel, sendAt, isRead}
     this.sendAt = dayjs(sendAt);
     this.isRead = isRead;
 }
-function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications}){
+function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications, comments}){
     this.id = id;
     this.title = title;
     this.description = description;
@@ -67,7 +67,8 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.images = images || [];
     this.anonymous = anonymous;
     this.notifications = notifications;//array of obj of type Message
-    this.unreadNotifications = unreadNotifications
+    this.unreadNotifications = unreadNotifications;
+    this.comments = comments;//array of obj of type Comment
 }
 
 function Comment(id, reportId, user, text, createdAt){
