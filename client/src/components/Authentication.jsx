@@ -9,6 +9,7 @@ import Loader from "./Loader";
 
 export default function AuthenticationScreen(props) {
     const screen = Object.freeze({ LOGIN: 'login', REGISTER: 'register', VERIFY: 'verify' });
+    const navigate = useNavigate();
     const [ currentScreen, setCurrentScreen ] = useState(screen.LOGIN);
     const [ temporaryUser, setTemporaryUser ] = useState(null);
 
@@ -30,7 +31,9 @@ export default function AuthenticationScreen(props) {
                         </div>
                         <LogInForm 
                             handleLogin={props.handleLogin} 
-                            redirectRegister={() => changeScreen(screen.REGISTER)} loginError={props.loginError} />
+                            redirectRegister={() => changeScreen(screen.REGISTER)} loginError={props.loginError} 
+                            navigate={navigate}
+                        />
                     </div>
                 )
             }
@@ -47,7 +50,9 @@ export default function AuthenticationScreen(props) {
                         <RegistrationForm 
                             redirectLogin={() => changeScreen(screen.LOGIN)} 
                             redirectVerify={() => changeScreen(screen.VERIFY)}
-                            setTemporaryUser={setTemporaryUser} />
+                            setTemporaryUser={setTemporaryUser} 
+                            navigate={navigate}
+                        />
                     </div>
                 )
             }
