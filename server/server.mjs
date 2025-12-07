@@ -42,6 +42,7 @@ const validate = validator.validate;
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
+const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || 30;
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -198,7 +199,7 @@ const otpGeneration = async (req, res) => {
       digits: true,
       specialChars: false
     });
-    const expiresAt = dayjs().add(10, 'minutes').toDate();
+    const expiresAt = dayjs().add(OTP_EXPIRATION_MINUTES, 'minutes').toDate();
     req.session.otp = { code: otp, expiresAt };
     sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
     res.status(201).json({ message: 'OTP generated and sent to email.' });
@@ -235,7 +236,7 @@ app.post("/otp/resend", (req, res, next) => {
   console.log(req.session.tempUser);
   if(!req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No temporary user data found. Please register first."));
   if(req.session.otp){
-    const createdAt = dayjs(req.session.otp.expiresAt).subtract(10, 'minutes');
+    const createdAt = dayjs(req.session.otp.expiresAt).subtract(OTP_EXPIRATION_MINUTES, 'minutes');
     const resendableAt = createdAt.add(1, 'minutes');
     if(dayjs().isAfter(resendableAt)) next();
     else return res.status(400).json(new errors.BadRequestError("You can request a new OTP only after 1 minute from the previous generation."));
