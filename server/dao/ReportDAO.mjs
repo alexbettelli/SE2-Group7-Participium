@@ -1,7 +1,6 @@
 import db from '../data/db.mjs';
 import dayjs from 'dayjs';
-import Mapper from '../utils/mapper.mjs'
-import e from 'express';
+import Mapper from '../utils/mapper.mjs';
 
 const getAllReports = () => {
     const query = `
@@ -277,22 +276,11 @@ const updateReportStatus = (userId, reportId, statusId) => {
 const getExternalOfficeAssignedReports = (userId) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT 
-        r.*, 
-        u.username, 
-        e.username AS employeeUsername,
-        rc.categoryName,
-        ri.id AS imageId, 
-        ri.imageUrl,
-        rs.statusName,
-        n.id as messageId, 
-        n.senderId, 
-        sender.username as senderUsername, 
-        n.receiverId, 
-        receiver.username as receiverUsername,
-        n.text, 
-        n.sendAt, 
-        n.isRead
+      SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName,
+             ri.id AS imageId, ri.imageUrl, rs.statusName,
+             n.id as messageId, n.senderId, sender.username as senderUsername,
+             n.receiverId, receiver.username as receiverUsername,
+             n.text, n.sendAt, n.isRead
       FROM report r
       JOIN report_status rs ON r.statusId = rs.id
       JOIN report_category rc on r.catId = rc.id
@@ -305,206 +293,98 @@ const getExternalOfficeAssignedReports = (userId) => {
       LEFT JOIN user sender ON n.senderId = sender.id
       LEFT JOIN user receiver ON n.receiverId = receiver.id
       WHERE r.catId = eo.catId 
-      AND r.externalOfficeId = eo.id
-      AND r.statusId = 2
-      AND r.employeeId IS NULL
+        AND r.externalOfficeId = eo.id
+        AND r.statusId = 2
       ORDER BY r.updatedAt DESC
     `;
-
     db.all(query, [userId], (err, rows) => {
       if (err) return reject(err);
-      if (!rows || rows.length === 0) return resolve([]);
-      const reports = Mapper.mapRowsToReports(rows);
-      resolve(reports);
+      resolve(rows?.length ? Mapper.mapRowsToReports(rows) : []);
     });
   });
 };
 
-
-const getExternalMaintainerMyReports = (userId) => {
+// Mostra solo i report accettati da quel maintainer (externalMaintainerId)
+export const getExternalMaintainerMyReports = (userId) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT 
-        r.*, 
-        u.username, 
-        e.username AS employeeUsername,
-        rc.categoryName,
-        ri.id AS imageId, 
-        ri.imageUrl,
-        rs.statusName,
-        n.id as messageId, 
-        n.senderId, 
-        sender.username as senderUsername, 
-        n.receiverId, 
-        receiver.username as receiverUsername,
-        n.text, 
-        n.sendAt, 
-        n.isRead,
-        (SELECT COUNT(*) 
-         FROM notification n2 
-         WHERE n2.reportId = r.id 
-         AND n2.receiverId = ? 
-         AND n2.isRead = 0 
-         AND n2.channelId = 2) AS unreadNotifications
+      SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName,
+             ri.id AS imageId, ri.imageUrl, rs.statusName,
+             n.id as messageId, n.senderId, sender.username as senderUsername,
+             n.receiverId, receiver.username as receiverUsername,
+             n.text, n.sendAt, n.isRead
       FROM report r
       JOIN report_status rs ON r.statusId = rs.id
-      JOIN report_category rc ON r.catId = rc.id
-      JOIN user u ON r.userId = u.id
-      LEFT JOIN user e ON r.employeeId = e.id
-      JOIN report_image ri ON r.id = ri.reportId
+      JOIN report_category rc on r.catId = rc.id
+      JOIN user u on r.userId = u.id
+      LEFT JOIN user e on r.employeeId = e.id
+      JOIN report_image ri on r.id = ri.reportId
       LEFT JOIN notification n ON r.id = n.reportId AND n.channelId = 1
       LEFT JOIN user sender ON n.senderId = sender.id
       LEFT JOIN user receiver ON n.receiverId = receiver.id
-      WHERE r.employeeId = ?
-      AND r.statusId IN (2, 3, 6)
+      WHERE r.externalMaintainerId = ?
+        AND r.statusId IN (2,3,6)
       ORDER BY r.updatedAt DESC
     `;
-
-    db.all(query, [userId, userId], (err, rows) => {
+    db.all(query, [userId], (err, rows) => {
       if (err) return reject(err);
-      if (!rows || rows.length === 0) return resolve([]);
-      const reports = Mapper.mapRowsToReports(rows);
-      resolve(reports);
+      resolve(rows?.length ? Mapper.mapRowsToReports(rows) : []);
     });
   });
 };
 
-
-const updateExternalMaintainerReportStatus = (userId, reportId, statusId) => {
+export const updateExternalMaintainerReportStatus = (userId, reportId, statusId) => {
   return new Promise((resolve, reject) => {
     const now = dayjs().toString();
-    
-    // Se statusId è 'accept', imposta solo employeeId senza cambiare status
+
     if (statusId === 'accept') {
       const acceptSql = `
         UPDATE report 
-        SET employeeId = ?,
+        SET externalMaintainerId = ?, 
+            statusId = 3,
             updatedAt = ?
         WHERE id = ?
-        AND statusId = 2
-        AND externalOfficeId IN (
-          SELECT external_officeId 
-          FROM external_office_employee 
-          WHERE userId = ?
-        )
-        AND employeeId IS NULL
+          AND statusId = 2
+          AND externalOfficeId IN (
+            SELECT external_officeId FROM external_office_employee WHERE userId = ?
+          )
       `;
-
       db.run(acceptSql, [userId, now, reportId, userId], function (err) {
         if (err) return reject(err);
-        if (this.changes === 0) return resolve(null);
-
-
-        db.get('SELECT userId FROM report WHERE id = ?', [reportId], (err, row) => {
-          if (err || !row) return reject(err);
-
-          const notificationText = 'Your report has been accepted by our external maintenance team.';
-          const notificationSql = `
-            INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt, isRead)
-            VALUES (?, ?, ?, ?, 1, ?, 0)
-          `;
-
-          db.run(notificationSql, [reportId, userId, row.userId, notificationText, now], function (err) {
-            if (err) return reject(err);
-
-            const newId = this.lastID;
-            db.get(`
-              SELECT n.*, 
-                  c.name as channelName,
-                  sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, 
-                  sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
-                  receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, 
-                  receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
-              FROM notification n
-              LEFT JOIN channel c ON n.channelId = c.id
-              LEFT JOIN user sender ON n.senderId = sender.id
-              LEFT JOIN user receiver ON n.receiverId = receiver.id
-              WHERE n.id = ?
-            `, [newId], (err, row) => {
-              if (err || !row) return reject(err);
-              const msg = Mapper.mapRowToMessage(row);
-              resolve(msg);
-            });
-          });
-        });
+        return resolve({ ok: this.changes > 0 });
       });
-    } else {
-
-      const updateSql = `
-        UPDATE report 
-        SET statusId = ?, 
-            updatedAt = ?
-        WHERE id = ?
-        AND employeeId = ?
-        AND externalOfficeId IN (
-          SELECT external_officeId 
-          FROM external_office_employee 
-          WHERE userId = ?
-        )
-      `;
-
-      db.run(updateSql, [statusId, now, reportId, userId, userId], function (err) {
-        if (err) return reject(err);
-        if (this.changes === 0) return resolve(null);
-
-        db.get('SELECT userId FROM report WHERE id = ?', [reportId], (err, row) => {
-          if (err || !row) return reject(err);
-
-          let notificationText = '';
-          if (statusId == 3) {
-            notificationText = 'Your report is now being handled by our external maintenance team.';
-          } else if (statusId == 6) {
-            notificationText = 'Your report has been resolved by our external maintenance team. Thank you for your contribution!';
-          }
-
-          if (!notificationText) return resolve(null);
-
-          const notificationSql = `
-            INSERT INTO notification (reportId, senderId, receiverId, text, channelId, sendAt, isRead)
-            VALUES (?, ?, ?, ?, 1, ?, 0)
-          `;
-
-          db.run(notificationSql, [reportId, userId, row.userId, notificationText, now], function (err) {
-            if (err) return reject(err);
-
-            const newId = this.lastID;
-            db.get(`
-              SELECT n.*, 
-                  c.name as channelName,
-                  sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, 
-                  sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
-                  receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, 
-                  receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
-              FROM notification n
-              LEFT JOIN channel c ON n.channelId = c.id
-              LEFT JOIN user sender ON n.senderId = sender.id
-              LEFT JOIN user receiver ON n.receiverId = receiver.id
-              WHERE n.id = ?
-            `, [newId], (err, row) => {
-              if (err || !row) return reject(err);
-              const msg = Mapper.mapRowToMessage(row);
-              resolve(msg);
-            });
-          });
-        });
-      });
+      return;
     }
+
+    const updateSql = `
+      UPDATE report 
+      SET statusId = ?, 
+          updatedAt = ?
+      WHERE id = ?
+        AND externalMaintainerId = ?
+        AND externalOfficeId IN (
+          SELECT external_officeId FROM external_office_employee WHERE userId = ?
+        )
+    `;
+    db.run(updateSql, [Number(statusId), now, reportId, userId, userId], function (err) {
+      if (err) return reject(err);
+      return resolve({ ok: this.changes > 0 });
+    });
   });
 };
 
 const ReportDAO = {
-    getAllReports,
-    getReportsByUserId,
-    addNewReport,
-    rejectReport,
-    getAssignedReports,
-    getUnassignedReports,
-    assignReportToOfficer,
-    updateReportStatus,
-    getExternalOfficeAssignedReports,
-    getExternalMaintainerMyReports,
-    updateExternalMaintainerReportStatus,
-    assignReportToExternalOffice,
-    updateReportStatus
-}
-export default ReportDAO
+  getAllReports,
+  getReportsByUserId,
+  addNewReport,
+  rejectReport,
+  getAssignedReports,
+  getUnassignedReports,
+  assignReportToOfficer,
+  assignReportToExternalOffice,
+  updateReportStatus,
+  getExternalOfficeAssignedReports,
+  getExternalMaintainerMyReports,
+  updateExternalMaintainerReportStatus
+};
+export default ReportDAO;
