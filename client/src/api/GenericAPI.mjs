@@ -37,7 +37,6 @@ const getExternalOffices = async() => {
     });
     if (res.ok) {
         const externalOffices = await res.json();
-        console.log(externalOffices);
         return externalOffices;
     } else {
         const errMessage = await res.json();
