@@ -70,4 +70,12 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.unreadNotifications = unreadNotifications
 }
 
-export {User, Report, Message, Office, Role, Status, Image, Category, Channel}
+function Comment(id, reportId, user, text, createdAt){
+    this.id = id;
+    this.reportId = reportId;
+    this.user = user;//obj of type User
+    this.text = text;
+    this.createdAt = dayjs(createdAt);
+}
+
+export {User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment};
