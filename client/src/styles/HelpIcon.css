@@ -1,0 +1,101 @@
+.help-icon-wrapper {
+    display: inline-block;
+    margin-left: 0.4rem;
+}
+
+.help-icon {
+    color: var(--color-green);
+    font-size: 1rem;
+    cursor: help;
+    transition: color 0.2s ease;
+}
+
+.help-icon:hover {
+    color: var(--color-wine-light);
+}
+
+/* Portal tooltip positioning */
+.help-tooltip-portal {
+    position: absolute;
+    z-index: 999999;
+    pointer-events: auto;
+}
+
+.help-tooltip-portal.help-tooltip-top {
+    transform: translate(calc(-50% + var(--icon-width) / 2), calc(-100% - 8px));
+}
+
+.help-tooltip-portal.help-tooltip-bottom {
+    transform: translate(calc(-50% + var(--icon-width) / 2), calc(var(--icon-height) + 8px));
+}
+
+.help-tooltip-portal.help-tooltip-left {
+    transform: translate(calc(-100% - 8px), calc(-50% + var(--icon-height) / 2));
+}
+
+.help-tooltip-portal.help-tooltip-right {
+    transform: translate(calc(var(--icon-width) + 8px), calc(-50% + var(--icon-height) / 2));
+}
+
+.help-tooltip-content {
+    background: var(--color-cream);
+    color: var(--color-dark);
+    padding: 0.875rem 1rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(83, 153, 135, 0.3);
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    border: 2px solid var(--color-green);
+    min-width: 220px;
+    max-width: 320px;
+    width: max-content;
+    font-weight: 400;
+}
+
+.help-tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.help-tooltip-portal.help-tooltip-top .help-tooltip-arrow {
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid var(--color-green);
+}
+
+.help-tooltip-portal.help-tooltip-bottom .help-tooltip-arrow {
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid var(--color-green);
+}
+
+.help-tooltip-portal.help-tooltip-left .help-tooltip-arrow {
+    right: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-left: 7px solid var(--color-green);
+}
+
+.help-tooltip-portal.help-tooltip-right .help-tooltip-arrow {
+    left: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 7px solid var(--color-green);
+}
+

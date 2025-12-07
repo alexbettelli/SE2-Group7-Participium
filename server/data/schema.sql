@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS report (
   catId INTEGER NOT NULL,
   statusId INTEGER NOT NULL,
   officeId INTEGER,
+  externalOfficeId INTEGER,
   createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
   updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
   rejectReason TEXT,
@@ -68,7 +69,8 @@ CREATE TABLE IF NOT EXISTS report (
   FOREIGN KEY (userId) REFERENCES user(id),
   FOREIGN KEY (catId) REFERENCES report_category(id),
   FOREIGN KEY (statusId) REFERENCES report_status(id),
-  FOREIGN KEY (officeId) REFERENCES office(id)
+  FOREIGN KEY (officeId) REFERENCES office(id),
+  FOREIGN KEY (externalOfficeId) REFERENCES external_office(id)
 );
 CREATE TABLE IF NOT EXISTS report_image (
   id INTEGER PRIMARY KEY,

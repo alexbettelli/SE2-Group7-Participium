@@ -1,6 +1,7 @@
 import "../styles/Authentication.css";
 import { Button, Form } from "react-bootstrap";
 import { useState, useActionState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router';
 
 import LoggingAPI from '../api/LoggingAPI.mjs';
 import dayjs from "dayjs";
@@ -15,21 +16,34 @@ export default function AuthenticationScreen(props) {
         setCurrentScreen(screen);
     }
 
-
     return (
         <div className="auth-container">
             { 
                 currentScreen === screen.LOGIN && (
                     <div className={`auth-form-wrapper login-form-wrapper`}>
+                        <div className="auth-info-section">
+                            <p className="auth-info-description">
+                                Report issues in your city and help make Turin a better place. 
+                                Submit reports about problems you encounter, track their progress, 
+                                and stay informed about municipal services.
+                            </p>
+                        </div>
                         <LogInForm 
                             handleLogin={props.handleLogin} 
                             redirectRegister={() => changeScreen(screen.REGISTER)} loginError={props.loginError} />
-                     </div>
+                    </div>
                 )
             }
             {
                 currentScreen === screen.REGISTER && (
                     <div className={`auth-form-wrapper register-form-wrapper`}>
+                        <div className="auth-info-section">
+                            <p className="auth-info-description">
+                                Report issues in your city and help make Turin a better place. 
+                                Submit reports about problems you encounter, track their progress, 
+                                and stay informed about municipal services.
+                            </p>
+                        </div>
                         <RegistrationForm 
                             redirectLogin={() => changeScreen(screen.LOGIN)} 
                             redirectVerify={() => changeScreen(screen.VERIFY)}
@@ -49,10 +63,9 @@ export default function AuthenticationScreen(props) {
                     </div>
                 )
             }
-        </div>
+            </div>
     )
 }
-
 
 function LogInForm(props) {
     const [state, formAction, isPending] = useActionState(login,{ username: '', password: '' });
@@ -90,6 +103,11 @@ function LogInForm(props) {
             {(state?.error || props.loginError) && (
                 <div className="auth-error-message">{state?.error || props.loginError}</div>
             )}
+            <div className="auth-help-link-inline">
+                <button onClick={() => props.navigate('/help')} className="help-link-button-inline">
+                    Need help? Visit our Help Center
+                </button>
+            </div>
         </div>
     )
 }
@@ -155,6 +173,11 @@ function RegistrationForm(props) {
             {state?.error && (
                 <div className="auth-error-message">{state.error}</div>
             )}
+            <div className="auth-help-link-inline">
+                <button onClick={() => props.navigate('/help')} className="help-link-button-inline">
+                    Need help? Visit our Help Center
+                </button>
+            </div>
         </div>
     )
 }

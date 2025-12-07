@@ -11,6 +11,7 @@ import MyReportsPage from './components/MyReportsPage.jsx';
 import ChatPage from './components/ChatPage.jsx';
 import ProfilePage from './components/ProfilePage';
 import AuthenticationScreen from './components/Authentication';
+import HelpCenter from './components/HelpCenter';
 
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
         <Route path="/profile" element={user && user.role?.id === 1 ? (<ProfilePage user={user} setUser={setUser} />) : (<Navigate to="/" replace />)} />
         <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/" />} />
         <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} /> : <Navigate to="/" />} />
+        <Route path="/help" element={<HelpCenter user={user} />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
