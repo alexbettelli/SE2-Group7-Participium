@@ -177,7 +177,7 @@ export const loginAsAdmin = async (agent) => {
 export const loginAsPR = async (agent) => {
     return await agent
         .post('/session')
-        .send({ username: "userPR", password: "prpassword" })
+        .send({ username: "userPr", password: "prpassword" })
 };
 export const loginAsOfficer = async (agent) => {
     return await agent
