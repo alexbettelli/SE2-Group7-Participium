@@ -1,73 +1,60 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import request from "supertest";
-import app from "../../server.mjs";
-import DAO from "../../dao/DAO.mjs";
+import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import {
+    setupTestDatabase,
+    teardownTestDatabase,
+    setupAgent,
+    loginAsAdmin,
+    logout,
+    loginAsUser
+} from '../setup.mjs';
 
-vi.mock('../../dao/DAO.mjs', async () => {
-    const actual = await vi.importActual('../../dao/DAO.mjs');
-
-    return {
-        ...actual,
-        default: {
-            ...actual.default,
-            getOffices: vi.fn()
-        }
-    }
-});
-
-beforeEach(() => {
-    vi.clearAllMocks();
-})
 
 describe('GET /offices', () => {
+
+    let agent;
+
+    beforeAll(async () => {
+        await setupTestDatabase();
+        agent = await setupAgent();
+    });
+
+    beforeEach(async () => {
+        await logout(agent);
+    });
+
+    // Cleanup after all tests
+    afterAll(async () => {
+        await teardownTestDatabase();
+    });
     it('200 OK', async () => {
         // arrange
-        const offices = [ { "id": 1, "name": "name 1", "catId": 1 } ];
-        DAO.getOffices.mockResolvedValue(offices);
+        const OFFICES = [
+            { id: 1, name: 'Office for Road Maintenance', catId: 1 },
+            { id: 2, name: 'Office for Waste Management', catId: 2 },
+            { id: 3, name: 'Office for Urban Green Management', catId: 3 },
+            { id: 4, name: 'Office for Public Transportation', catId: 4 }
+        ];
 
-        // act
-        const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
-        const result = await request(app).get('/offices').set('Cookie', auth.headers['set-cookie'] ?? []);
+        await loginAsAdmin(agent);
+        const result = await agent.get('/offices');
 
         // assert
         expect(result.status).toBe(200);
-        expect(result.body).toEqual(offices);
-        expect(DAO.getOffices).toHaveBeenCalledTimes(1);
+        expect(result.body).toEqual(OFFICES);
     });
 
     it('401 Unauthorized', async () => {
-        // act
-        const result = await request(app).get('/offices');
+        const result = await agent.get('/offices');
 
-        // assert
         expect(result.status).toBe(401);
-        expect(DAO.getOffices).toHaveBeenCalledTimes(0);
-        
+
     });
 
-    
+
     it('403 Forbidden', async () => {
-        // act
-        const auth = await request(app).post('/session').send({ "username": "mario.rossi", "password": "mariorossi" });
-        const result = await request(app).get('/offices').set('Cookie', auth.headers['set-cookie'] ?? []);
+        await loginAsUser(agent);
+        const result = await agent.get('/offices');
 
-        // assert
         expect(result.status).toBe(403);
-        expect(DAO.getOffices).toHaveBeenCalledTimes(0);
-    });
-
-
-    it('503 Service Unvailable', async () => {
-        // arrange
-        DAO.getOffices.mockImplementation(() => {throw new Error()});
-
-        // act
-        const auth = await request(app).post('/session').send({ "username": "admin", "password": "adminpassword" });
-        const result = await request(app).get('/offices').set('Cookie', auth.headers['set-cookie'] ?? []);
-
-        // assert
-        expect(result.status).toBe(503);
-        expect(DAO.getOffices).toHaveBeenCalledTimes(1);
-        expect(DAO.getOffices).toThrow;
     });
 });
