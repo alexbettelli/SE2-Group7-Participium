@@ -1,6 +1,7 @@
 import db from '../data/db.mjs';
 import dayjs from 'dayjs';
 import Mapper from '../utils/mapper.mjs'
+import e from 'express';
 
 const getAllReports = () => {
     const query = `
@@ -134,7 +135,8 @@ const getAssignedReports = (userId) => {
                 ri.imageUrl, 
                 rs.statusName,
                 rc.categoryName,
-                n.id as messageId, 
+                n.id as messageId,
+                eo.name as externalOfficeName, 
                n.senderId, 
                sender.username as senderUsername, 
                n.receiverId, 
@@ -157,6 +159,7 @@ const getAssignedReports = (userId) => {
             JOIN report_category rc ON r.catId = rc.id
             RIGHT JOIN notification n ON r.id = n.reportId AND n.channelId=1
             LEFT JOIN user sender ON n.senderId = sender.id
+            LEFT JOIN external_office eo ON r.externalOfficeId = eo.id
             JOIN user receiver ON n.receiverId = receiver.id
             WHERE r.employeeId = ?`;
 
@@ -188,6 +191,21 @@ const assignReportToOfficer = (reportId, categoryId, officeId, officerId) => {
                        WHERE id = ?`;
         const now = dayjs().toString();
         db.run(query, [officerId, officeId, categoryId, now, reportId], function (err) {
+            if (err) return reject(err);
+            resolve();
+        });
+    });
+};
+
+const assignReportToExternalOffice = (reportId, externalOfficeId) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE report
+                        SET externalOfficeId = ?,
+                            statusId = 2,
+                            updatedAt = ?
+                        WHERE id = ?`;
+        const now = dayjs().toString();
+        db.run(query, [externalOfficeId, now, reportId], function (err) {
             if (err) return reject(err);
             resolve();
         });
@@ -263,6 +281,7 @@ const ReportDAO = {
     getAssignedReports,
     getUnassignedReports,
     assignReportToOfficer,
+    assignReportToExternalOffice,
     updateReportStatus
 }
 export default ReportDAO
