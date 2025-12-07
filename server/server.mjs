@@ -199,8 +199,9 @@ const otpGeneration = async (req, res) => {
       digits: true,
       specialChars: false
     });
+    const hashedOtp = await bcrypt.hash(otp, 8);
     const expiresAt = dayjs().add(OTP_EXPIRATION_MINUTES, 'minutes').toDate();
-    req.session.otp = { code: otp, expiresAt };
+    req.session.otp = { code: hashedOtp, expiresAt };
     sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
     res.status(201).json({ message: 'OTP generated and sent to email.' });
   } catch (error) {
@@ -244,11 +245,11 @@ app.post("/otp/resend", (req, res, next) => {
 }, otpGeneration);
 
 app.post('/users/temporary/verify', async (req, res) => {
-  console.log(req.session.tempUser);
   if(!req.session.otp || !req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No OTP found. Please generate a new one."));
   const { code, expiresAt } = req.session.otp;
   const { otp } = req.body;
-  if (otp !== code || dayjs().isAfter(dayjs(expiresAt))) {
+  const match = await bcrypt.compare(otp, code);
+  if (!match || dayjs().isAfter(dayjs(expiresAt))) {
     return res.status(400).json(new errors.BadRequestError("The OTP is invalid or has expired."));
   }
   
