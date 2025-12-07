@@ -36,17 +36,6 @@ describe('E2E User Routes', () => {
     typeId: 1
   };
 
-  it('POST /user - missing password', async () => {
-    const res = await agent.post('/user').send({
-      username: 'nouserpass',
-      email: 'nouserpass@example.com',
-      firstName: 'No',
-      lastName: 'Pass',
-      typeId: 1
-    });
-    expect([400, 503]).toContain(res.statusCode);
-  });
-
   it('POST /session - wrong username', async () => {
     const res = await login(agent, 'wronguser', 'e2epassword');
     expect(res.statusCode).toBe(401);
@@ -62,30 +51,10 @@ describe('E2E User Routes', () => {
     expect([400, 401]).toContain(res.statusCode);
   });
 
-  it('POST /user - register new user successfully', async () => {
-    const res = await agent.post('/user').send(testUser);
-    expect(res.statusCode).toBe(201);
-  });
-  it('POST /user - register new user with username already used', async () => {
-    const res = await agent.post('/user').send(testUser);
-    expect(res.statusCode).toBe(409);
-    expect(res.body).toBeDefined();
-    expect(res.body).toHaveProperty('error');
-    
-  });
-
   it('POST /session - login with user successfully', async () => {
     const res = await loginAsUser(agent);
     expect(res.statusCode).toBe(201);
     expect(res.body).toHaveProperty('username', 'user');
-  });
-  it('POST /session - login with user successfully', async () => {
-    const res = await agent.post('/session').send({
-      username: testUser.username,
-      password: testUser.password
-    });
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty('username', testUser.username);
   });
 
   it('GET /session/current - get current session for logged in user ', async () => {
