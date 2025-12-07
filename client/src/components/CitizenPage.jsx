@@ -15,11 +15,14 @@ import * as turf from '@turf/turf';
 import ReportOverview from './ReportOverview.jsx';
 import ReportPopup from './ReportPopUp.jsx';
 import ReactDOM from "react-dom/client";
+import { useNavigate } from 'react-router';
 
 import GenericAPI from '../api/GenericAPI.mjs';
 import ReportAPI from '../api/ReportAPI.mjs';
+import HelpIcon from './HelpIcon.jsx';
 
 export default function CitizenPage({ user }) {
+    const navigate = useNavigate();
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
@@ -64,7 +67,7 @@ export default function CitizenPage({ user }) {
         "Public Transport and Mobility": "purple"
     };
     const getMarkerIcon = (categoryName) => {
-        const color = categoryColors[categoryName] || "blue"; // Default color        
+        const color = categoryColors[categoryName] || "blue"; // Default color
         return L.AwesomeMarkers.icon({
             icon: 'fa-circle',
             markerColor: color,
@@ -561,7 +564,9 @@ export default function CitizenPage({ user }) {
                                     <>
                                         <div className="location-info-box">
                                             <div className="location-header">
-                                                <strong>Selected Location</strong>
+                                                <strong>Selected Location
+                                                    <HelpIcon text="Make sure the location is inside Turin city boundaries. The address will be automatically retrieved." />
+                                                </strong>
                                                 <button className="reset-button" onClick={clearSelection}>
                                                     Reset
                                                 </button>
@@ -574,7 +579,9 @@ export default function CitizenPage({ user }) {
                                             <h3>Report Details</h3>
 
                                             <div className="form-group">
-                                                <label>Title <span>*</span></label>
+                                                <label>Title <span>*</span>
+                                                    <HelpIcon text="A brief, descriptive title for your report (5-100 characters)." />
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="form-input"
@@ -585,7 +592,9 @@ export default function CitizenPage({ user }) {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Description <span>*</span></label>
+                                                <label>Description <span>*</span>
+                                                    <HelpIcon text="Provide detailed information about the issue (10-255 characters)." />
+                                                </label>
                                                 <textarea
                                                     className="form-textarea"
                                                     value={description}
@@ -595,7 +604,9 @@ export default function CitizenPage({ user }) {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Category <span>*</span></label>
+                                                <label>Category <span>*</span>
+                                                    <HelpIcon text="Select the category that best matches your issue." />
+                                                </label>
                                                 <select
                                                     className="form-select"
                                                     value={catId}
@@ -611,7 +622,9 @@ export default function CitizenPage({ user }) {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Photos (1-3 required) <span>*</span></label>
+                                                <label>Photos (1-3 required) <span>*</span>
+                                                    <HelpIcon text="Upload 1 to 3 photos showing the issue. Clear photos help staff understand the problem better." />
+                                                </label>
                                                 <label className="file-input-label">
                                                     <input
                                                         type="file"
