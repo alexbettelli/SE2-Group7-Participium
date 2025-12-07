@@ -16,6 +16,11 @@ import UserDAO from './dao/UserDAO.mjs';
 import GenericInfoDAO from './dao/GenericInfoDAO.mjs';
 import NotificationDAO from './dao/NotificationDAO.mjs';
 import ReportDAO from './dao/ReportDAO.mjs';
+import otpGenerator from 'otp-generator';
+import dayjs from 'dayjs';
+import nodemailer from 'nodemailer';
+import juice from 'juice';
+import Handlebars from 'handlebars';
 
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
@@ -37,6 +42,7 @@ const validate = validator.validate;
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
+const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || 30;
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -81,15 +87,14 @@ const uploadProfile = multer({
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening at ${BASE_URL}`);
-  console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
-});
-
 app.use(session({
   secret: 'Participium!',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: false
+  } // 1 day
 }));
 
 app.use(passport.initialize());
@@ -144,25 +149,121 @@ const isCitizen = (req, res, next) => {
   return res.status(403).json(new errors.ForbiddenError("Access restricted to citizens only."));
 };
 
-app.post("/user", async (req, res) => {
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: "participium.g7@gmail.com",
+      pass: 'rvht crky jvnb xaqy'
+    }
+});
+
+const templatePath = path.join(__dirname, 'emails', 'email.hbs');
+const stylePath = path.join(__dirname, 'emails', 'email.css');
+const templateContent = fs.readFileSync(templatePath, 'utf-8');
+const cssContent = fs.readFileSync(stylePath, 'utf-8');
+const template = Handlebars.compile(templateContent);
+
+const sendEmail = async (email, username, fullName, otp) => {
+  const emailData = {
+    username: username,
+    fullName: fullName,
+    otp: otp.split('')
+  };
+
+  const mailOptions = {
+    from: "participium.g7@gmail.com",
+    to: email,
+    subject: "Participium account creation",
+    html: juice.inlineContent(template(emailData), cssContent)
+  }
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email: ' + error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+}
+
+const otpGeneration = async (req, res) => {
+  if(!req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No temporary user data found. Please register first."));
+  
+  try {
+    const data = req.session.tempUser;
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: true,
+      lowerCaseAlphabets: false,
+      digits: true,
+      specialChars: false
+    });
+    const hashedOtp = await bcrypt.hash(otp, 8);
+    const expiresAt = dayjs().add(OTP_EXPIRATION_MINUTES, 'minutes').toDate();
+    req.session.otp = { code: hashedOtp, expiresAt };
+    sendEmail(data.email, data.username, `${data.firstName} ${data.lastName}`, otp)
+    res.status(201).json({ message: 'OTP generated and sent to email.' });
+  } catch (error) {
+    console.error('Error generating OTP: ' + error);
+    return res.status(500).json(new errors.InternalServerError("Error generating OTP."));
+  }
+
+};
+
+app.post("/users/temporary", async (req, res, next) => {
+  console.log(req.session.tempUser, req.session.otp);
+  if(req.session.otp){
+    if(dayjs().isBefore(dayjs(req.session.otp.expiresAt))){
+      return res.status(400).json(new errors.BadRequestError("An OTP has already been generated and is still valid."));
+    }
+  }
+
   try {
     const data = req.body;
-
     const user = await UserDAO.getUserByUsername(data.username);
     if (user) return res.status(409).json(new errors.ConflictError("This username already exists."));
-
     const hashedPassword = await bcrypt.hash(data.password, 8);
-    data.password = hashedPassword
-    const newUserId = await UserDAO.addNewUser(data);
-
-    return res.status(201).json(newUserId);
-
+    data.password = hashedPassword;
+    req.session.tempUser = data;
+    next();
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json(new errors.ServiceUnvailableError("Unable to save the user."));
   }
+}, otpGeneration);
 
+app.post("/otp/resend", (req, res, next) => {
+  console.log(req.session.tempUser);
+  if(!req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No temporary user data found. Please register first."));
+  if(req.session.otp){
+    const createdAt = dayjs(req.session.otp.expiresAt).subtract(OTP_EXPIRATION_MINUTES, 'minutes');
+    const resendableAt = createdAt.add(1, 'minutes');
+    if(dayjs().isAfter(resendableAt)) next();
+    else return res.status(400).json(new errors.BadRequestError("You can request a new OTP only after 1 minute from the previous generation."));
+  }else next();
+}, otpGeneration);
 
+app.post('/users/temporary/verify', async (req, res) => {
+  if(!req.session.otp || !req.session.tempUser) return res.status(400).json(new errors.BadRequestError("No OTP found. Please generate a new one."));
+  const { code, expiresAt } = req.session.otp;
+  const { otp } = req.body;
+  const match = await bcrypt.compare(otp, code);
+  if (!match || dayjs().isAfter(dayjs(expiresAt))) {
+    return res.status(400).json(new errors.BadRequestError("The OTP is invalid or has expired."));
+  }
+  
+  try {
+    const newUserId = await UserDAO.addNewUser(req.session.tempUser);
+    delete req.session.tempUser;
+    delete req.session.otp;
+    return res.status(201).json(newUserId);
+  } catch(error){
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError("Unable to save the user."));
+  }
+  
+  
 });
 
 
@@ -249,6 +350,16 @@ app.get('/offices', isLogged, async (req, res) => {
 
     const offices = await GenericInfoDAO.getOffices();
     return res.status(200).json(offices);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.get('/externalOffices', isLogged, async (req, res) => {
+  try {
+    const externalOffices = await GenericInfoDAO.getExternalOffices();
+    return res.status(200).json(externalOffices);
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json(new errors.ServiceUnvailableError());
@@ -416,6 +527,17 @@ app.post('/reports/assign', isLogged, async (req, res) => {
       text: `Your report has been approved, we will keep you updated.`,
       channelId: 1,
     });
+    return res.status(200).json();
+  } catch (err) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.post('/reports/assignExternal', isLogged, async (req, res) => {
+  if (req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { reportId, externalOfficeId } = req.body;
+    await ReportDAO.assignReportToExternalOffice(reportId, externalOfficeId);
     return res.status(200).json();
   } catch (err) {
     return res.status(500).json(new errors.InternalServerError());
@@ -591,6 +713,11 @@ app.post('/notifications/read', isLogged, async (req, res) => {
   } catch (err) {
     res.status(500).json(new errors.InternalServerError());
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening at ${BASE_URL}`);
+  console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
 });
 
 
