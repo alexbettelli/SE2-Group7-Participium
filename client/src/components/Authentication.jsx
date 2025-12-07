@@ -2,12 +2,13 @@ import "../styles/Authentication.css";
 
 import { Button, Form } from "react-bootstrap";
 import { useState, useActionState } from 'react'
+import { useNavigate } from 'react-router';
 
 import LoggingAPI from '../api/LoggingAPI.mjs';
 
 
 function AuthenticateForm(props) {
-
+    const navigate = useNavigate();
     const [isLogin, setIsLogin] = useState(true);
 
     const handleToggle = () => {
@@ -17,9 +18,16 @@ function AuthenticateForm(props) {
     return (
         <div className="auth-container">
             <div className={`auth-form-wrapper ${isLogin ? 'login-form-wrapper' : 'register-form-wrapper'}`}>
+                <div className="auth-info-section">
+                    <p className="auth-info-description">
+                        Report issues in your city and help make Turin a better place. 
+                        Submit reports about problems you encounter, track their progress, 
+                        and stay informed about municipal services.
+                    </p>
+                </div>
                 {isLogin
-                    ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle} loginError={props.loginError} />
-                    : <RegistrationForm handleToggle={handleToggle} />}
+                    ? <LogInForm handleLogin={props.handleLogin} handleToggle={handleToggle} loginError={props.loginError} navigate={navigate} />
+                    : <RegistrationForm handleToggle={handleToggle} navigate={navigate} />}
             </div>
         </div>
     );
@@ -64,6 +72,11 @@ function LogInForm(props) {
             {(state?.error || props.loginError) && (
                 <div className="auth-error-message">{state?.error || props.loginError}</div>
             )}
+            <div className="auth-help-link-inline">
+                <button onClick={() => props.navigate('/help')} className="help-link-button-inline">
+                    Need help? Visit our Help Center
+                </button>
+            </div>
         </div>
     )
 }
@@ -129,6 +142,11 @@ function RegistrationForm(props) {
             {state?.error && (
                 <div className="auth-error-message">{state.error}</div>
             )}
+            <div className="auth-help-link-inline">
+                <button onClick={() => props.navigate('/help')} className="help-link-button-inline">
+                    Need help? Visit our Help Center
+                </button>
+            </div>
         </div>
     )
 }
