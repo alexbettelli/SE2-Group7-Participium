@@ -126,6 +126,18 @@ function NavHeader(props) {
               Home
             </button>
 
+            <button
+              onClick={() => {
+                navigate("/help");
+                setExpanded(false);
+              }}
+              className="nav-home-btn"
+              style={{ marginLeft: '0.5rem' }}
+            >
+              <i className="bi bi-question-circle" style={{ marginRight: '0.3rem' }}></i>
+              Help
+            </button>
+
             {user && handleLogout && (
               <button
                 className="nav-home-btn"

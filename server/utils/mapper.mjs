@@ -1,5 +1,4 @@
-import e from 'express';
-import {User, Report, Message, Office, Role, Status, Image, Category, Channel}from '../model/model.mjs';
+import { User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment } from '../model/model.mjs';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
@@ -11,7 +10,7 @@ function mapRowToUser(row) {
     const role = new Role(
         row.typeId,
         row.type
-    )   
+    )
 
     return new User(
         row.id,
@@ -19,7 +18,7 @@ function mapRowToUser(row) {
         row.email,
         row.firstName,
         row.lastName,
-        role,                    
+        role,
         row.allowEmailNotification,
         row.telegramUsername,
         row.imageUrl ? `${IMAGE_BASE_URL}/profiles/${row.imageUrl}` : null
@@ -57,8 +56,8 @@ const mapRowsToOffices = (rows) => {
 }
 
 //map a single role
-const mapRowToRole = (row) =>{
-    if (!row) return null;     
+const mapRowToRole = (row) => {
+    if (!row) return null;
 
     return new Role(
         row.id,
@@ -71,8 +70,8 @@ const mapRowsToRoles = (rows) => {
 }
 
 //map a single category
-const mapRowToCategory = (row) =>{
-    if (!row) return null;     
+const mapRowToCategory = (row) => {
+    if (!row) return null;
 
     return new Category(
         row.id,
@@ -85,8 +84,8 @@ const mapRowsToCategories = (rows) => {
 }
 
 //map a single status
-const mapRowToStatus = (row) =>{
-    if (!row) return null;     
+const mapRowToStatus = (row) => {
+    if (!row) return null;
 
     return new Status(
         row.id,
@@ -95,9 +94,9 @@ const mapRowToStatus = (row) =>{
 }
 //map multiple status
 const mapRowsToStatus = (rows) => {
-     return rows.map(mapRowToStatus);
+    return rows.map(mapRowToStatus);
 }
- 
+
 //map multiple reports
 const mapRowsToReports = (rows) => {
     const grouped = rows.reduce((acc, row) => {
@@ -121,18 +120,19 @@ const mapRowsToReports = (rows) => {
                 anonymous: row.anonymous,
                 images: [],
                 notifications: [],
-                unreadNotifications: row.unreadNotifications || 0
+                unreadNotifications: row.unreadNotifications || 0,
+                comments: []
             };
         }
 
         const report = acc[row.id];
 
-        // add image if it not exist
+        // add image if it not exists
         if (row.imageId && !report.images.some(img => img.id === row.imageId)) {
             report.images.push(new Image(row.imageId, `${IMAGE_BASE_URL}/reports/${report.id}/${row.imageUrl}`));
         }
 
-        // add message if it not exist
+        // add message if it not exists
         if (row.messageId && !report.notifications.some(msg => msg.id === row.messageId)) {
             const message = new Message({
                 id: row.messageId,
@@ -145,6 +145,17 @@ const mapRowsToReports = (rows) => {
                 isRead: !!row.isRead
             });
             report.notifications.push(message);
+        }
+        //add comment if it not exists
+        if (row.commentId && !report.comme.some(comm => comm.id === row.commentId)) {
+            const comment = new Comment({
+                id: row.commentId,
+                reportId: row.id,
+                user: new User(row.commenterId, row.commenterUsername, row.commenterFirstName, row.commenterLastName),
+                text: row.text,
+                createdAt: row.createdAt
+            });
+            report.comments.push(comment);
         }
 
         return acc;
@@ -200,11 +211,27 @@ const mapRowToMessage = (row) => {
         isRead: !!row.isRead
     });
 }
-
+//map multiple messages
 const mapRowsToMessage = (rows) => {
     return rows.map(mapRowToMessage);
 }
+//map a single comment
+const mapRowToComment = (row) => {
+    if (!row) return null;
 
+    return new Comment({
+        id: row.id,
+        reportId: row.reportId,
+        user: new User(row.userId, row.username, row.firstName, row.lastName),
+        text: row.text,
+        createdAt: row.createdAt
+    });
+
+}
+//map multiple comments
+const mapRowsToComments = (rows) => {
+    return rows.map(mapRowToComment);
+}
 const Mapper = {
     mapRowToUser,
     mapRowsToUsers,
@@ -214,12 +241,14 @@ const Mapper = {
     mapRowsToCategories,
     mapRowToStatus,
     mapRowsToStatus,
-    mapRowToOffice, 
+    mapRowToOffice,
     mapRowsToOffices,
     mapRowsToReports,
     mapRowsToReport,
     mapRowToMessage,
-    mapRowsToMessage   
+    mapRowsToMessage,
+    mapRowToComment,
+    mapRowsToComments
 }
 
 
