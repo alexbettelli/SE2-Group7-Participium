@@ -1,17 +1,18 @@
 const SERVER_URL = 'http://localhost:3001';
 
 const registrate = async (data) => {
-    const res = await fetch(SERVER_URL + '/user', {
+    const res = await fetch(SERVER_URL + '/users/temporary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data)
     })
 
     if (res.ok) {
-        const user = await res.json();
-        return user;
+        const message = await res.json();
+        return message;
     } else {
-        let errMessage = 'Error:user not saved!';
+        let errMessage = 'Error: user not saved!';
         try {
             const errDetails = await res.json();
             errMessage = errDetails.message || errMessage;
@@ -22,6 +23,53 @@ const registrate = async (data) => {
         throw new Error(errMessage);
     }
 }
+
+const verifyOTP = async (otp) => {
+    const res = await fetch(SERVER_URL + '/users/temporary/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ otp })
+    });
+
+    if(res.ok) {
+        const userId = await res.json();
+        return userId;
+    } else {
+        let errMessage = 'Error: OTP verification failed!';
+        try {
+            const errDetails = await res.json();
+            errMessage = errDetails.message || errMessage;
+        } catch {
+            const errText = await res.text();
+            if (errText) errMessage = errText;
+        }
+        throw new Error(errMessage);
+    }
+}
+
+const resendOTP = async () => {
+    const res = await fetch(SERVER_URL + '/otp/resend', {
+        method: 'POST',
+        credentials: 'include'
+    });
+
+    if(res.ok) {
+        const message = await res.json();
+        return message;
+    } else {
+        let errMessage = 'Error: OTP resend failed!';
+        try {
+            const errDetails = await res.json();
+            errMessage = errDetails.message || errMessage;
+        } catch {
+            const errText = await res.text();
+            if (errText) errMessage = errText;
+        }
+        throw new Error(errMessage);
+    }
+}
+
 const login = async (credentials) => {
     const response = await fetch(SERVER_URL + '/session', {
         method: 'POST',
@@ -53,6 +101,8 @@ const logOut = async () => {
 const LoggingAPI = {
     login,
     registrate,
+    verifyOTP,
+    resendOTP,
     logOut
 };
 export default LoggingAPI;

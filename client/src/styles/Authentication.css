@@ -193,6 +193,10 @@
     background: none !important;
 }
 
+.otp-form-wrapper{
+    width: fit-content;
+}
+
 /* Responsive design */
 @media (max-width: 576px) {
     .auth-container {
