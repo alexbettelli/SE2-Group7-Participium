@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router';
 import GenericAPI from '../api/GenericAPI.mjs';
 import ReportAPI from '../api/ReportAPI.mjs';
 import HelpIcon from './HelpIcon.jsx';
+import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function CitizenPage({ user }) {
     const navigate = useNavigate();
@@ -48,22 +49,6 @@ export default function CitizenPage({ user }) {
     const [reportDetails, setReportDetails] = useState({});
     const [locationError, setLocationError] = useState('');
     
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'Assigned':
-                return 'status-assigned';
-            case 'Resolved':
-                return 'status-resolved';
-            case 'Pending Approval':
-                return 'status-pending';
-            case 'Rejected':
-                return 'status-rejected';
-            case 'In Progress':
-                return 'status-in-progress';
-            default:
-                return 'status-suspended';
-        }
-    };
     const categoryColors = {
         "Roads and Infrastructure": "lightblue",
         "Waste and Cleanliness": "black",

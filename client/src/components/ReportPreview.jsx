@@ -11,6 +11,7 @@ import Map from './Map.jsx';
 import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import ReportAPI from '../api/ReportAPI.mjs';
+import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function ReportPreview(props) {
     const { report, setSelectedReport } = props;
@@ -84,23 +85,6 @@ export default function ReportPreview(props) {
         };
         if (updateStatus && props.user.role.id === 4) updateReportStatus();
     }, [updateStatus]);
-
-    const getStatusClass = (statusName) => {
-        switch (statusName) {
-            case 'Resolved':
-                return 'status-resolved';
-            case 'Pending Approval':
-                return 'status-pending';
-            case 'Rejected':
-                return 'status-rejected';
-            case 'In Progress':
-                return 'status-in-progress'; 
-            case 'Assigned':
-                return 'status-assigned';
-            default:
-                return 'status-suspended';
-        }
-    };
 
     useEffect(() => {
         if (expanded) document.body.style.overflowY = 'hidden';
