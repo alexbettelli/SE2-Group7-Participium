@@ -2,6 +2,7 @@ import "../styles/Authentication.css";
 import { Button, Form } from "react-bootstrap";
 import { useState, useActionState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router';
+import PropTypes from 'prop-types';
 
 import LoggingAPI from '../api/LoggingAPI.mjs';
 import dayjs from "dayjs";
@@ -72,6 +73,11 @@ export default function AuthenticationScreen(props) {
     )
 }
 
+AuthenticationScreen.propTypes = {
+    handleLogin: PropTypes.func.isRequired,
+    loginError: PropTypes.string
+};
+
 function LogInForm(props) {
     const [state, formAction, isPending] = useActionState(login,{ username: '', password: '' });
 
@@ -116,6 +122,13 @@ function LogInForm(props) {
         </div>
     )
 }
+
+LogInForm.propTypes = {
+    handleLogin: PropTypes.func.isRequired,
+    redirectRegister: PropTypes.func.isRequired,
+    loginError: PropTypes.string,
+    navigate: PropTypes.func.isRequired
+};
 
 function RegistrationForm(props) {
     const [state, formAction, isPending] = useActionState(registrate, { username: '', password: '', email: '', firstName: '', lastName: '' });
@@ -187,9 +200,20 @@ function RegistrationForm(props) {
     )
 }
 
+RegistrationForm.propTypes = {
+    redirectLogin: PropTypes.func.isRequired,
+    redirectVerify: PropTypes.func.isRequired,
+    setTemporaryUser: PropTypes.func.isRequired,
+    navigate: PropTypes.func.isRequired
+};
+
 function SignInButton(props) {
     return <Button className="auth-btn-link" variant="link" type="button" onClick={props.redirectLogin}>Do you already have an account?</Button>;
 }
+
+SignInButton.propTypes = {
+    redirectLogin: PropTypes.func.isRequired
+};
 
 function OTPForm(props) {
     const verifyOTP = async (prevState, formData) => {
@@ -286,3 +310,11 @@ function OTPForm(props) {
         </div>
     )
 }
+
+OTPForm.propTypes = {
+    redirectLogin: PropTypes.func.isRequired,
+    setTemporaryUser: PropTypes.func.isRequired,
+    username: PropTypes.string,
+    email: PropTypes.string,
+    date: PropTypes.object
+};

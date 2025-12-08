@@ -22,6 +22,24 @@ const getOffices = () => {
         });
     });
 }
+
+const getExternalOffices = () => {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT ExO.*,
+                 RC.categoryName
+            FROM external_office ExO
+            LEFT JOIN report_category RC ON ExO.catId = RC.id
+        `;
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const offices = Mapper.mapRowsToOffices(rows)
+            resolve(offices);
+        });
+    });
+} 
+
 const getRoles = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user_type 
@@ -83,6 +101,7 @@ const getReportStatuses = async () => {
 
 const GenericInfoDAO = {
     getOffices,
+    getExternalOffices,
     getRoles,
     getCategories,
     getReportStatuses

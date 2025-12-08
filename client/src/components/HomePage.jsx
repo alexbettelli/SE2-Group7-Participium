@@ -1,9 +1,11 @@
 import { Navigate } from 'react-router';
+import PropTypes from 'prop-types';
 import '../styles/commonStyle.css';
 import TechnicalOfficeStaffMemberPage from './TechnicalOfficeStaffMemberPage';
 import CitizenPage from './CitizenPage';
 import AdminPage from './AdminPage';
 import PrOfficerPage from './PrOfficerPage';
+import ExternalMaintainerPage from './ExternalMaintainerPage';
 import NotFound from './NotFound';
 
 export default function HomePage(props) {
@@ -18,7 +20,18 @@ export default function HomePage(props) {
       return <PrOfficerPage user={props.user} />;
     case 4:
       return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} />;
+    case 6:
+      return <ExternalMaintainerPage user={props.user} setSelectedReport={props.setSelectedReport} />;
     default:
       return <NotFound />;
   }
+};
+
+HomePage.propTypes = {
+  user: PropTypes.shape({
+    role: PropTypes.shape({
+      id: PropTypes.number.isRequired
+    }).isRequired
+  }),
+  setSelectedReport: PropTypes.func
 };

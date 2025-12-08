@@ -328,6 +328,40 @@ Defines all the channels able to send messages.
 
   The form performs client-side validation to ensure all required fields are filled correctly and that image constraints are met. Upon successful submission, users are redirected to the report overview page to see their submitted report.
 
+## User account verification
+The creation of a user account requires the verification of it through an OTP code sent to the email. This procedure requires several steps:
+1. Creating a temporary user.
+2. Generating and sending a 6-character OTP.
+3. Optionally resending a new OTP (minimum delay: 1 minute).
+4. Verifying the OTP and creating the final user account.
+
+### Registration flow overview
+#### Endpoints
+- `/users/temporary`: creates temporary user + sends OTP via email.
+- `/otp/resend`: it is optional, and it consists on resending the OTP. It can be done after a minimum time of 1 minute of the previous sending.
+- `/users/temporary/verify`: verifies OTP and creates the final user
+
+### Environment variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OTP_EXPIRATION_MINUTES` | How long the OTP is valid | `30` |
+
+### Email delivery system
+The application uses **Nodemailer** with Gmail SMTP to send OTP emails.  
+A custom HTML email template is built using **Handlebars**, and CSS is inlined using **Juice**.
+
+Each email contains:
+- The user’s full name
+- Their username
+- A 6-character OTP (letters + numbers)
+
+Example OTP: `A9F3BD`
+
+### Security notes
+- OTP validity period is configurable through the environment variable.
+- Resending an OTP is rate-limited (1 minute cooldown).
+- Server never exposes nor stores the plain OTP, but it is stored in the user session in the hashed form thanks to **bcrypt**
+
 ## Users
 
 - **Admin user**

@@ -1,6 +1,8 @@
 import ReportPreview from './ReportPreview.jsx';
+import PropTypes from 'prop-types';
 
 export default function ReportsTable(props) {
+    const externalOffices = props.externalOffices ?? []; 
 
     return (
         <>
@@ -8,26 +10,68 @@ export default function ReportsTable(props) {
                 <p>There are no reports at the moment.</p> :
                 <div className="reports-table">
                     {props.reports.map(report => {
+                        const filteredOffices = externalOffices.filter(
+                            office => office?.category?.id === report?.category?.id
+                        );
                         return <ReportRow
                             key={report.id}
                             report={report}
+                            externalOffices={filteredOffices}
                             user={props.user}
                             setSelectedReport={props.setSelectedReport}
-                            updateReports={props.updateReports} />
-                    }
-                    )}
+                            updateReports={props.updateReports}
+                            isExternalMaintainer={props.isExternalMaintainer}
+                            showAcceptButton={props.showAcceptButton}
+                            onAcceptReport={props.onAcceptReport}
+                        />
+                    })}
                 </div>
             }
         </>
     )
 }
 
+ReportsTable.propTypes = {
+    reports: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        category: PropTypes.shape({
+            id: PropTypes.number
+        })
+    })).isRequired,
+    user: PropTypes.object.isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    updateReports: PropTypes.func,
+    externalOffices: PropTypes.arrayOf(PropTypes.shape({
+        category: PropTypes.shape({
+            id: PropTypes.number
+        })
+    }))
+};
+
 function ReportRow(props) {
-    const { report, setSelectedReport, updateReports } = props;
+    const { report, externalOffices = [], setSelectedReport, updateReports } = props; 
 
     return (
         <div className='reports-table-row'>
-            <ReportPreview key={report.id} report={report} user={props.user} setSelectedReport={setSelectedReport} updateReports={updateReports} />
+            <ReportPreview
+                key={report.id}
+                report={report}
+                externalOffices={externalOffices}
+                user={props.user}
+                setSelectedReport={setSelectedReport}
+                updateReports={updateReports}
+                isExternalMaintainer={props.isExternalMaintainer}
+                showAcceptButton={props.showAcceptButton}
+                onAcceptReport={props.onAcceptReport}
+            />
         </div>
     )
 }
+
+ReportRow.propTypes = {
+    report: PropTypes.object.isRequired,
+    externalOffices: PropTypes.array,
+    user: PropTypes.object.isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    updateReports: PropTypes.func
+};

@@ -89,6 +89,7 @@ const updateReportStatus = async (reportId, statusId) => {
 const getAssignedReports = async () => {
     const res = await fetch(`${SERVER_URL}/reports/assigned`, { credentials: 'include' });
     const json = await res.json();
+    console.log(json);
     if (res.ok) return json;
     else return { error: json.error || 'Error fetching assigned reports' };
 };
@@ -121,6 +122,68 @@ const assignReportToOfficer = async (reportId, userId, categoryId, officeId, off
     }
 };
 
+const getExternalOfficeAssignedReports = async () => {
+    const res = await fetch(SERVER_URL + '/reports/external-office-assigned', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching office assigned reports');
+    }
+};
+const getExternalMaintainerMyReports = async () => {
+    const res = await fetch(SERVER_URL + '/reports/external-maintainer-my', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        return await res.json();
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching my reports');
+    }
+};
+const updateExternalMaintainerReportStatus = async (reportId, statusId) => {
+    const res = await fetch(`${SERVER_URL}/reports/external-maintainer/${reportId}?statusId=${statusId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        const data = await res.json();
+        return {
+            ok: data.ok || true,
+            notification: data.notification || null
+        };
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error updating report status');
+    }   
+};
+
+const assignReportToExternalOffice = async (reportId, externalOfficeId) => {
+    const res = await fetch(SERVER_URL + '/reports/assignExternal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reportId, externalOfficeId })
+    });
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error assigning report to external office');
+    }
+};
+
 const ReportAPI = {
     submitReport,
     getAllReports,
@@ -130,7 +193,11 @@ const ReportAPI = {
     updateReportStatus,
     getAssignedReports,
     getUnassignedReports,
-    assignReportToOfficer
+    assignReportToOfficer,
+    getExternalOfficeAssignedReports,
+    getExternalMaintainerMyReports,
+    updateExternalMaintainerReportStatus,
+    assignReportToExternalOffice
 };
 
 export default ReportAPI;

@@ -3,6 +3,7 @@ import '../styles/ProfilePage.css';
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import PropTypes from 'prop-types';
 
 import UserAPI from '../api/UserAPI.mjs';
 
@@ -136,21 +137,21 @@ export default function ProfilePage({ user, setUser }) {
           <div className="profile-col profile-col-info">
             <div className="info-display">
               <div className="info-item">
-                <label>Full Name</label>
+                <div className="info-label">Full Name</div>
                 <div className="info-value">
                   <i className="bi bi-person-fill"></i>
                   {user.firstName} {user.lastName}
                 </div>
               </div>
               <div className="info-item">
-                <label>Username</label>
+                <div className="info-label">Username</div>
                 <div className="info-value">
                   <i className="bi bi-at"></i>
                   {user.username}
                 </div>
               </div>
               <div className="info-item">
-                <label>Email</label>
+                <div className="info-label">Email</div>
                 <div className="info-value">
                   <i className="bi bi-envelope-fill"></i>
                   {user.email}
@@ -212,3 +213,16 @@ export default function ProfilePage({ user, setUser }) {
     </div>
   );
 }
+
+ProfilePage.propTypes = {
+  user: PropTypes.shape({
+    firstName: PropTypes.string.isRequired,
+    lastName: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    telegramUsername: PropTypes.string,
+    allowEmailNotification: PropTypes.number,
+    imageUrl: PropTypes.string
+  }),
+  setUser: PropTypes.func.isRequired
+};

@@ -1,15 +1,29 @@
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import ReportAPI from '../api/ReportAPI.mjs';
+import GenericAPI from '../api/GenericAPI.mjs';
 import ReportsTable from './ReportsTable.jsx';
 import '../styles/TechnicalOfficeStaffMember.css';
 
 export default function TechnicalOfficeStaffMemberPage(props) {
     const [reports, setReports] = useState([]);
+    const [externalOffices, setExternalOffices] = useState([]);
     const [retrieve, setRetrieve] = useState(true);
 
     const updateReports = () => {
         setRetrieve(true);
     }
+
+    useEffect(() => {
+        async function fetchExternalOffices() {
+            GenericAPI.getExternalOffices().then(externalOffices => {
+                setExternalOffices(externalOffices);
+            }).catch(error => {
+                console.error('Error fetching external offices:', error);
+            });
+        }
+        fetchExternalOffices();
+    }, []);
 
     useEffect(() => {
         async function getAssignedReports() {
@@ -33,9 +47,18 @@ export default function TechnicalOfficeStaffMemberPage(props) {
             <ReportsTable
                 user={props.user}
                 reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) - (a.unreadNotifications || 0))}
+                externalOffices={externalOffices}
                 setSelectedReport={props.setSelectedReport}
                 updateReports={updateReports}
             />
         </div>
     )
 }
+
+TechnicalOfficeStaffMemberPage.propTypes = {
+    user: PropTypes.shape({
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired
+    }).isRequired,
+    setSelectedReport: PropTypes.func.isRequired
+};
