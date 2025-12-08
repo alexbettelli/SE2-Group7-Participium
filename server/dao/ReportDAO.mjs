@@ -6,12 +6,14 @@ const getAllReports = () => {
     const query = `
         select r.*,
                u.username, 
+               em.username as externalMaintainerUsername,
                rc.categoryName,
                i.id as imageId, 
                i.imageUrl,
                s.statusName
         from report r
         join user u on r.userId = u.id 
+        left join user em on r.externalMaintainerId = em.id
         join report_category rc on r.catId = rc.id
         join report_image i on r.id = i.reportId
         join report_status s on r.statusId = s.id
@@ -31,6 +33,7 @@ const getReportsByUserId = async (userId) => {
         select r.*,
                u.username, 
                e.username as employeeUsername,
+               em.username as externalMaintainerUsername,
                rc.categoryName,
                i.id as imageId, 
                i.imageUrl,
@@ -47,6 +50,7 @@ const getReportsByUserId = async (userId) => {
         from report r
         join user u on r.userId = u.id 
         left join user e on r.employeeId = e.id
+        left join user em on r.externalMaintainerId = em.id
         join report_category rc on r.catId = rc.id
         join report_image i on r.id = i.reportId
         join report_status s on r.statusId = s.id
@@ -130,6 +134,7 @@ const getAssignedReports = (userId) => {
                 u.username, 
                 u.id AS userId,
                 e.username AS employeeUsername, 
+                em.username AS externalMaintainerUsername,
                 ri.id AS imageId, 
                 ri.imageUrl, 
                 rs.statusName,
@@ -158,6 +163,7 @@ const getAssignedReports = (userId) => {
             JOIN report_category rc ON r.catId = rc.id
             RIGHT JOIN notification n ON r.id = n.reportId AND n.channelId=1
             LEFT JOIN user sender ON n.senderId = sender.id
+            LEFT JOIN user em ON r.externalMaintainerId = em.id
             LEFT JOIN external_office eo ON r.externalOfficeId = eo.id
             JOIN user receiver ON n.receiverId = receiver.id
             WHERE r.employeeId = ?`;
@@ -276,7 +282,7 @@ const updateReportStatus = (userId, reportId, statusId) => {
 const getExternalOfficeAssignedReports = (userId) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName,
+            SELECT r.*, u.username, e.username AS employeeUsername, em.username AS externalMaintainerUsername, rc.categoryName,
              ri.id AS imageId, ri.imageUrl, rs.statusName,
              n.id as messageId, n.senderId, sender.username as senderUsername,
              n.receiverId, receiver.username as receiverUsername,
@@ -286,6 +292,7 @@ const getExternalOfficeAssignedReports = (userId) => {
       JOIN report_category rc on r.catId = rc.id
       JOIN user u on r.userId = u.id
       LEFT JOIN user e on r.employeeId = e.id
+      LEFT JOIN user em on r.externalMaintainerId = em.id
       JOIN report_image ri on r.id = ri.reportId
       JOIN external_office_employee eoe ON eoe.userId = ?
       JOIN external_office eo ON eo.id = eoe.external_officeId
@@ -308,7 +315,7 @@ const getExternalOfficeAssignedReports = (userId) => {
 export const getExternalMaintainerMyReports = (userId) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName,
+            SELECT r.*, u.username, e.username AS employeeUsername, em.username AS externalMaintainerUsername, rc.categoryName,
              ri.id AS imageId, ri.imageUrl, rs.statusName,
              n.id as messageId, n.senderId, sender.username as senderUsername,
              n.receiverId, receiver.username as receiverUsername,
@@ -317,7 +324,8 @@ export const getExternalMaintainerMyReports = (userId) => {
       JOIN report_status rs ON r.statusId = rs.id
       JOIN report_category rc on r.catId = rc.id
       JOIN user u on r.userId = u.id
-      LEFT JOIN user e on r.employeeId = e.id
+            LEFT JOIN user e on r.employeeId = e.id
+            LEFT JOIN user em on r.externalMaintainerId = em.id
       JOIN report_image ri on r.id = ri.reportId
       LEFT JOIN notification n ON r.id = n.reportId AND n.channelId = 1
       LEFT JOIN user sender ON n.senderId = sender.id

@@ -114,6 +114,7 @@ const mapRowsToReports = (rows) => {
                 status: new Status(row.statusId, row.statusName),
                 office: row.officeId ? new Office(row.officeId, row.officeName) : null,
                 externalOffice: row.externalOfficeId ? new Office(row.externalOfficeId, row.externalOfficeName) : null,
+                externalMaintainer: row.externalMaintainerId ? new User(row.externalMaintainerId, row.externalMaintainerUsername) : null,
                 createdAt: row.createdAt,
                 updatedAt: row.updatedAt,
                 rejectReason: row.rejectReason,
@@ -121,6 +122,7 @@ const mapRowsToReports = (rows) => {
                 images: [],
                 notifications: [],
                 unreadNotifications: row.unreadNotifications || 0,
+                unreadComments: row.unreadComments || 0,
                 comments: []
             };
         }
@@ -147,7 +149,7 @@ const mapRowsToReports = (rows) => {
             report.notifications.push(message);
         }
         //add comment if it not exists
-        if (row.commentId && !report.comme.some(comm => comm.id === row.commentId)) {
+        if (row.commentId && !report.comments.some(comm => comm.id === row.commentId)) {
             const comment = new Comment({
                 id: row.commentId,
                 reportId: row.id,
