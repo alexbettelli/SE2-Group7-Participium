@@ -11,10 +11,11 @@ import Map from './Map.jsx';
 import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import ReportAPI from '../api/ReportAPI.mjs';
+import UserAPI from '../api/UserAPI.mjs';
 import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function ReportPreview(props) {
-    const { report, setSelectedReport } = props;
+    const { report, setSelectedReport, isExternalMaintainer = false, showAcceptButton = false, onAcceptReport } = props;
     const [expanded, setExpanded] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showExternalAssignmentModal, setShowExternalAssignmentModal] = useState(false);
@@ -71,7 +72,13 @@ export default function ReportPreview(props) {
     useEffect(() => {
         const updateReportStatus = async () => {
             try {
-                const result = await ReportAPI.updateReportStatus(report.id, selectedStatusId);
+                let result;
+                if (isExternalMaintainer) {
+                    result = await ReportAPI.updateExternalMaintainerReportStatus(report.id, selectedStatusId);
+                } else {
+                    result = await ReportAPI.updateReportStatus(report.id, selectedStatusId);
+                }
+                
                 if (result && result.notification) {
                     report.notifications = [...report.notifications, result.notification];
                     setSelectedReport({ ...report });
@@ -79,12 +86,32 @@ export default function ReportPreview(props) {
                 if (result.ok) props.updateReports();
             } catch (error) {
                 console.error('Error updating report status:', error);
+                alert('Failed to update status: ' + error.message);
             }
             setUpdateStatus(false);
             setSelectedStatusId(null);
         };
-        if (updateStatus && props.user.role.id === 4) updateReportStatus();
+        if (updateStatus && (props.user.role.id === 4 || props.user.role.id === 6)) {
+            updateReportStatus();
+        }
     }, [updateStatus]);
+
+    const getStatusClass = (statusName) => {
+        switch (statusName) {
+            case 'Resolved':
+                return 'status-completed';
+            case 'Pending Approval':
+                return 'status-pending';
+            case 'Rejected':
+                return 'status-rejected';
+            case 'In Progress':
+                return 'status-in-progress';
+            case 'Assigned':
+                return 'status-assigned';
+            default:
+                return 'status-default';
+        }
+    };
 
     useEffect(() => {
         if (expanded) document.body.style.overflowY = 'hidden';
@@ -115,36 +142,63 @@ export default function ReportPreview(props) {
                     </div>
                 </div>
                 <div className="card-section actions">
-                    <div className="chat-btn-notification-wrapper">
-                        {report.unreadNotifications > 0 && (
-                            <span className="chat-btn-notification-count">{report.unreadNotifications}</span>
-                        )}
-                        <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
-                            <span className="chat-btn-flex">
-                                <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
-                                <span> Go to the chat</span>
-                            </span>
-                        </button>
-                    </div>
-                    { report.externalOffice == null ? 
-                        <button className='btn-assign-external' type="button" onClick={(e) => { e.stopPropagation(); handleShowExternalAssignment(); }}>
-                            <span><i className="bi bi-building"></i> Assign to external company</span>
-                        </button>
-                        : 
-                        <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report);  }}>
-                            <span className="chat-btn-flex">
-                                <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
-                                <span> {report.externalOffice.name}</span>
-                            </span>
-                        </button>
-                    }
-                    {
-                        props.user.role.id === 4 &&
-                        <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
-                            <span><i className="bi bi-pencil-fill"></i> Change status</span>
-                        </button>
-                    }
 
+                    {!showAcceptButton && (
+                        <div className="chat-btn-notification-wrapper">
+                            {report.unreadNotifications > 0 && (
+                                <span className="chat-btn-notification-count">{report.unreadNotifications}</span>
+                            )}
+                            <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
+                                <span className="chat-btn-flex">
+                                    <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
+                                    <span> Go to the chat</span>
+                                </span>
+                            </button>
+                        </div>
+                    )}
+                    
+                    {showAcceptButton && report.status.id === 2 && (
+            <button className="btn-accept" type="button" onClick={(e) => { e.stopPropagation(); onAcceptReport(report.id); }}>
+              <i className="bi bi-check-circle"></i>{' '}Accept Report
+            </button>
+          )}
+
+          {/* Sezione azioni ufficio tecnico: assegnazione esterna + change status */}
+          {props.user?.role?.id === 4 && (
+            <>
+              {report.externalOffice == null ? (
+                <button
+                  className="btn-assign-external"
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleShowExternalAssignment(); }}
+                >
+                  <span><i className="bi bi-building"></i>{' '}Assign to external company</span>
+                </button>
+              ) : (
+                <button
+                  className="btn-chat"
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setSelectedReport(report); }}
+                >
+                  <span className="chat-btn-flex">
+                    <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
+                    <span>{' '}{report.externalOffice.name}</span>
+                  </span>
+                </button>
+              )}
+
+              <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
+                <span><i className="bi bi-pencil-fill"></i>{' '}Change status</span>
+              </button>
+            </>
+          )}
+
+          {/* Sezione change status per manutentore esterno (ruolo 6) quando non c’è il bottone di Accept */}
+          {props.user?.role?.id === 6 && !showAcceptButton && (
+            <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>
+              <span><i className="bi bi-pencil-fill"></i>{' '}Change status</span>
+            </button>
+          )}
                 </div>
             </div>
             {expanded && <ReportView onClose={toggleExpanded} report={report} />}
@@ -162,8 +216,14 @@ export default function ReportPreview(props) {
                 <Modal.Body>
                     <Form.Select aria-label="Default select example" defaultValue={report.status.id} onChange={(e) => setSelectedStatusId(e.target.value)}>
                         {statuses.map(status => {
-                            if (![1, 2, 5].includes(status.id))
-                                return <option key={status.id} value={status.id} >{status.statusName}</option>;
+                            // Technical Office
+                            if (props.user.role.id === 4 && ![1, 2, 5].includes(status.id)) {
+                                return <option key={status.id} value={status.id}>{status.statusName}</option>;
+                            }
+                            // External Maintainer: solo 3 (In Progress) e 6 (Resolved)
+                            if (isExternalMaintainer && [3, 6].includes(status.id)) {
+                                return <option key={status.id} value={status.id}>{status.statusName}</option>;
+                            }
                         })}
                     </Form.Select>
                 </Modal.Body>

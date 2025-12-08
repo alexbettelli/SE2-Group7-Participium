@@ -444,12 +444,73 @@ app.get('/users/myreports', isLogged, async (req, res) => {
   }
 });
 
+
 app.get('/reports/unassigned', isLogged, async (req, res) => {
   if (req.user.role.id !== 3) return res.status(403).json(new errors.ForbiddenError());
   try {
     const reports = await ReportDAO.getUnassignedReports();
     return res.status(200).json(reports);
   } catch (ex) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+// Route 1: Report assegnati all'office (da accettare)
+app.get("/reports/external-office-assigned", isLogged, async (req, res) => {
+  if (req.user.role.id !== 6) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await ReportDAO.getExternalOfficeAssignedReports(req.user.id);
+    return res.status(200).json(reports);
+  } catch (ex) {
+    console.error(`ERROR: ${ex.message}`);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+// Route 2: Report accettati dal maintainer
+app.get("/reports/external-maintainer-my", isLogged, async (req, res) => {
+  if (req.user.role.id !== 6) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await ReportDAO.getExternalMaintainerMyReports(req.user.id);
+    return res.status(200).json(reports);
+  } catch (ex) {
+    console.error(`ERROR: ${ex.message}`);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get("/reports/assigned", isLogged, async (req, res) => {
+  if (req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const reports = await ReportDAO.getAssignedReports(req.user.id);
+    return res.status(200).json(reports);
+  } catch (ex) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get("/reports/statuses", isLogged, async (req, res) => {
+  try {
+    const statuses = await GenericInfoDAO.getReportStatuses();
+    return res.status(200).json(statuses);
+  } catch (e) {
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.patch("/reports/external-maintainer/:id", isLogged, async (req, res) => {
+  if (req.user.role.id !== 6) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const notification = await ReportDAO.updateExternalMaintainerReportStatus(
+      req.user.id, 
+      req.params.id, 
+      req.query.statusId
+    );
+    if (!notification)
+      return res.status(404).json(new errors.NotFoundError("Report not found."));
+    return res.status(200).json({ ok: true, notification });
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -614,16 +675,6 @@ app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
   }
 });
 
-app.get("/reports/assigned", isLogged, async (req, res) => {
-  if (req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
-  try {
-    const reports = await ReportDAO.getAssignedReports(req.user.id);
-    return res.status(200).json(reports);
-  } catch (ex) {
-    return res.status(500).json(new errors.InternalServerError());
-  }
-});
-
 app.patch("/reports/:id", isLogged, async (req, res) => {
   if (req.user.role.id !== 4) return res.status(403).json(new errors.ForbiddenError());
   try {
@@ -635,17 +686,6 @@ app.patch("/reports/:id", isLogged, async (req, res) => {
     return res.status(500).json(new errors.InternalServerError());
   }
 });
-
-app.get("/reports/statuses", isLogged, async (req, res) => {
-  try {
-    const statuses = await GenericInfoDAO.getReportStatuses();
-    return res.status(200).json(statuses);
-  } catch (e) {
-    return res.status(500).json(new errors.InternalServerError());
-  }
-});
-
-
 
 //NOTIFICATIONS
 
