@@ -2,7 +2,7 @@ import '../styles/AdminPage.css';
 
 import { useState, useEffect } from 'react';
 import UnassignedReportsList from './UnassignedReportList.jsx';
-
+import PropTypes from 'prop-types'; 
 import GenericAPI from '../api/GenericAPI.mjs';
 import ReportAPI from '../api/ReportAPI.mjs';
 
@@ -66,7 +66,6 @@ export default function PrOfficerPage({ user }) {
 
 
   return (
-    <>
       <div className="admin-page-container">
         <h2 className="admin-page-title">Public Relations Officer Page</h2>
         <p className="admin-page-description">Welcome {user.username}! Here you can accept, reject and assign reports.</p>
@@ -80,7 +79,18 @@ export default function PrOfficerPage({ user }) {
             handleReject={rejectReport} />
         </section>
       </div>
-    </>
   );
 }
+
+
+PrOfficerPage.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string.isRequired,
+    role: PropTypes.shape({
+      id: PropTypes.number,
+    }),
+  }).isRequired,
+};
+
 

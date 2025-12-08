@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import MapComponent from './Map.jsx';
 import '../styles/UnassignedReportList.css';
+import PropTypes from 'prop-types';
 
 export default function UnassignedReportsList(props) {
   const { reports, categories, offices, handleAssign, handleReject } = props;
@@ -124,15 +125,13 @@ const ReportRow = (props) => {
           e.stopPropagation();
           handleAccept();
         }}>
-          <i className="bi bi-check-circle-fill"></i>
-          Accept
+          <i className="bi bi-check-circle-fill"></i>{' '}Accept
         </button>
         <button className="btn-reject-report" onClick={(e) => {
           e.stopPropagation();
           setReportToReject(report);
         }}>
-          <i className="bi bi-x-circle-fill"></i>
-          Reject
+          <i className="bi bi-x-circle-fill"></i>{' '}Reject
         </button>
       </td>
     </tr>
@@ -156,10 +155,10 @@ function ReportView(props) {
           <div className="media-container">
             <div className="carousel-wrapper">
               <Carousel>
-                {props.report.images.map((image, index) => {
+                {props.report.images.map((image) => {
                   return (
-                    <Carousel.Item key={index}>
-                      <img className="d-block w-100" src={image.imageUrl} alt={`Image ${index + 1}`} />
+                    <Carousel.Item key={image.id ?? image.imageUrl}>
+                      <img className="d-block w-100" src={image.imageUrl} alt={`Img ${image.id ?? image.imageUrl}`} />
                     </Carousel.Item>
                   );
                 })}
@@ -228,3 +227,79 @@ function RejectReportModal(props) {
     </>
   );
 }
+
+const ImageShape = PropTypes.shape({
+  id: PropTypes.number,
+  imageUrl: PropTypes.string.isRequired,
+});
+
+const CategoryShape = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  categoryName: PropTypes.string,
+});
+
+const UserShape = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  username: PropTypes.string,
+});
+
+const EmployeeShape = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  firstName: PropTypes.string,
+  lastName: PropTypes.string,
+  username: PropTypes.string,
+});
+
+const OfficeShape = PropTypes.shape({
+  id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  name: PropTypes.string,
+  category: CategoryShape,
+  employees: PropTypes.arrayOf(EmployeeShape),
+});
+
+
+const ReportShape = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  address: PropTypes.string,
+  images: PropTypes.arrayOf(ImageShape).isRequired,
+  user: UserShape.isRequired,
+  category: CategoryShape.isRequired,
+  latitude: PropTypes.number,
+  longitude: PropTypes.number,
+  createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]), // ✅
+});
+
+UnassignedReportsList.propTypes = {
+  reports: PropTypes.arrayOf(ReportShape).isRequired,
+  categories: PropTypes.arrayOf(CategoryShape),
+  offices: PropTypes.arrayOf(OfficeShape),
+  handleAssign: PropTypes.func.isRequired,
+  handleReject: PropTypes.func.isRequired,
+};
+
+UnassignedReportsList.defaultProps = {
+  categories: [],
+  offices: [],
+};
+
+ReportRow.propTypes = {
+  report: ReportShape.isRequired,
+  categories: PropTypes.arrayOf(CategoryShape).isRequired,
+  offices: PropTypes.arrayOf(OfficeShape).isRequired,
+  onClick: PropTypes.func.isRequired,
+  handleAssign: PropTypes.func.isRequired,
+  setReportToReject: PropTypes.func.isRequired,
+};
+
+ReportView.propTypes = {
+  report: ReportShape.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+
+RejectReportModal.propTypes = {
+  report: ReportShape.isRequired,
+  onClose: PropTypes.func.isRequired,
+  handleReject: PropTypes.func.isRequired,
+};

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router";
 import ReportAPI from '../api/ReportAPI.mjs';
 import "../styles/NavBar.css";
+import PropTypes from 'prop-types';
 
 function NavHeader(props) {
   const { user, handleLogout, unreadNotifications, setUnreadNotifications } = props;
@@ -23,21 +24,24 @@ function NavHeader(props) {
     }
   };
 
-  useEffect(() => {
-    if (!user || !user?.id || (user?.role.id !== 1 && user?.role.id !== 4))
-      return;
-    const fetchUnreadNotifications = async () => {
-      try {
-        const reports = user.role.id === 1 ? await ReportAPI.getMyReports() : await ReportAPI.getAssignedReports();
-        const totalUnreadNotifications = reports.reduce((sum, report) => sum + (report.unreadNotifications || 0), 0);
-        setUnreadNotifications(totalUnreadNotifications);
-      } catch (error) {
-        console.error('Error fetching unread notifications:', error);
-      }
-    };
+useEffect(() => {
+  if (!user?.id || (user?.role?.id !== 1 && user?.role?.id !== 4)) return;
 
-    fetchUnreadNotifications();
-  }, [user]);
+  const fetchUnreadNotifications = async () => {
+    try {
+      const reports = user.role.id === 1
+        ? await ReportAPI.getMyReports()
+        : await ReportAPI.getAssignedReports();
+      const totalUnreadNotifications = reports.reduce((sum, r) => sum + (r.unreadNotifications || 0), 0);
+      setUnreadNotifications?.(totalUnreadNotifications);
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+    }
+  };
+
+  fetchUnreadNotifications();
+}, [user]);
+
 
   useEffect(() => {
     if (user?.imageUrl) {
@@ -55,7 +59,7 @@ function NavHeader(props) {
         {/* Left side: Brand + Logo + Welcome message */}
         <div className="navbar-left">
           <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
-            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />
+            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />{' '}
             PARTICIPIUM
           </Navbar.Brand>
 
@@ -125,7 +129,6 @@ function NavHeader(props) {
             >
               Home
             </button>
-
             <button
               onClick={() => {
                 navigate("/help");
@@ -134,9 +137,11 @@ function NavHeader(props) {
               className="nav-home-btn"
               style={{ marginLeft: '0.5rem' }}
             >
-              <i className="bi bi-question-circle" style={{ marginRight: '0.3rem' }}></i>
+              <i className="bi bi-question-circle" style={{ marginRight: '0.3rem' }} aria-hidden="true" />
+              {' '}
               Help
             </button>
+           
 
             {user && handleLogout && (
               <button
@@ -152,5 +157,19 @@ function NavHeader(props) {
     </Navbar>
   );
 }
+
+NavHeader.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string,
+    imageUrl: PropTypes.string,
+    role: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    }).isRequired,
+  }),
+  handleLogout: PropTypes.func,
+  unreadNotifications: PropTypes.number,
+  setUnreadNotifications: PropTypes.func,
+};
 
 export default NavHeader;
