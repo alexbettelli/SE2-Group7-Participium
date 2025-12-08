@@ -1,6 +1,7 @@
 import '../styles/ChatPage.css';
 
 import { useRef, useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 
 import Message from "./Message.jsx";
 
@@ -140,3 +141,27 @@ export default function ChatPage(props) {
         </div>
     );
 }
+
+ChatPage.propTypes = {
+    report: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        notifications: PropTypes.arrayOf(PropTypes.object).isRequired,
+        user: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            username: PropTypes.string.isRequired
+        }).isRequired,
+        employee: PropTypes.shape({
+            id: PropTypes.number,
+            username: PropTypes.string
+        })
+    }).isRequired,
+    user: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        role: PropTypes.shape({
+            id: PropTypes.number.isRequired
+        }).isRequired
+    }).isRequired,
+    unreadNotifications: PropTypes.number.isRequired,
+    setUnreadNotifications: PropTypes.func.isRequired
+};

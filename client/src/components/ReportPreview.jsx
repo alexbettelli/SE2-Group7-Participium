@@ -7,7 +7,7 @@ import { Carousel, Modal, Form } from 'react-bootstrap';
 
 import dayjs from 'dayjs';
 
-import Map from './Map.jsx';
+import MapComponent from './Map.jsx';
 import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import ReportAPI from '../api/ReportAPI.mjs';
@@ -245,7 +245,7 @@ function ReportView(props) {
                             </Carousel>
                         </div>
                         <div className="map-container-popup">
-                            <Map lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
+                            <MapComponent lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
                         </div>
                     </div>
 

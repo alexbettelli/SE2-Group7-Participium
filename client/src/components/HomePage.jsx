@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router';
+import PropTypes from 'prop-types';
 import '../styles/commonStyle.css';
 import TechnicalOfficeStaffMemberPage from './TechnicalOfficeStaffMemberPage';
 import CitizenPage from './CitizenPage';
@@ -21,4 +22,13 @@ export default function HomePage(props) {
     default:
       return <NotFound />;
   }
+};
+
+HomePage.propTypes = {
+  user: PropTypes.shape({
+    role: PropTypes.shape({
+      id: PropTypes.number.isRequired
+    }).isRequired
+  }),
+  setSelectedReport: PropTypes.func
 };

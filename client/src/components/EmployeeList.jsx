@@ -1,5 +1,6 @@
 import { Table, Form } from 'react-bootstrap';
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import '../styles/EmployeeList.css';
 
 export default function UnassignedEmployeeList(props) {
@@ -113,4 +114,40 @@ function EmployeeRow(props) {
         </tr>
     );
 }
+
+UnassignedEmployeeList.propTypes = {
+    employees: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        username: PropTypes.string.isRequired,
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired
+    })).isRequired,
+    roles: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        type: PropTypes.string.isRequired
+    })).isRequired,
+    offices: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired
+    })).isRequired,
+    onAssign: PropTypes.func.isRequired
+};
+
+EmployeeRow.propTypes = {
+    employee: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        username: PropTypes.string.isRequired,
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired
+    }).isRequired,
+    roles: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        type: PropTypes.string.isRequired
+    })).isRequired,
+    offices: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired
+    })).isRequired,
+    onAssign: PropTypes.func.isRequired
+};
 
