@@ -96,23 +96,6 @@ export default function ReportPreview(props) {
         }
     }, [updateStatus]);
 
-    const getStatusClass = (statusName) => {
-        switch (statusName) {
-            case 'Resolved':
-                return 'status-completed';
-            case 'Pending Approval':
-                return 'status-pending';
-            case 'Rejected':
-                return 'status-rejected';
-            case 'In Progress':
-                return 'status-in-progress';
-            case 'Assigned':
-                return 'status-assigned';
-            default:
-                return 'status-default';
-        }
-    };
-
     useEffect(() => {
         if (expanded) document.body.style.overflowY = 'hidden';
         else document.body.style.overflowY = 'auto';
