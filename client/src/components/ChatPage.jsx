@@ -8,8 +8,8 @@ import NotificationAPI from '../api/NotificationAPI.mjs';
 
 
 export default function ChatPage(props) {
-    const { report, user, unreadNotifications, setUnreadNotifications } = props;
-    const [messages, setMessages] = useState(report.notifications);
+    const { report, user, unreadNotifications, setUnreadNotifications, chatWith } = props;
+    const [messages, setMessages] = useState(chatWith === "user" ? report.notifications : report.comments);
     const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
     const [notificationText, setNotificationText] = useState("");
@@ -22,7 +22,7 @@ export default function ChatPage(props) {
         const markNotificationsRead = async () => {
             if (report?.id && user?.id) {
                 try {
-                    const readNotifications = await NotificationAPI.setReadNotifications(report.id);
+                    const readNotifications = (chatWith === "user") ? await NotificationAPI.setReadNotifications(report.id) : await NotificationAPI.setReadComments(report.id);
                     setUnreadNotifications(prev => prev - readNotifications);
                     setLoading(false)
                 } catch (err) {
@@ -36,8 +36,9 @@ export default function ChatPage(props) {
 
     useEffect(() => {
         if (report?.id) {
-            const sortedMessages = [...report.notifications].sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt));
+            const sortedMessages = (chatWith === "user") ? [...report.notifications].sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt)) : [...report.comments].sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt));
             setMessages(sortedMessages);
+            console.log(report);
         }
     }, [report, user.id]);
 
@@ -51,12 +52,18 @@ export default function ChatPage(props) {
         if (!notificationText.trim()) return;
         setSending(true);
         try {
-            const newMessage = await NotificationAPI.submitNotification({
+            const newMessage = (chatWith === "user") ? await NotificationAPI.submitNotification({
                 reportId: report.id,
                 senderId: report.employee.id || 1,
                 receiverId: report.user.id,
                 text: notificationText,
                 channelId: 1
+            }) :
+            await NotificationAPI.submitComment({
+                reportId: report.id,
+                senderId: user.id,
+                receiverId: (user.id === report.employee.id) ? report.externalMaintainer.id : report.employee.id,
+                text: notificationText,
             });
             setNotificationText("");
             if (newMessage) {
@@ -86,7 +93,8 @@ export default function ChatPage(props) {
 
             <div className="chat-header-row">
                 <div className="chat-officer-label">
-                    {user.role.id !== 1 ? report.user.username : (report.employee ? report.employee.username : 'No officer assigned')}
+                    {chatWith=== "user" && (user.role.id !== 1 ? report.user.username : (report.employee ? report.employee.username : 'No officer assigned'))}
+                    {chatWith=== "maintainer" && (user.role.id !== 4 ? report.employee.username : (report.externalMaintainer ? report.externalMaintainer.username : 'No external maintainer assigned'))}
                 </div>
                 <div className="chat-report-title">
                     REPORT: "{report.title}"
@@ -98,9 +106,9 @@ export default function ChatPage(props) {
                         <div>There are no messages in the chat yet</div>
                     ) : (
                         <>
-                            {messages.map(msg => (
+                            {messages.map((msg, idx) => (
                                 <div
-                                    key={msg.id}
+                                    key={msg.id ?? `${msg.sendAt ?? 'no-time'}-${msg.sender?.id ?? 'no-sender'}-${msg.receiver?.id ?? 'no-receiver'}-${idx}`}
                                     style={{
                                         display: 'flex',
                                         justifyContent: ((msg.sender && msg.sender.id === user.id) || (!msg.sender && user.role.id !== 1)) ? 'flex-end' : 'flex-start',

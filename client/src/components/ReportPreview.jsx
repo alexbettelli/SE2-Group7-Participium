@@ -15,7 +15,7 @@ import UserAPI from '../api/UserAPI.mjs';
 import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function ReportPreview(props) {
-    const { report, setSelectedReport, isExternalMaintainer = false, showAcceptButton = false, onAcceptReport } = props;
+    const { report, setSelectedReport, isExternalMaintainer = false, showAcceptButton = false, onAcceptReport, setChatWith } = props;
     const [expanded, setExpanded] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showExternalAssignmentModal, setShowExternalAssignmentModal] = useState(false);
@@ -131,7 +131,7 @@ export default function ReportPreview(props) {
                             {report.unreadNotifications > 0 && (
                                 <span className="chat-btn-notification-count">{report.unreadNotifications}</span>
                             )}
-                            <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); navigate('/chat'); }}>
+                            <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); setChatWith(props.user?.role?.id === 6 ? "maintainer" : "user"); navigate('/chat'); }}>
                                 <span className="chat-btn-flex">
                                     <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
                                     <span> Go to the chat</span>
@@ -161,7 +161,7 @@ export default function ReportPreview(props) {
                 <button
                   className="btn-chat"
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setSelectedReport(report); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedReport(report); setChatWith("maintainer"); navigate('/chat');}}
                 >
                   <span className="chat-btn-flex">
                     <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>

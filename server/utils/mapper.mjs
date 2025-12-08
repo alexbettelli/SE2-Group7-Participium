@@ -136,27 +136,36 @@ const mapRowsToReports = (rows) => {
 
         // add message if it not exists
         if (row.messageId && !report.notifications.some(msg => msg.id === row.messageId)) {
+            const sender = row.notificationSenderId
+                ? new User(row.notificationSenderId, row.notificationSenderUsername)
+                : (row.senderId ? new User(row.senderId, row.senderUsername) : null);
+            const receiver = row.notificationReceiverId
+                ? new User(row.notificationReceiverId, row.notificationReceiverUsername)
+                : new User(row.receiverId, row.receiverUsername);
             const message = new Message({
                 id: row.messageId,
                 reportId: row.id,
-                sender: row.senderId ? new User(row.senderId, row.receiverId) : null, //for auto-generated messages
-                receiver: new User(row.receiverId, row.receiverUsername),
-                text: row.text,
+                sender,
+                receiver,
+                text: row.notificationText ?? row.text,
                 channel: row.channelId || 1,
-                sendAt: row.sendAt,
-                isRead: !!row.isRead
+                sendAt: row.notificationSendAt ?? row.sendAt,
+                isRead: !!(row.notificationIsRead ?? row.isRead)
             });
             report.notifications.push(message);
         }
-        //add comment if it not exists
+        // add comment if it not exists
         if (row.commentId && !report.comments.some(comm => comm.id === row.commentId)) {
-            const comment = new Comment({
-                id: row.commentId,
-                reportId: row.id,
-                user: new User(row.commenterId, row.commenterUsername, row.commenterFirstName, row.commenterLastName),
-                text: row.text,
-                createdAt: row.createdAt
-            });
+            const sender = row.commentSenderId ? new User(row.commentSenderId, row.commentSenderUsername) : (row.senderId ? new User(row.senderId, row.senderUsername) : null);
+            const receiver = row.commentReceiverId ? new User(row.commentReceiverId, row.commentReceiverUsername) : (row.receiverId ? new User(row.receiverId, row.receiverUsername) : null);
+            const comment = new Comment(
+                row.commentId,
+                row.id,
+                sender,
+                receiver,
+                row.commentText ?? row.text,
+                row.commentSendAt ?? row.sendAt
+            );
             report.comments.push(comment);
         }
 
@@ -220,15 +229,16 @@ const mapRowsToMessage = (rows) => {
 //map a single comment
 const mapRowToComment = (row) => {
     if (!row) return null;
-
-    return new Comment({
-        id: row.id,
-        reportId: row.reportId,
-        user: new User(row.userId, row.username, row.firstName, row.lastName),
-        text: row.text,
-        createdAt: row.createdAt
-    });
-
+    const sender = row.senderId ? new User(row.senderId, row.senderUsername) : null;
+    const receiver = row.receiverId ? new User(row.receiverId, row.receiverUsername) : null;
+    return new Comment(
+        row.commentId,
+        row.id,
+        sender,
+        receiver,
+        row.text,
+        row.sendAt
+    );
 }
 //map multiple comments
 const mapRowsToComments = (rows) => {

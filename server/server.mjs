@@ -715,13 +715,39 @@ app.post('/notifications/read', isLogged, async (req, res) => {
   }
 });
 
+
+//COMMENTS
+
+app.post('/comments', async (req, res) => { //missing validate({ body: schemas.comment })
+  try {
+    const message = req.body;
+    const fullMessage = await NotificationDAO.createComment(message);
+    return res.status(201).json(fullMessage);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    return res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.post('/comments/read', isLogged, async (req, res) => {
+  const { reportId } = req.body;
+  const userId = req.user.id;
+  let readComments = 0;
+  if (!reportId || !userId) {
+    return res.status(400).json(new errors.BadRequestError("Missing reportId or userId"));
+  }
+  try {
+    readComments = await NotificationDAO.setCommentsAsRead(userId, reportId);
+    res.status(201).json({ success: true, readComments });
+  } catch (err) {
+    res.status(500).json(new errors.InternalServerError());
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening at ${BASE_URL}`);
   console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
 });
-
-
-
 
 
 app.use((err, req, res, next) => {

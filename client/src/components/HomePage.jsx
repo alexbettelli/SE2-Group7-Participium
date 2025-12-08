@@ -18,9 +18,9 @@ export default function HomePage(props) {
     case 3:
       return <PrOfficerPage user={props.user} />;
     case 4:
-      return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} />;
+      return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} setChatWith={props.setChatWith}/>;
     case 6:
-      return <ExternalMaintainerPage user={props.user} setSelectedReport={props.setSelectedReport} />;
+      return <ExternalMaintainerPage user={props.user} setSelectedReport={props.setSelectedReport} setChatWith={props.setChatWith}/>;
     default:
       return <NotFound />;
   }
