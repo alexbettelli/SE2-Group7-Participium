@@ -1,12 +1,12 @@
 import '../styles/AdminPage.css';
 import { useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 
 import NewEmployeeForm from './NewEmployeeForm.jsx';
 import UnassignedEmployeeList from './EmployeeList.jsx';
 
 import UserAPI from '../api/UserAPI.mjs';
 import GenericAPI from '../api/GenericAPI.mjs';
-
 
 export default function AdminPage({ user }) {
   const [employees, setEmployees] = useState([]);
@@ -80,3 +80,9 @@ export default function AdminPage({ user }) {
     </div>
   );
 }
+
+AdminPage.propTypes = {
+  user: PropTypes.shape({
+    username: PropTypes.string.isRequired,
+  }).isRequired,
+}; 

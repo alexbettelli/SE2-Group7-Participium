@@ -6,12 +6,12 @@ import { useNavigate } from "react-router";
 import { Carousel, Modal, Form } from 'react-bootstrap';
 
 import dayjs from 'dayjs';
+import PropTypes from 'prop-types';
 
-import Map from './Map.jsx';
+import MapComponent from './Map.jsx';
 import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import ReportAPI from '../api/ReportAPI.mjs';
-import UserAPI from '../api/UserAPI.mjs';
 import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function ReportPreview(props) {
@@ -79,7 +79,7 @@ export default function ReportPreview(props) {
                     result = await ReportAPI.updateReportStatus(report.id, selectedStatusId);
                 }
                 
-                if (result && result.notification) {
+                if (result?.notification) {
                     report.notifications = [...report.notifications, result.notification];
                     setSelectedReport({ ...report });
                 }
@@ -102,8 +102,7 @@ export default function ReportPreview(props) {
     }, [expanded]);
 
     const getImage = () => {
-        if (report && report.images && report.images.length > 0) return report.images[0].imageUrl;
-        else return NotFoundImage.not_found_url;
+        return report?.images?.[0]?.imageUrl ?? NotFoundImage.not_found_url;
     }
 
     const toggleExpanded = () => {
@@ -114,7 +113,7 @@ export default function ReportPreview(props) {
         <>
             <div className='report-preview-card' onClick={toggleExpanded}>
                 <div className="card-section">
-                    <img src={getImage()} alt="Report image" onError={(e) => NotFoundImage.setSrcToNotFound(e)} />
+                    <img src={getImage()} alt="Report img" onError={(e) => NotFoundImage.setSrcToNotFound(e)} />
                     <div className='card-main-info'>
                         <h3>{report.title}</h3>
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
@@ -236,7 +235,7 @@ export default function ReportPreview(props) {
                     <Form.Select
                         aria-label="Default select example"
                         className="external-select"
-                        value={selectedExternalOfficeId ?? (props.externalOffices && props.externalOffices[0] && props.externalOffices[0].id) ?? ''}
+                        value={selectedExternalOfficeId ?? props.externalOffices?.[0]?.id ?? ''}
                         onChange={(e) => setSelectedExternalOfficeId(Number(e.target.value))}
                     >
                         {props.externalOffices?.map(office => {
@@ -257,6 +256,74 @@ export default function ReportPreview(props) {
     )
 }
 
+ReportPreview.propTypes = {
+  report: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    address: PropTypes.string,
+    createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+    updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+    images: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number,
+        imageUrl: PropTypes.string.isRequired,
+      })
+    ).isRequired,
+    user: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      username: PropTypes.string,
+    }).isRequired,
+    category: PropTypes.shape({
+      id: PropTypes.number,
+      categoryName: PropTypes.string,
+    }).isRequired,
+    status: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      statusName: PropTypes.string.isRequired,
+    }).isRequired,
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
+    externalOffice: PropTypes.shape({
+      id: PropTypes.number,
+      name: PropTypes.string,
+    }),
+    unreadNotifications: PropTypes.number,
+    rejectReason: PropTypes.string,
+    notifications: PropTypes.array,
+  }).isRequired,
+
+  externalOffices: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string,
+      category: PropTypes.shape({
+        id: PropTypes.number,
+        categoryName: PropTypes.string,
+      }),
+    })
+  ),
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    role: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    }).isRequired,
+  }).isRequired,
+  setSelectedReport: PropTypes.func.isRequired,
+  updateReports: PropTypes.func,
+  isExternalMaintainer: PropTypes.bool,
+  showAcceptButton: PropTypes.bool,
+  onAcceptReport: PropTypes.func,
+};
+
+ReportPreview.defaultProps = {
+  externalOffices: [],
+  updateReports: () => {},
+  isExternalMaintainer: false,
+  showAcceptButton: false,
+  onAcceptReport: () => {},
+};
+
 function ReportView(props) {
     const report = props.report;
 
@@ -276,11 +343,11 @@ function ReportView(props) {
                     <div className="media-container">
                         <div className="carousel-wrapper">
                             <Carousel controls={props.report.images.length > 1} indicators={props.report.images.length > 1}>
-                                {props.report.images.map((image, index) => {
-                                    return <Carousel.Item key={index}>
+                                {props.report.images.map((image) => {
+                                    return <Carousel.Item key={image.id ?? image.imageUrl}>
                                         <img className="d-block"
                                             src={image.imageUrl}
-                                            alt={`Image ${index + 1}`}
+                                            alt={`Img ${image.id ?? image.imageUrl}`}
                                             onError={(e) => NotFoundImage.setSrcToNotFound(e)}
                                         />
                                     </Carousel.Item>;
@@ -288,7 +355,7 @@ function ReportView(props) {
                             </Carousel>
                         </div>
                         <div className="map-container-popup">
-                            <Map lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
+                            <MapComponent lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
                         </div>
                     </div>
 
@@ -325,3 +392,36 @@ function ReportView(props) {
         </>
     )
 }
+
+ReportView.propTypes = {
+  report: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    images: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number,
+        imageUrl: PropTypes.string.isRequired,
+      })
+    ).isRequired,
+    category: PropTypes.shape({
+      categoryName: PropTypes.string,
+    }).isRequired,
+    user: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      username: PropTypes.string,
+    }).isRequired,
+    createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+    updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+    address: PropTypes.string,
+    description: PropTypes.string,
+    status: PropTypes.shape({
+      id: PropTypes.number,
+      statusName: PropTypes.string,
+    }),
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
+    rejectReason: PropTypes.string,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+

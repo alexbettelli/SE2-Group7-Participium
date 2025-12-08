@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 export default function ReportPopup(props) {
   return (
 
@@ -15,3 +17,13 @@ export default function ReportPopup(props) {
     </div>
   );
 }
+
+ReportPopup.propTypes = {
+  report: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    category: PropTypes.shape({
+      categoryName: PropTypes.string
+    })
+  }).isRequired,
+  handlePopUpDetailsClick: PropTypes.func.isRequired
+};
