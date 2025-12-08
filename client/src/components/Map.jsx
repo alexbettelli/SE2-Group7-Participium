@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
@@ -6,7 +7,7 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 
-export default function Map(props) {
+export default function MapComponent(props) {
     const { lat, lng, category } = props;
 
     const mapRef = useRef(null);
@@ -63,3 +64,9 @@ export default function Map(props) {
         <div ref={mapRef} style={{ width: "50%", height: "250px" }} />
     );
 }
+
+MapComponent.propTypes = {
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
+    category: PropTypes.string.isRequired
+};

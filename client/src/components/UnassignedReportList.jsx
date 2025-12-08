@@ -1,7 +1,7 @@
 import { Table, Form, Button, Carousel } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import Map from './Map.jsx';
+import MapComponent from './Map.jsx';
 import '../styles/UnassignedReportList.css';
 import PropTypes from 'prop-types';
 
@@ -165,7 +165,7 @@ function ReportView(props) {
               </Carousel>
             </div>
             <div className="map-container-popup">
-              <Map lat={report.latitude} lng={report.longitude} />
+              <MapComponent lat={report.latitude} lng={report.longitude} />
             </div>
           </div>
           <div className="report-details">

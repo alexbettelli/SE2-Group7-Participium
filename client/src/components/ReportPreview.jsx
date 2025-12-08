@@ -8,7 +8,7 @@ import { Carousel, Modal, Form } from 'react-bootstrap';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
-import Map from './Map.jsx';
+import MapComponent from './Map.jsx';
 import * as NotFoundImage from '../utils/NotFoundImage.mjs';
 
 import ReportAPI from '../api/ReportAPI.mjs';
@@ -95,8 +95,6 @@ export default function ReportPreview(props) {
             updateReportStatus();
         }
     }, [updateStatus]);
-
-
 
     useEffect(() => {
         if (expanded) document.body.style.overflowY = 'hidden';
@@ -357,7 +355,7 @@ function ReportView(props) {
                             </Carousel>
                         </div>
                         <div className="map-container-popup">
-                            <Map lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
+                            <MapComponent lat={report.latitude} lng={report.longitude} category={report.category.categoryName} />
                         </div>
                     </div>
 

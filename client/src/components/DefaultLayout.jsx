@@ -1,4 +1,5 @@
 import { Outlet } from "react-router";
+import PropTypes from 'prop-types';
 import DefaultFooter from './Footer';
 import NavHeader from './NavBar';
 import { Container } from "react-bootstrap";
@@ -16,5 +17,12 @@ function DefaultLayout(props) {
         </div>
     );
 }
+
+DefaultLayout.propTypes = {
+    user: PropTypes.object,
+    handleLogout: PropTypes.func.isRequired,
+    unreadNotifications: PropTypes.number,
+    setUnreadNotifications: PropTypes.func.isRequired
+};
 
 export default DefaultLayout;
