@@ -10,6 +10,10 @@ import app from '../server.mjs';
 const schemaPath = path.join(process.cwd(), 'data', 'schema.sql');
 const schema = fs.readFileSync(schemaPath, "utf-8");
 
+const TEST_UPLOADS_DIR = path.join(process.cwd(), 'tests', 'test_uploads');
+const TEST_REPORTS_DIR = path.join(TEST_UPLOADS_DIR, 'reports');
+const TEST_PROFILES_DIR = path.join(TEST_UPLOADS_DIR, 'profiles');
+
 const USER_TYPES = [
     { type: 'Citizen' },
     { type: 'System Administrator' },
@@ -237,10 +241,56 @@ export const resetReports = async () => {
     }
 };
 
+export const setupTestUploadDirs = () => {
+    try {
+        if (!fs.existsSync(TEST_UPLOADS_DIR)) {
+            fs.mkdirSync(TEST_UPLOADS_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(TEST_REPORTS_DIR)) {
+            fs.mkdirSync(TEST_REPORTS_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(TEST_PROFILES_DIR)) {
+            fs.mkdirSync(TEST_PROFILES_DIR, { recursive: true });
+        }
+        console.log('Test upload directories created successfully');
+    } catch (error) {
+        throw error;
+    }
+};
+export const cleanupTestUploadDirs = () => {
+    try {
+        const cleanDir = (dirPath) => {
+            if (fs.existsSync(dirPath)) {
+                const files = fs.readdirSync(dirPath);
+                for (const file of files) {
+                    const filePath = path.join(dirPath, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        cleanDir(filePath);
+                        fs.rmdirSync(filePath);
+                    } else {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+        };
+
+        cleanDir(TEST_UPLOADS_DIR);
+        if (fs.existsSync(TEST_UPLOADS_DIR)) {
+            fs.rmdirSync(TEST_UPLOADS_DIR);
+        }
+        console.log('Test upload directories cleaned successfully');
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 export default {
     setupTestDatabase,
     teardownTestDatabase,
+    setupTestUploadDirs,
+    cleanupTestUploadDirs,
     setupAgent,
     login,
     loginAsUser,

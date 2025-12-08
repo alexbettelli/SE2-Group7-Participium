@@ -43,11 +43,12 @@ const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
 const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || 30;
+const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads';
 
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/images', express.static(path.join(__dirname, 'uploads')));
+app.use('/images', express.static(path.join(__dirname, UPLOADS_DIR)));
 
 const corsOptions = {
   origin: CORS_ORIGIN,
@@ -58,11 +59,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 const upload = multer();
-const upload_dir = 'uploads';
+const upload_dir = UPLOADS_DIR;
 
 const profileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, 'uploads', 'profiles');
+    const dir = path.join(__dirname, UPLOADS_DIR, 'profiles');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -601,12 +602,13 @@ app.put('/api/user/profile', isLogged, isCitizen, uploadProfile.single('profileP
       const extension = req.file.originalname.split('.').pop();
       filename = `${uuidv4()}.${extension}`;
 
-      const directory = path.join(__dirname, 'uploads', 'profiles');
+      const directory = path.join(__dirname, UPLOADS_DIR, 'profiles');
       if (!fsSync.existsSync(directory)) fsSync.mkdirSync(directory, { recursive: true });
       fsSync.writeFileSync(path.join(directory, filename), req.file.buffer);
 
       if (oldImageUrl) {
-        const oldPhotoPath = path.join(__dirname, 'uploads', 'profiles', oldImageUrl);
+        const filename = oldImageUrl.includes('/') ? oldImageUrl.split('/').pop() : oldImageUrl;
+        const oldPhotoPath = path.join(__dirname, UPLOADS_DIR, 'profiles', filename);
         try {
           await fsPromises.unlink(oldPhotoPath);
         } catch (err) {
@@ -645,7 +647,8 @@ app.delete('/api/user/profile/photo', isLogged, isCitizen, async (req, res) => {
     const oldImageUrl = currentUser.imageUrl;
 
     if (oldImageUrl) {
-      const oldPhotoPath = path.join(__dirname, 'uploads', 'profiles', oldImageUrl);
+      const filename = oldImageUrl.includes('/') ? oldImageUrl.split('/').pop() : oldImageUrl;
+      const oldPhotoPath = path.join(__dirname, UPLOADS_DIR, 'profiles', filename);
       try {
         await fsPromises.unlink(oldPhotoPath);
       } catch (err) {

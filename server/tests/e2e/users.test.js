@@ -2,12 +2,15 @@ import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
 import {
   setupTestDatabase,
   teardownTestDatabase,
+  setupTestUploadDirs,
+  cleanupTestUploadDirs,
   setupAgent,
   loginAsUser,
   loginAsAdmin,
   logout,
   login,
 } from '../setup.mjs';
+import path from 'path';
 
 describe('E2E User Routes', () => {
 
@@ -15,6 +18,7 @@ describe('E2E User Routes', () => {
 
   beforeAll(async () => {
     await setupTestDatabase();
+    setupTestUploadDirs(); // Crea le cartelle di test per gli upload
     agent = await setupAgent();
   });
 
@@ -24,6 +28,7 @@ describe('E2E User Routes', () => {
 
   // Cleanup after all tests
   afterAll(async () => {
+    cleanupTestUploadDirs(); // Pulisce i file uploadati durante i test
     await teardownTestDatabase();
   });
 
@@ -76,25 +81,28 @@ describe('E2E User Routes', () => {
     const res = await agent.put('/api/user/profile')
       .field('telegramUsername', '@e2e_tele')
       .field('allowEmailNotification', '1')
-      .attach('profilePhoto', Buffer.from('fakeimage'), 'photo.jpg');
+      .attach('profilePhoto', path.join(__dirname, 'fixtures/img1.jpg'));
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toBeDefined();
-
     expect(res.body).toHaveProperty('imageUrl');
-    
   });
 
   it('DELETE /api/user/profile/photo - delete profile photo', async () => {
+    // First upload a profile photo
     await loginAsUser(agent);
+    const uploadRes = await agent.put('/api/user/profile')
+      .field('telegramUsername', '@e2e_tele_delete')
+      .field('allowEmailNotification', '1')
+      .attach('profilePhoto', path.join(__dirname, 'fixtures/img2.jpg'));
 
-    const res = await agent.delete('/api/user/profile/photo');
-    expect([200, 401, 500]).toContain(res.statusCode);
-    if (res.statusCode === 200) {
-      expect(res.body).toHaveProperty('message');
-    } else {
-      expect(res.body).toHaveProperty('error');
-    }
+    expect(uploadRes.statusCode).toBe(200);
+    expect(uploadRes.body).toHaveProperty('imageUrl');
+
+    // Then delete the uploaded photo
+    const deleteRes = await agent.delete('/api/user/profile/photo');
+    expect(deleteRes.statusCode).toBe(200);
+    expect(deleteRes.body).toHaveProperty('message');
   });
 });
 

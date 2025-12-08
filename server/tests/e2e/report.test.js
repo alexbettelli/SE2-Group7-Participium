@@ -2,6 +2,8 @@ import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
 import {
     setupTestDatabase,
     teardownTestDatabase,
+    setupTestUploadDirs,
+    cleanupTestUploadDirs,
     resetReports,
     setupAgent,
     loginAsUser,
@@ -17,6 +19,7 @@ describe('E2E reports routes', () => {
     beforeAll(async () => {
         await setupTestDatabase();
         await resetReports();
+        setupTestUploadDirs();
         agent = await setupAgent();
     });
 
@@ -25,6 +28,7 @@ describe('E2E reports routes', () => {
     });
     // Cleanup after all tests
     afterAll(async () => {
+        cleanupTestUploadDirs();
         await teardownTestDatabase();
     });
     describe('GET /reports/statuses', () => {
