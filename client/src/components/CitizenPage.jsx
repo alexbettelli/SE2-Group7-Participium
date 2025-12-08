@@ -22,7 +22,8 @@ import ReportAPI from '../api/ReportAPI.mjs';
 import HelpIcon from './HelpIcon.jsx';
 import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
-export default function CitizenPage({ user }) {
+export default function CitizenPage(props) {
+    const { user } = props;
     const navigate = useNavigate();
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);

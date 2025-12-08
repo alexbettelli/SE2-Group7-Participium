@@ -8,7 +8,7 @@ import NotificationAPI from '../api/NotificationAPI.mjs';
 
 
 export default function ChatPage(props) {
-    const { report, user, unreadNotifications, setUnreadNotifications, chatWith } = props;
+    const { report, user, setUnreadNotifications, chatWith } = props;
     const [messages, setMessages] = useState(chatWith === "user" ? report.notifications : report.comments);
     const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
@@ -38,7 +38,6 @@ export default function ChatPage(props) {
         if (report?.id) {
             const sortedMessages = (chatWith === "user") ? [...report.notifications].sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt)) : [...report.comments].sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt));
             setMessages(sortedMessages);
-            console.log(report);
         }
     }, [report, user.id]);
 

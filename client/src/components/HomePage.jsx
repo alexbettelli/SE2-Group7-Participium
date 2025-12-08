@@ -12,7 +12,7 @@ export default function HomePage(props) {
 
   switch (props.user.role.id) {
     case 1:
-      return <CitizenPage user={props.user} />;
+      return <CitizenPage user={props.user} setChatWith={props.setChatWith}/>;
     case 2:
       return <AdminPage user={props.user} />;
     case 3:
