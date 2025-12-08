@@ -163,7 +163,7 @@ const getAssignedReports = (userId) => {
             WHERE r.employeeId = ?`;
 
         db.all(query, [userId], (err, rows) => {
-            if (err) return reject(false);
+            if (err) return reject(new Error(err.message || 'Database error'));
             resolve(Mapper.mapRowsToReports(rows));
         });
     });

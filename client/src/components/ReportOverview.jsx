@@ -1,5 +1,6 @@
 import '../styles/ReportOverview.css';
 import { Carousel } from 'react-bootstrap';
+import PropTypes from 'prop-types';
 
 const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, showNewReportBtn = true }) => {
 
@@ -56,7 +57,7 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
                                         <img
                                             className="d-block w-100"
                                             src={image.imageUrl}
-                                            alt={`Report image ${index + 1}`}
+                                            alt={`${index + 1} of ${report.images.length}`}
                                         />
                                     </Carousel.Item>
                                 ))}
@@ -101,6 +102,31 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
             </div>
         </div>
     );
+};
+
+ReportOverview.propTypes = {
+    user: PropTypes.shape({
+        username: PropTypes.string
+    }),
+    report: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        category: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        address: PropTypes.string,
+        latitude: PropTypes.number.isRequired,
+        longitude: PropTypes.number.isRequired,
+        status: PropTypes.string.isRequired,
+        images: PropTypes.arrayOf(PropTypes.shape({
+            imageUrl: PropTypes.string.isRequired
+        })),
+        username: PropTypes.string,
+        isAnonymous: PropTypes.bool,
+        createdAt: PropTypes.string
+    }).isRequired,
+    onBackToHome: PropTypes.func,
+    showSuccessBanner: PropTypes.bool,
+    showNewReportBtn: PropTypes.bool
 };
 
 export default ReportOverview;

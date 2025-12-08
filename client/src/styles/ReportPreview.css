@@ -119,7 +119,6 @@ div.report-view{
 }
 
 div.report-view-header {
-    position: relative;
     border-bottom: 1px solid #ccc;
     display: flex;
     align-items: center;

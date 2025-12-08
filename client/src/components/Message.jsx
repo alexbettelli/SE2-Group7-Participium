@@ -1,5 +1,6 @@
 import "../styles/Message.css";
 import dayjs from 'dayjs';
+import PropTypes from 'prop-types';
 
 export default function Message(props) {
     const { message } = props;
@@ -25,3 +26,12 @@ export default function Message(props) {
         </div>
     );
 }
+
+Message.propTypes = {
+    message: PropTypes.shape({
+        text: PropTypes.string.isRequired,
+        sendAt: PropTypes.string,
+        sender: PropTypes.object
+    }).isRequired,
+    user: PropTypes.object
+};
