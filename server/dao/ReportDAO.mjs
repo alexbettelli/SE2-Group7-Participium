@@ -1,7 +1,6 @@
 import db from '../data/db.mjs';
 import dayjs from 'dayjs';
-import Mapper from '../utils/mapper.mjs'
-import e from 'express';
+import Mapper from '../utils/mapper.mjs';
 
 const getAllReports = () => {
     const query = `
@@ -273,15 +272,119 @@ const updateReportStatus = (userId, reportId, statusId) => {
     });
 }
 
+
+const getExternalOfficeAssignedReports = (userId) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName,
+             ri.id AS imageId, ri.imageUrl, rs.statusName,
+             n.id as messageId, n.senderId, sender.username as senderUsername,
+             n.receiverId, receiver.username as receiverUsername,
+             n.text, n.sendAt, n.isRead
+      FROM report r
+      JOIN report_status rs ON r.statusId = rs.id
+      JOIN report_category rc on r.catId = rc.id
+      JOIN user u on r.userId = u.id
+      LEFT JOIN user e on r.employeeId = e.id
+      JOIN report_image ri on r.id = ri.reportId
+      JOIN external_office_employee eoe ON eoe.userId = ?
+      JOIN external_office eo ON eo.id = eoe.external_officeId
+      LEFT JOIN notification n ON r.id = n.reportId AND n.channelId = 1
+      LEFT JOIN user sender ON n.senderId = sender.id
+      LEFT JOIN user receiver ON n.receiverId = receiver.id
+      WHERE r.catId = eo.catId 
+        AND r.externalOfficeId = eo.id
+        AND r.statusId = 2
+      ORDER BY r.updatedAt DESC
+    `;
+    db.all(query, [userId], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows?.length ? Mapper.mapRowsToReports(rows) : []);
+    });
+  });
+};
+
+// Mostra solo i report accettati da quel maintainer (externalMaintainerId)
+export const getExternalMaintainerMyReports = (userId) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName,
+             ri.id AS imageId, ri.imageUrl, rs.statusName,
+             n.id as messageId, n.senderId, sender.username as senderUsername,
+             n.receiverId, receiver.username as receiverUsername,
+             n.text, n.sendAt, n.isRead
+      FROM report r
+      JOIN report_status rs ON r.statusId = rs.id
+      JOIN report_category rc on r.catId = rc.id
+      JOIN user u on r.userId = u.id
+      LEFT JOIN user e on r.employeeId = e.id
+      JOIN report_image ri on r.id = ri.reportId
+      LEFT JOIN notification n ON r.id = n.reportId AND n.channelId = 1
+      LEFT JOIN user sender ON n.senderId = sender.id
+      LEFT JOIN user receiver ON n.receiverId = receiver.id
+      WHERE r.externalMaintainerId = ?
+        AND r.statusId IN (2,3,6)
+      ORDER BY r.updatedAt DESC
+    `;
+    db.all(query, [userId], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows?.length ? Mapper.mapRowsToReports(rows) : []);
+    });
+  });
+};
+
+export const updateExternalMaintainerReportStatus = (userId, reportId, statusId) => {
+  return new Promise((resolve, reject) => {
+    const now = dayjs().toString();
+
+    if (statusId === 'accept') {
+      const acceptSql = `
+        UPDATE report 
+        SET externalMaintainerId = ?, 
+            statusId = 3,
+            updatedAt = ?
+        WHERE id = ?
+          AND statusId = 2
+          AND externalOfficeId IN (
+            SELECT external_officeId FROM external_office_employee WHERE userId = ?
+          )
+      `;
+      db.run(acceptSql, [userId, now, reportId, userId], function (err) {
+        if (err) return reject(err);
+        return resolve({ ok: this.changes > 0 });
+      });
+      return;
+    }
+
+    const updateSql = `
+      UPDATE report 
+      SET statusId = ?, 
+          updatedAt = ?
+      WHERE id = ?
+        AND externalMaintainerId = ?
+        AND externalOfficeId IN (
+          SELECT external_officeId FROM external_office_employee WHERE userId = ?
+        )
+    `;
+    db.run(updateSql, [Number(statusId), now, reportId, userId, userId], function (err) {
+      if (err) return reject(err);
+      return resolve({ ok: this.changes > 0 });
+    });
+  });
+};
+
 const ReportDAO = {
-    getAllReports,
-    getReportsByUserId,
-    addNewReport,
-    rejectReport,
-    getAssignedReports,
-    getUnassignedReports,
-    assignReportToOfficer,
-    assignReportToExternalOffice,
-    updateReportStatus
-}
-export default ReportDAO
+  getAllReports,
+  getReportsByUserId,
+  addNewReport,
+  rejectReport,
+  getAssignedReports,
+  getUnassignedReports,
+  assignReportToOfficer,
+  assignReportToExternalOffice,
+  updateReportStatus,
+  getExternalOfficeAssignedReports,
+  getExternalMaintainerMyReports,
+  updateExternalMaintainerReportStatus
+};
+export default ReportDAO;

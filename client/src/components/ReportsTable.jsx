@@ -1,6 +1,7 @@
 import ReportPreview from './ReportPreview.jsx';
 
 export default function ReportsTable(props) {
+    const externalOffices = props.externalOffices ?? []; 
 
     return (
         <>
@@ -8,15 +9,21 @@ export default function ReportsTable(props) {
                 <p>There are no reports at the moment.</p> :
                 <div className="reports-table">
                     {props.reports.map(report => {
+                        const filteredOffices = externalOffices.filter(
+                            office => office?.category?.id === report?.category?.id
+                        );
                         return <ReportRow
                             key={report.id}
                             report={report}
-                            externalOffices={props.externalOffices?.filter(office => office.category.id === report.category.id)}
+                            externalOffices={filteredOffices}
                             user={props.user}
                             setSelectedReport={props.setSelectedReport}
-                            updateReports={props.updateReports} />
-                    }
-                    )}
+                            updateReports={props.updateReports}
+                            isExternalMaintainer={props.isExternalMaintainer}
+                            showAcceptButton={props.showAcceptButton}
+                            onAcceptReport={props.onAcceptReport}
+                        />
+                    })}
                 </div>
             }
         </>
@@ -24,11 +31,21 @@ export default function ReportsTable(props) {
 }
 
 function ReportRow(props) {
-    const { report, externalOffices,setSelectedReport, updateReports } = props;
+    const { report, externalOffices = [], setSelectedReport, updateReports } = props; 
 
     return (
         <div className='reports-table-row'>
-            <ReportPreview key={report.id} report={report} externalOffices={externalOffices} user={props.user} setSelectedReport={setSelectedReport} updateReports={updateReports} />
+            <ReportPreview
+                key={report.id}
+                report={report}
+                externalOffices={externalOffices}
+                user={props.user}
+                setSelectedReport={setSelectedReport}
+                updateReports={updateReports}
+                isExternalMaintainer={props.isExternalMaintainer}
+                showAcceptButton={props.showAcceptButton}
+                onAcceptReport={props.onAcceptReport}
+            />
         </div>
     )
 }

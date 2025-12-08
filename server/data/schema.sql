@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS report (
   updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
   rejectReason TEXT,
   employeeId INTEGER,
+  externalMaintainerId INTEGER,
   FOREIGN KEY (userId) REFERENCES user(id),
   FOREIGN KEY (catId) REFERENCES report_category(id),
   FOREIGN KEY (statusId) REFERENCES report_status(id),
