@@ -32,6 +32,7 @@ function App() {
       .catch(e => {
         setLoggedIn(false);
         setUser(null);
+        console.error(e);
       });
   }, []);
 
