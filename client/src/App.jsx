@@ -21,6 +21,7 @@ function App() {
   const [loginError, setLoginError] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
   const [unreadNotifications, setUnreadNotifications] = useState(null);
+  const [chatWith, setChatWith] = useState(null);
 
   useEffect(() => {
     UserAPI.getUserInfo()
@@ -53,11 +54,11 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout user={user} handleLogout={handleLogout} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} />}>
-        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport} /> : <AuthenticationScreen handleLogin={handleLogin} loginError={loginError} />} />
+        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/> : <AuthenticationScreen handleLogin={handleLogin} loginError={loginError} />} />
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/" />} />
         <Route path="/profile" element={user && user.role?.id === 1 ? (<ProfilePage user={user} setUser={setUser} />) : (<Navigate to="/" replace />)} />
-        <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/" />} />
-        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} /> : <Navigate to="/" />} />
+        <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/> : <Navigate to="/" />} />
+        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} chatWith={chatWith}/> : <Navigate to="/" />} />
         <Route path="/help" element={<HelpCenter user={user} />} />
         <Route path="*" element={<NotFound />} />
       </Route>

@@ -58,10 +58,58 @@ const setNotificationsAsRead = (userId, reportId) => {
     });
 }
 
+
+//COMMENTS
+
+const createComment = (message) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO comment (reportId, senderId, receiverId, text, sendAt)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        const now = dayjs().toString();
+        db.run(query, [
+            message.reportId,
+            message.senderId || null,
+            message.receiverId,
+            message.text,
+            now
+        ], function (err) {
+            if (err) return reject(err);
+            const newId = this.lastID;
+            db.get(`
+                SELECT co.*, 
+                       sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
+                       receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
+                FROM comment co
+                LEFT JOIN user sender ON co.senderId = sender.id
+                LEFT JOIN user receiver ON co.receiverId = receiver.id
+                WHERE co.id = ?
+            `, [newId], (err, row) => {
+                if (err || !row) return reject(err);
+                const msg = Mapper.mapRowToComment(row);
+                resolve(msg);
+            });
+        });
+    });
+};
+
+const setCommentsAsRead = (userId, reportId) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE comment SET isRead = 1 WHERE reportId = ? AND receiverId = ? AND isRead = 0`;
+        db.run(query, [reportId, userId], function (err) {
+            if (err) return reject(err);
+            resolve(this.changes);
+        });
+    });
+}
+
+
 const NotificationDAO = {
     createNotification,
-    //getUnreadNotifications,
-    setNotificationsAsRead
+    setNotificationsAsRead,
+    createComment,
+    setCommentsAsRead
 }
 
 export default NotificationDAO;

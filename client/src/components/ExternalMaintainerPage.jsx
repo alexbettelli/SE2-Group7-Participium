@@ -69,6 +69,7 @@ export default function ExternalMaintainerPage(props) {
                         setSelectedReport={props.setSelectedReport}
                         updateReports={updateReports}
                         isExternalMaintainer={true}
+                        setChatWith={props.setChatWith}
                     />
                 </div>
             </div>

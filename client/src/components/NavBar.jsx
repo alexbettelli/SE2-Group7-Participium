@@ -86,7 +86,7 @@ useEffect(() => {
         {/* Right side: Icons + Buttons */}
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto navbar-nav-custom">
-            {user && (user.role?.id === 1 || user.role?.id === 4) && (
+            {user && (user.role?.id === 1 || user.role?.id === 4 || user.role?.id === 6) && (
               <div
                 onClick={() => {
                   user.role.id === 1 ? navigate("/myreports") : navigate("/");

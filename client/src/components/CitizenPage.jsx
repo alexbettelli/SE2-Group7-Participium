@@ -22,7 +22,8 @@ import HelpIcon from './HelpIcon.jsx';
 import getStatusClass from '../utils/StatusColorsMapper.mjs';
 import PropTypes from 'prop-types'; 
 
-export default function CitizenPage({ user }) {
+export default function CitizenPage(props) {
+    const { user } = props;
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);

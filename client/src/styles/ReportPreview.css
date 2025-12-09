@@ -237,6 +237,42 @@ div.field p {
     gap: 0.7rem;
 }
 
+
+.btn-chat {
+    background: var(--color-green);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.7rem 2.2rem;
+    box-shadow: 0 4px 16px rgba(83, 153, 135, 0.18);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    position: relative;
+    outline: none;
+    white-space: nowrap;
+}
+
+.btn-chat:hover {
+    background: var(--color-green);
+    box-shadow: 0 8px 24px rgba(83, 153, 135, 0.28);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.btn-chat:active {
+    background: var(--color-green);
+    transform: scale(0.98);
+}
+
+.chat-btn-flex {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
 .chat-btn-notification-wrapper {
     position: relative;
     display: inline-block;

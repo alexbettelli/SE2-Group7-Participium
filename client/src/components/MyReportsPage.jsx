@@ -8,7 +8,7 @@ import ReportsTable from "./ReportsTable.jsx";
 import ReportAPI from '../api/ReportAPI.mjs';
 
 export default function MyReportsPage(props) {
-    const { user, setSelectedReport } = props;
+    const { user, setSelectedReport, setChatWith} = props;
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -38,6 +38,7 @@ export default function MyReportsPage(props) {
                 user={user}
                 reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) - (a.unreadNotifications || 0))}
                 setSelectedReport={setSelectedReport}
+                setChatWith={setChatWith}
             />
         </div>
     );
