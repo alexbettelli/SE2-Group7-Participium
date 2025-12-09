@@ -54,6 +54,37 @@
     box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
 }
 
+
+.external-maintainer-page .btn-accept,
+.external-maintainer-page .btn-change-status,
+.external-maintainer-page .btn-chat,
+.external-maintainer-page .btn-assign-external,
+.external-maintainer-page .btn-close-modal,
+.external-maintainer-page .btn-save-modal {
+  font-size: 1rem;    
+  padding: 0.35rem 0.6rem;
+  border-radius: 5px;     
+  gap: 0.35rem;           
+}
+
+
+.external-maintainer-page .report-preview-card .status-badge,
+.external-maintainer-page .report-preview-card .report-id-badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 10px;
+}
+
+/* hide map */
+.external-maintainer-page .report-preview-card .map-preview {
+  display: none !important;
+}
+.external-maintainer-page .chat-btn-notification-count {
+  transform: scale(0.7);        
+  transform-origin: top right;  
+}
+
+
 @media (max-width: 1200px) {
     .two-columns {
         grid-template-columns: 1fr;

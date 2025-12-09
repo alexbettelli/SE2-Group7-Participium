@@ -33,6 +33,12 @@ class ForbiddenError extends AppError {
     }
 }
 
+class NotFoundError extends AppError {
+    constructor(error = "The requested resource was not found."){
+        super(404, "Not Found", error);
+    } 
+}
+
 class ConflictError extends AppError {
     constructor(error = "Conflict on the resource."){
         super(409, "Conflict Error", error);
@@ -52,4 +58,4 @@ class ServiceUnvailableError extends AppError {
 }
 
 
-export { AppError, BadRequestError, UnauthorizedError, ForbiddenError, ConflictError, InternalServerError, ServiceUnvailableError }
+export { AppError, BadRequestError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError, InternalServerError, ServiceUnvailableError }

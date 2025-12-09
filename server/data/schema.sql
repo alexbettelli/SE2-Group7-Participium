@@ -86,35 +86,27 @@ CREATE TABLE IF NOT EXISTS channel (
 );
 CREATE TABLE IF NOT EXISTS comment (
   id INTEGER PRIMARY KEY,
-  reportId INTEGER,
+  reportId INTEGER NOT NULL,
   senderId INTEGER NULL,
-  receiverId INTEGER NOT NULL,
   text TEXT NOT NULL,
   sendAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  receiverId INTEGER,
   isRead INTEGER DEFAULT 0,
   FOREIGN KEY (reportId) REFERENCES report(id),
   FOREIGN KEY (senderId) REFERENCES user(id),
   FOREIGN KEY (receiverId) REFERENCES user(id)
 );
 CREATE TABLE IF NOT EXISTS notification (
-    id INTEGER PRIMARY KEY,
-    reportId INTEGER,
-    senderId INTEGER NULL,
-    receiverId INTEGER NOT NULL,
-    text TEXT NOT NULL,
-    channelId INTEGER NOT NULL,
-    sendAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    isRead	INTEGER DEFAULT 0,
-    FOREIGN KEY (reportId) REFERENCES report(id),
-    FOREIGN KEY (senderId) REFERENCES user(id),
-    FOREIGN KEY (receiverId) REFERENCES user(id),
-    FOREIGN KEY (channelId) REFERENCES channel(id)
+  id INTEGER PRIMARY KEY,
+  reportId INTEGER,
+  senderId INTEGER NULL,
+  receiverId INTEGER NOT NULL,
+  text TEXT NOT NULL,
+  channelId INTEGER NOT NULL,
+  sendAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  isRead INTEGER DEFAULT 0,
+  FOREIGN KEY (reportId) REFERENCES report(id),
+  FOREIGN KEY (senderId) REFERENCES user(id),
+  FOREIGN KEY (receiverId) REFERENCES user(id),
+  FOREIGN KEY (channelId) REFERENCES channel(id)
 );
-
-
-
-
-
-
-
-

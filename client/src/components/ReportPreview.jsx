@@ -117,6 +117,15 @@ export default function ReportPreview(props) {
             <div className='report-preview-card' onClick={toggleExpanded}>
                 <div className="card-section">
                     <img src={getImage()} alt="Report img" onError={(e) => NotFoundImage.setSrcToNotFound(e)} />
+                    <div className="map-preview">
+                        <MapComponent 
+                            lat={report.latitude} 
+                            lng={report.longitude} 
+                            category={report.category.categoryName} 
+                            zoomable={false} 
+                            movable={false} 
+                        />
+                    </div>
                     <div className='card-main-info'>
                         <h3>{report.title}</h3>
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
