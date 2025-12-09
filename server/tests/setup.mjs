@@ -19,13 +19,15 @@ const USER_TYPES = [
     { type: 'System Administrator' },
     { type: 'Municipal Public Relations Officer' },
     { type: 'Technical Office Staff Member' },
-    { type: 'Unassigned Employee' }
+    { type: 'Unassigned Employee' },
+    { type: 'External Maintainer' }
 ];
 const USERS = [
     { username: 'user', password: 'userpassword', email: 'user@email.it', firstName: 'us', lastName: 'er', typeId: 1, allowEmailNotification: 1 },
     { username: 'admin', password: 'adminpassword', email: 'admin@email.it', firstName: 'ad', lastName: 'min', typeId: 2, allowEmailNotification: 0 },
     { username: 'userPr', password: 'prpassword', email: 'userPr@email.it', firstName: 'user', lastName: 'Pr', typeId: 3, allowEmailNotification: 0 },
     { username: 'userOfficer', password: 'officerpassword', email: 'userOfficer@email.it', firstName: 'user', lastName: 'officer', typeId: 4, allowEmailNotification: 0 },
+    { username: 'externalMaintainer', password: 'maintainerpassword', email: 'externalMaintainer@email.it', firstName: 'external', lastName: 'maintainer', typeId: 6, allowEmailNotification: 0 }
 ];
 const REPORT_CATEGORIES = [
     'Roads and Infrastructure',
@@ -49,10 +51,10 @@ const OFFICES = [
 ];
 
 const EXTERNAL_OFFICES = [
-    { name: 'LAVORINCORSO', catId: 1 },
-    { name: 'AMIAT S.p.A', catId: 2 },
-    { name: 'ICEF S.r.l', catId: 3 },
-    { name: 'GTT S.p.A', catId: 4 }
+  { name: 'LAVORINCORSO', catId: 1 },
+  { name: 'AMIAT S.p.A', catId: 2 },
+  { name: 'ICEF S.r.l', catId: 3 },
+  { name: 'GTT S.p.A', catId: 4 }
 ];
 const REPORTS = [
     {
@@ -154,6 +156,21 @@ const insertInitialData = async () => {
             db.run(`INSERT INTO external_office (name, catId) VALUES (?, ?)`, [office.name, office.catId], (err) => err ? rej(err) : res())
         );
     }
+
+
+    const externalMaintainer = await new Promise((res, rej) =>
+      db.get(`SELECT id FROM user WHERE username = ?`, ['externalMaintainer'], (err, row) => err ? rej(err) : res(row))
+    );
+    const extOfficeCat1 = await new Promise((res, rej) =>
+      db.get(`SELECT id FROM external_office WHERE catId = 1 LIMIT 1`, [], (err, row) => err ? rej(err) : res(row))
+    );
+    await new Promise((res, rej) =>
+      db.run(
+        `INSERT INTO external_office_employee (external_officeId, userId) VALUES (?, ?)`,
+        [extOfficeCat1.id, externalMaintainer.id],
+        (err) => err ? rej(err) : res()
+      )
+    );
 };
 export const setupTestDatabase = async () => {
     try {
