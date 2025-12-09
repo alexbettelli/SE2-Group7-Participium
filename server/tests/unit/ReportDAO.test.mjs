@@ -1,5 +1,7 @@
-import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, beforeEach, vi } from 'vitest';
 import ReportDAO from '../../dao/ReportDAO.mjs';
+import db from '../../data/db.mjs';
+
 import {
     setupTestDatabase,
     teardownTestDatabase,
@@ -35,6 +37,7 @@ describe('ReportDAO', () => {
             expect(report1.images[0].imageUrl).toContain(`/reports/${report1.id}/img2.png`);
         });
     });
+
     describe('getReportsByUserId', () => {
         it('should return reports for a given user id', async () => {
 
@@ -64,6 +67,7 @@ describe('ReportDAO', () => {
             expect(reports).toHaveLength(0);
         });
     });
+
     describe('addNewReport', () => {
         it('should add a new report successfully', async () => {
             const newReport = {
@@ -97,6 +101,7 @@ describe('ReportDAO', () => {
             expect(report.images.length).toBe(1);
         });
     });
+
     describe('getUnassignedReports', () => {
         it('should returns mapped reports for unassigned reports', async () => {
 
@@ -127,6 +132,7 @@ describe('ReportDAO', () => {
             expect(unassignedAfter.length).toBe(unassignedBefore.length - 1);
         });
     });
+
     describe('assignReportToOfficer', () => {
         it('should assign report to officer successfully', async () => {
             const unassigned = await ReportDAO.getUnassignedReports();
@@ -174,6 +180,8 @@ describe('ReportDAO', () => {
         });
         
     });
+
+
     describe('getAssignedReports', () => {
         it('should return reports assigned to a specific officer', async () => {
 
@@ -192,6 +200,7 @@ describe('ReportDAO', () => {
             });
         });
     });
+
     describe('updateReportStatus', () => {       
 
         it('should update report status "In Progress" message', async () => {
@@ -225,6 +234,28 @@ describe('ReportDAO', () => {
 
             expect(result.text).toBe('Your report has been resolved. Thank you for your contribution!');
         });
+
+        it('should throw error for invalid officer updating status', async () => {
+            const unassigned = await ReportDAO.getUnassignedReports();
+            const reportId = unassigned[0].id;
+            await ReportDAO.assignReportToOfficer(reportId, 1, 1, 4, unassigned[0].user.id);
+
+            const result = await ReportDAO.updateReportStatus(999, reportId, 3);
+            expect(result).toBe(false);
+        });
+
+        it('should throw error for invalid report id', async () => {
+            const result = await ReportDAO.updateReportStatus(4, 9999, 3);
+            expect(result).toBe(false);
+        });
+
+        it('should throw error for invalid status id', async () => {
+            const unassigned = await ReportDAO.getUnassignedReports();
+            const reportId = unassigned[0].id;
+            await ReportDAO.assignReportToOfficer(reportId, 1, 1, 4, unassigned[0].user.id);
+            await expect(ReportDAO.updateReportStatus(4, reportId, 9999)).rejects.toThrow();
+            
+        });
     });
     describe('rejectReport', () => {
         it('should update report status and reason', async () => {
@@ -244,4 +275,159 @@ describe('ReportDAO', () => {
         });
     });
 
+    
+    describe('assignReportToExternalOffice', () => {
+        it('should assign report to external office successfully', async () => {
+            
+            const newReport = {
+                title: "new report",
+                description: "description of new report",
+                latitude: 45.10000,
+                longitude: 32.25,
+                address: "addresss of new report",
+                userId: 1,
+                catId: 1,
+                statusId: 1,
+                createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+                anonymous: 0,
+                images: ['img1.png']
+            }
+            const report = await ReportDAO.addNewReport(newReport);
+            expect(report).toBeTruthy();
+            
+            
+            await ReportDAO.assignReportToOfficer(report.id, 1, 1, 4, 1);
+            const result = await ReportDAO.assignReportToExternalOffice(report.id, 1);
+            expect(result).toBeUndefined(); 
+        });
+    });
+
+    describe("getExternalOfficesAssignedReports", () => {
+        it("should return reports assigned to external offices", async () => {
+            const reports = await ReportDAO.getExternalOfficeAssignedReports(5);
+            expect(Array.isArray(reports)).toBe(true);
+            expect(reports.length).toBe(0); 
+
+            const newReport = {
+                title: "new report",
+                description: "description of new report",
+                latitude: 45.10000,
+                longitude: 32.25,
+                address: "addresss of new report",
+                userId: 1,
+                catId: 1,
+                statusId: 1,
+                createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+                anonymous: 0,
+                images: ['img1.png']
+            }
+            const report = await ReportDAO.addNewReport(newReport);
+            expect(report).toBeTruthy();
+            
+            
+            await ReportDAO.assignReportToOfficer(report.id, 1, 1, 4, 1);
+            await ReportDAO.assignReportToExternalOffice(report.id, 1);
+            const result = await ReportDAO.getExternalOfficeAssignedReports(5);
+            expect(Array.isArray(result)).toBe(true);
+            expect(result.length).toBe(1); 
+            expect(result[0].id).toBe(report.id);
+
+        });
+    });
+    describe("getExternalMaintainerReports", () => {
+        it("should return reports assigned to external maintainer", async () => {
+            const newReport = {
+                title: "new report",
+                description: "description of new report",
+                latitude: 45.10000,
+                longitude: 32.25,
+                address: "addresss of new report",
+                userId: 1,
+                catId: 1,
+                statusId: 1,
+                createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+                anonymous: 0,
+                images: ['img1.png']
+            }
+            const report = await ReportDAO.addNewReport(newReport);
+            expect(report).toBeTruthy();
+            
+            
+            await ReportDAO.assignReportToOfficer(report.id, 1, 1, 4, 1);
+            await ReportDAO.assignReportToExternalOffice(report.id, 1);
+            const result = await ReportDAO.getExternalOfficeAssignedReports(5);
+            expect(Array.isArray(result)).toBe(true);
+            expect(result.length).toBe(1); 
+            expect(result[0].id).toBe(report.id);
+
+            const reports = await ReportDAO.getExternalMaintainerMyReports(5);
+            expect(Array.isArray(reports)).toBe(true);
+            expect(reports.length).toBe(0);
+            const result2 = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 'accept');
+            expect(result2.ok).toBe(true);
+            expect(result2.comment.text).toBe('The maintainer accepted the report and is starting work');
+            const reportsAfter = await ReportDAO.getExternalMaintainerMyReports(5);
+            expect(Array.isArray(reportsAfter)).toBe(true);
+            expect(reportsAfter.length).toBe(1);
+            expect(reportsAfter[0].id).toBe(report.id);
+        });
+    });
+
+    describe("updateExternalMaintainerReportStatus", () => {
+        it("should update report status by external maintainer", async () => {
+            const newReport = {
+                    title: "new report",
+                    description: "description of new report",
+                    latitude: 45.10000,
+                    longitude: 32.25,
+                    address: "addresss of new report",
+                    userId: 1,
+                    catId: 1,
+                    statusId: 1,
+                    createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+                    anonymous: 0,
+                    images: ['img1.png']
+                }
+            const report = await ReportDAO.addNewReport(newReport);
+            expect(report).toBeTruthy();
+            
+            
+            await ReportDAO.assignReportToOfficer(report.id, 1, 1, 4, 1);
+            await ReportDAO.assignReportToExternalOffice(report.id, 1);
+
+            
+            const result = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 'accept');
+            expect(result.ok).toBe(true);
+            expect(result.comment.text).toBe('The maintainer accepted the report and is starting work');
+
+            const result1 = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 'accept');
+            expect(result1.ok).toBe(false);
+
+            const result2 = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 3);
+            expect(result2.ok).toBe(true);
+            expect(result2.comment.text).toBe("The maintainer is working on the report");
+
+            const result2_1 = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 3);
+            expect(result2_1.ok).toBe(true);
+
+            const result2_2 = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 4);
+            expect(result2_2.ok).toBe(false);
+
+            const result3 = await ReportDAO.updateExternalMaintainerReportStatus(5, report.id, 6);
+            expect(result3.ok).toBe(true);
+            expect(result3.comment.text).toBe("The report has been resolved by the maintainer!");
+        });
+    });
+
+    describe("rejection errors for ReportDAO", () => {
+        it("reject by getReportsByUserId", async () => {
+            vi.spyOn(db, 'all').mockImplementationOnce((query, params, callback) => {
+                callback(new Error('Database error'), null);
+            });
+
+            await expect(ReportDAO.getReportsByUserId(1)).rejects.toThrow('Database error');
+        });
+
+        
+    });
 });
