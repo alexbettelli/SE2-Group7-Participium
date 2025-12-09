@@ -1,4 +1,5 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, vi } from 'vitest';
+import db from '../../data/db.mjs';
 import GenericInfoDAO from '../../dao/GenericInfoDAO.mjs';
 import {
     setupTestDatabase,
@@ -27,6 +28,22 @@ describe('GenericInfoDAO', () => {
                     'Office for Waste Management',
                     'Office for Urban Green Management',
                     'Office for Public Transportation',
+                ]));
+        });
+    });
+
+    describe('getExternalOffices', () => {
+        it('returns seeded external offices', async () => {
+            const externalOffices = await GenericInfoDAO.getExternalOffices();
+            expect(Array.isArray(externalOffices)).toBe(true);
+            expect(externalOffices).toHaveLength(4);
+            const names = externalOffices.map(o => o.name);
+            expect(names).toEqual(expect.arrayContaining(
+                [
+                    'LAVORINCORSO',
+                    'AMIAT S.p.A',
+                    'ICEF S.r.l',
+                    'GTT S.p.A'
                 ]));
         });
     });
@@ -75,4 +92,45 @@ describe('GenericInfoDAO', () => {
             );
         });
     });
+
+    describe('GenericInfoDAO error handling from db failures', () => {
+      it('handles db errors in getOffices', async () => {
+          const dbAllMock = vi.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+              callback(new Error('DB error'), null);
+          });
+          await expect(GenericInfoDAO.getOffices()).rejects.toThrow('DB error');
+          dbAllMock.mockRestore();
+      });
+
+      it('handles db errors in getExternalOffices', async () => {
+          const dbAllMock = vi.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+              callback(new Error('DB error'), null);
+          });
+          await expect(GenericInfoDAO.getExternalOffices()).rejects.toThrow('DB error');
+          dbAllMock.mockRestore();
+      });
+
+      it('handles db errors in getCategories', async () => {
+          const dbAllMock = vi.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+              callback(new Error('DB error'), null);
+          });
+          await expect(GenericInfoDAO.getCategories()).rejects.toThrow('DB error');
+          dbAllMock.mockRestore();
+      });
+      it('handles db errors in getRoles', async () => {
+          const dbAllMock = vi.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+              callback(new Error('DB error'), null);
+          }); 
+          await expect(GenericInfoDAO.getRoles()).rejects.toThrow('DB error');
+          dbAllMock.mockRestore();
+      });
+      it('handles db errors in getReportStatuses', async () => {
+          const dbAllMock = vi.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+              callback(new Error('DB error'), null);
+          });
+          await expect(GenericInfoDAO.getReportStatuses()).rejects.toThrow('DB error');
+          dbAllMock.mockRestore();
+      });
+    });
 });
+

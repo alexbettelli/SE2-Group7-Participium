@@ -147,10 +147,17 @@ describe('E2E Employee Routes', () => {
             const res = await agent.delete(`/employees/${idCreatedEmployee}`);
             expect(res.statusCode).toBe(403);
         })
+
+        it("delete an employee with invalid id", async () => {
+            await loginAsAdmin(agent);
+            const res = await agent.delete(`/employees/invalidId`);
+            expect(res.statusCode).toBe(400);
+        })
+
         it("delete a non-existing employee", async () => {
             await loginAsAdmin(agent);
             const res = await agent.delete(`/employees/99999`);
-            expect(res.statusCode).toBe(400);
+            expect(res.statusCode).toBe(404);
         })
 
         it("delete an employee correctly", async () => {
