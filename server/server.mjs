@@ -297,13 +297,15 @@ app.delete('/employees/:id', isLogged, async (req, res) => {
       return res.status(403).json(new errors.ForbiddenError());
     }
     const employeeId = req.params.id;
-    if (!employeeId) {
+    if (!employeeId || isNaN(employeeId)) {
       return res.status(400).json(new errors.BadRequestError("Employee ID is required."));
     }
 
+    
+
     const username = await UserDAO.getUserById(employeeId);
     if (!username) {
-      return res.status(404).json(new errors.NotFoundError("Employee not found."));
+      return res.status(404).json(new errors.BadRequestError("Employee not found."));
     }
     await UserDAO.deleteEmployeeById(employeeId);
     return res.status(200).json({ message: 'Employee deleted successfully' });

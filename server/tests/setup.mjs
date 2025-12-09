@@ -47,6 +47,13 @@ const OFFICES = [
     { name: 'Office for Urban Green Management', catId: 3 },
     { name: 'Office for Public Transportation', catId: 4 }
 ];
+
+const EXTERNAL_OFFICES = [
+    { name: 'LAVORINCORSO', catId: 1 },
+    { name: 'AMIAT S.p.A', catId: 2 },
+    { name: 'ICEF S.r.l', catId: 3 },
+    { name: 'GTT S.p.A', catId: 4 }
+];
 const REPORTS = [
     {
         title: "report1",
@@ -140,6 +147,13 @@ const insertInitialData = async () => {
     await new Promise((res, rej) =>
         db.run(`INSERT INTO office_employee (officeId, userId) VALUES (?, ?)`, [1,4], (err) => err ? rej(err) : res())
     );
+
+    // Insert external offices
+    for (const office of EXTERNAL_OFFICES) {
+        await new Promise((res, rej) =>
+            db.run(`INSERT INTO external_office (name, catId) VALUES (?, ?)`, [office.name, office.catId], (err) => err ? rej(err) : res())
+        );
+    }
 };
 export const setupTestDatabase = async () => {
     try {
