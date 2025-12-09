@@ -1,6 +1,7 @@
 import '../styles/MyReportsPage.css';
 
 import { useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 
 import ReportsTable from "./ReportsTable.jsx";
 
@@ -42,3 +43,11 @@ export default function MyReportsPage(props) {
         </div>
     );
 }
+
+MyReportsPage.propTypes = {
+    user: PropTypes.shape({
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired
+    }).isRequired,
+    setSelectedReport: PropTypes.func.isRequired
+};

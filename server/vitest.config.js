@@ -9,5 +9,8 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
     },
     include: ['tests/**/*.test.js','tests/**/*.test.mjs'],
+    env: {
+      UPLOADS_DIR: 'tests/test_uploads'
+    }
   },
 });

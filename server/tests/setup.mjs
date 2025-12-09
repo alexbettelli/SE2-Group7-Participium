@@ -10,6 +10,10 @@ import app from '../server.mjs';
 const schemaPath = path.join(process.cwd(), 'data', 'schema.sql');
 const schema = fs.readFileSync(schemaPath, "utf-8");
 
+const TEST_UPLOADS_DIR = path.join(process.cwd(), 'tests', 'test_uploads');
+const TEST_REPORTS_DIR = path.join(TEST_UPLOADS_DIR, 'reports');
+const TEST_PROFILES_DIR = path.join(TEST_UPLOADS_DIR, 'profiles');
+
 const USER_TYPES = [
     { type: 'Citizen' },
     { type: 'System Administrator' },
@@ -22,7 +26,6 @@ const USERS = [
     { username: 'admin', password: 'adminpassword', email: 'admin@email.it', firstName: 'ad', lastName: 'min', typeId: 2, allowEmailNotification: 0 },
     { username: 'userPr', password: 'prpassword', email: 'userPr@email.it', firstName: 'user', lastName: 'Pr', typeId: 3, allowEmailNotification: 0 },
     { username: 'userOfficer', password: 'officerpassword', email: 'userOfficer@email.it', firstName: 'user', lastName: 'officer', typeId: 4, allowEmailNotification: 0 },
-    { username: 'unassigned_emp', password: 'unemppass', email: 'unemp@email.it', firstName: 'unassigned', lastName: 'emp', typeId: 5, allowEmailNotification: 0 }
 ];
 const REPORT_CATEGORIES = [
     'Roads and Infrastructure',
@@ -44,6 +47,47 @@ const OFFICES = [
     { name: 'Office for Urban Green Management', catId: 3 },
     { name: 'Office for Public Transportation', catId: 4 }
 ];
+const REPORTS = [
+    {
+        title: "report1",
+        description: "descrioption of report1",
+        latitude: 45.035,
+        longitude: 7.626,
+        address: "Address of report1",
+        userId: 1,
+        catId: 1,
+        statusId: 1,
+        images: ['img2.png', 'img3.png'],
+        anonymous: 0,
+        createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+    },
+    {
+        title: "report2",
+        description: "descrioption of report2",
+        latitude: 45.082,
+        longitude: 7.634,
+        address: "Address of report2",
+        userId: 1,
+        catId: 1,
+        statusId: 1,
+        images: ['img4.png', 'img5.png'],
+        anonymous: 0,
+        createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+    },
+    {
+        title: "report3",
+        description: "descrioption of report3",
+        latitude: 45.058,
+        longitude: 7.629,
+        address: "Address of report3",
+        userId: 1,
+        catId: 2,
+        statusId: 1,
+        images: ['img6.png'],
+        anonymous: 0,
+        createdAt: "Tue Nov 12 2025 15:42:10 GMT+0100",
+    }
+]
 const initializeSchema = () => {
     return new Promise((resolve, reject) => {
         db.exec(schema, (err) => {
@@ -93,6 +137,9 @@ const insertInitialData = async () => {
             db.run(`INSERT INTO office (name, catId) VALUES (?, ?)`, [office.name, office.catId], (err) => err ? rej(err) : res())
         );
     }
+    await new Promise((res, rej) =>
+        db.run(`INSERT INTO office_employee (officeId, userId) VALUES (?, ?)`, [1,4], (err) => err ? rej(err) : res())
+    );
 };
 export const setupTestDatabase = async () => {
     try {
@@ -117,43 +164,139 @@ export const setupAgent = () => {
     return agent
 };
 export const login = async (agent, username, password) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username, password })
 };
 export const loginAsUser = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "user", password: "userpassword" })
 };
 export const loginAsAdmin = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "admin", password: "adminpassword" })
 };
 export const loginAsPR = async (agent) => {
-    await agent
-        .post('/sessions')
-        .send({ username: "userPR", password: "prpassword" })
+    return await agent
+        .post('/session')
+        .send({ username: "userPr", password: "prpassword" })
 };
 export const loginAsOfficer = async (agent) => {
-    await agent
-        .post('/sessions')
+    return await agent
+        .post('/session')
         .send({ username: "userOfficer", password: "officerpassword" })
 };
 export const logout = async (agent) => {
-    await agent.delete('/sessions/current');
+    return await agent.delete('/sessions/current');
 }
+
+export const resetReports = async () => {
+    let reportId;
+
+    await new Promise((res, rej) =>
+        db.run(`DELETE FROM report_image`, (err) => err ? rej(err) : res())
+    );
+    await new Promise((res, rej) =>
+        db.run(`DELETE FROM report`, (err) => err ? rej(err) : res())
+    );
+    for (const report of REPORTS) {
+
+        const result = await new Promise((res, rej) =>
+            db.run(
+                `INSERT INTO report (
+                    title, description, latitude, longitude, address,
+                    userId, catId, statusId, createdAt, anonymous
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    report.title, report.description, report.latitude, report.longitude,
+                    report.address, report.userId, report.catId, report.statusId,
+                    report.createdAt, report.anonymous
+                ],
+                function (err) {
+                    if (err) return rej(err);
+                    res(this);
+                }
+            )
+        );
+
+        reportId = result.lastID;
+
+        for (const image of report.images) {
+            const now = new Date().toISOString();
+
+            await new Promise((res, rej) =>
+                db.run(
+                    `INSERT INTO report_image (reportId, imageUrl, uploadedAt)
+                     VALUES (?, ?, ?)`,
+                    [reportId, image, now],
+                    function (err) {
+                        if (err) return rej(err);
+                        res(this);
+                    }
+                )
+            );
+        }
+    }
+};
+
+export const setupTestUploadDirs = () => {
+    try {
+        if (!fs.existsSync(TEST_UPLOADS_DIR)) {
+            fs.mkdirSync(TEST_UPLOADS_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(TEST_REPORTS_DIR)) {
+            fs.mkdirSync(TEST_REPORTS_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(TEST_PROFILES_DIR)) {
+            fs.mkdirSync(TEST_PROFILES_DIR, { recursive: true });
+        }
+        console.log('Test upload directories created successfully');
+    } catch (error) {
+        throw error;
+    }
+};
+export const cleanupTestUploadDirs = () => {
+    try {
+        const cleanDir = (dirPath) => {
+            if (fs.existsSync(dirPath)) {
+                const files = fs.readdirSync(dirPath);
+                for (const file of files) {
+                    const filePath = path.join(dirPath, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        cleanDir(filePath);
+                        fs.rmdirSync(filePath);
+                    } else {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+        };
+
+        cleanDir(TEST_UPLOADS_DIR);
+        if (fs.existsSync(TEST_UPLOADS_DIR)) {
+            fs.rmdirSync(TEST_UPLOADS_DIR);
+        }
+        console.log('Test upload directories cleaned successfully');
+    } catch (error) {
+        throw error;
+    }
+};
 
 
 export default {
     setupTestDatabase,
     teardownTestDatabase,
+    setupTestUploadDirs,
+    cleanupTestUploadDirs,
     setupAgent,
     login,
     loginAsUser,
     loginAsAdmin,
     loginAsPR,
     loginAsOfficer,
-    logout
+    logout,
+    resetReports
 };

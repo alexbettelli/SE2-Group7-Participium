@@ -161,10 +161,9 @@
     padding: 0.85rem 2rem;
     border-radius: 20px;
     box-shadow: 0 3px 12px rgba(112, 38, 50, 0.3);
-    width: 100%;
+    width: 70%;
     margin-bottom: 1.2rem;
     cursor: pointer;
-    width: 70%;
     display: flex;
     justify-content: center;
     align-items: center;

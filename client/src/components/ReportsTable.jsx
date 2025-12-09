@@ -1,4 +1,5 @@
 import ReportPreview from './ReportPreview.jsx';
+import PropTypes from 'prop-types';
 
 export default function ReportsTable(props) {
     const externalOffices = props.externalOffices ?? []; 
@@ -31,6 +32,23 @@ export default function ReportsTable(props) {
     )
 }
 
+ReportsTable.propTypes = {
+    reports: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        category: PropTypes.shape({
+            id: PropTypes.number
+        })
+    })).isRequired,
+    user: PropTypes.object.isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    updateReports: PropTypes.func,
+    externalOffices: PropTypes.arrayOf(PropTypes.shape({
+        category: PropTypes.shape({
+            id: PropTypes.number
+        })
+    }))
+};
+
 function ReportRow(props) {
     const { report, externalOffices = [], setSelectedReport, updateReports, setChatWith } = props; 
 
@@ -51,3 +69,11 @@ function ReportRow(props) {
         </div>
     )
 }
+
+ReportRow.propTypes = {
+    report: PropTypes.object.isRequired,
+    externalOffices: PropTypes.array,
+    user: PropTypes.object.isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    updateReports: PropTypes.func
+};

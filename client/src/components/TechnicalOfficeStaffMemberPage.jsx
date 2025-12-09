@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import ReportAPI from '../api/ReportAPI.mjs';
 import GenericAPI from '../api/GenericAPI.mjs';
 import ReportsTable from './ReportsTable.jsx';
@@ -54,3 +55,11 @@ export default function TechnicalOfficeStaffMemberPage(props) {
         </div>
     )
 }
+
+TechnicalOfficeStaffMemberPage.propTypes = {
+    user: PropTypes.shape({
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired
+    }).isRequired,
+    setSelectedReport: PropTypes.func.isRequired
+};
