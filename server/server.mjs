@@ -36,6 +36,7 @@ const schemas = swaggerDocument.components.schemas;
 validator.ajv.addSchema(schemas.user, 'user');
 validator.ajv.addSchema(schemas.report, 'report');
 validator.ajv.addSchema(schemas.notification, 'notification');
+validator.ajv.addSchema(schemas.comment, 'comment');
 addFormats(validator.ajv);
 const validate = validator.validate;
 
@@ -713,7 +714,7 @@ app.post('/notifications/read', isLogged, async (req, res) => {
 
 //COMMENTS
 
-app.post('/comments', async (req, res) => { //missing validate({ body: schemas.comment })
+app.post('/comments', isLogged, validate({ body: schemas.comment }),async (req, res) => { 
   try {
     const message = req.body;
     const fullMessage = await NotificationDAO.createComment(message);

@@ -2068,6 +2068,17 @@
                 },
                 "required": [ "receiverId", "text", "channelId" ]
             },
+            "comment": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "reportId": { "type": "integer" },
+                    "senderId": { "type": ["integer", "null"] },
+                    "receiverId": { "type": "integer" },
+                    "text": { "type": "string" }
+                },
+                "required": [ "reportId", "receiverId", "text" ]
+            },
             "public_stats": {
                 "type": "object",
                 "properties": {
