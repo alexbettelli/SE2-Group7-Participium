@@ -29,7 +29,10 @@ function NavHeader(props) {
     const fetchUnreadNotifications = async () => {
       try {
         const reports = user.role.id === 1 ? await ReportAPI.getMyReports() : await ReportAPI.getAssignedReports();
-        const totalUnreadNotifications = reports.reduce((sum, report) => sum + (report.unreadNotifications || 0), 0);
+        const totalUnreadNotifications = reports.reduce(
+          (sum, report) => sum + (report.unreadNotifications || 0) + (report.unreadComments || 0),
+          0
+        );
         setUnreadNotifications(totalUnreadNotifications);
       } catch (error) {
         console.error('Error fetching unread notifications:', error);

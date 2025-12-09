@@ -164,7 +164,8 @@ const mapRowsToReports = (rows) => {
                 sender,
                 receiver,
                 row.commentText ?? row.text,
-                row.commentSendAt ?? row.sendAt
+                row.commentSendAt ?? row.sendAt,
+                row.commentIsRead ?? row.isRead
             );
             report.comments.push(comment);
         }
@@ -231,13 +232,19 @@ const mapRowToComment = (row) => {
     if (!row) return null;
     const sender = row.senderId ? new User(row.senderId, row.senderUsername) : null;
     const receiver = row.receiverId ? new User(row.receiverId, row.receiverUsername) : null;
+    const id = row.commentId ?? row.id;
+    const reportId = row.reportId ?? row.id;
+    const text = row.commentText ?? row.text;
+    const sendAt = row.commentSendAt ?? row.sendAt;
+    const isRead = row.commentIsRead ?? row.isRead;
     return new Comment(
-        row.commentId,
-        row.id,
+        id,
+        reportId,
         sender,
         receiver,
-        row.text,
-        row.sendAt
+        text,
+        sendAt,
+        isRead
     );
 }
 //map multiple comments

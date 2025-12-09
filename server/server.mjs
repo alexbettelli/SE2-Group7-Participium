@@ -501,14 +501,14 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
 app.patch("/reports/external-maintainer/:id", isLogged, async (req, res) => {
   if (req.user.role.id !== 6) return res.status(403).json(new errors.ForbiddenError());
   try {
-    const notification = await ReportDAO.updateExternalMaintainerReportStatus(
+    const result = await ReportDAO.updateExternalMaintainerReportStatus(
       req.user.id, 
       req.params.id, 
       req.query.statusId
     );
-    if (!notification)
+    if (!result)
       return res.status(404).json(new errors.NotFoundError("Report not found."));
-    return res.status(200).json({ ok: true, notification });
+    return res.status(200).json({ ok: true, notification: result.notification, comment: result.comment });
   } catch (e) {
     console.error(`ERROR: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());

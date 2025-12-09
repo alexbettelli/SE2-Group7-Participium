@@ -74,13 +74,14 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.comments = comments;//array of obj of type Comment
 }
 
-function Comment(id, reportId, sender, receiver, text, sendAt){
+function Comment(id, reportId, sender, receiver, text, sendAt, isRead){
     this.id = id;
     this.reportId = reportId;
     this.sender = sender; // obj of type User
     this.receiver = receiver; // obj of type User
     this.text = text;
     this.sendAt = dayjs(sendAt);
+    this.isRead = isRead;
 }
 
 export {User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment};

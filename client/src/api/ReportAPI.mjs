@@ -161,7 +161,8 @@ const updateExternalMaintainerReportStatus = async (reportId, statusId) => {
         const data = await res.json();
         return {
             ok: data.ok || true,
-            notification: data.notification || null
+            notification: data.notification || null,
+            comment: data.comment || null
         };
     } else {
         const errMessage = await res.json();

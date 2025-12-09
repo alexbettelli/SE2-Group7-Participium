@@ -4,7 +4,7 @@ import Mapper from '../utils/mapper.mjs';
 
 const getAllReports = () => {
     const query = `
-      SELECT r.*, u.username, em.username AS externalMaintainerUsername,
+          SELECT r.*, u.username, em.username AS externalMaintainerUsername,
              rc.categoryName,
              i.id AS imageId, i.imageUrl,
              s.statusName,
@@ -15,7 +15,8 @@ const getAllReports = () => {
              creceiver.username AS commentReceiverUsername,
              co.text AS commentText,
              co.sendAt AS commentSendAt,
-             co.isRead AS commentIsRead
+              co.isRead AS commentIsRead,
+              unreadC.unreadComments
       FROM report r
       JOIN user u ON r.userId = u.id
       LEFT JOIN user em ON r.externalMaintainerId = em.id
@@ -25,6 +26,11 @@ const getAllReports = () => {
       LEFT JOIN comment co ON r.id = co.reportId
       LEFT JOIN user csender ON co.senderId = csender.id
       LEFT JOIN user creceiver ON co.receiverId = creceiver.id
+          LEFT JOIN (
+           SELECT reportId, SUM(isRead = 0) AS unreadComments
+           FROM comment
+           GROUP BY reportId
+          ) AS unreadC ON unreadC.reportId = r.id
     `;
     return new Promise((resolve, reject) => {
         db.all(query, [], (err, rows) => {
@@ -457,41 +463,91 @@ export const getExternalMaintainerMyReports = (userId) => {
 
 export const updateExternalMaintainerReportStatus = (userId, reportId, statusId) => {
   return new Promise((resolve, reject) => {
-    const now = dayjs().toString();
+        const now = dayjs().toString();
+        const numericStatus = Number(statusId);
+        // Only allow In Progress (3) or Resolved (6)
+        if (!(numericStatus === 3 || numericStatus === 6)) {
+            return resolve({ ok: false });
+        }
 
-    if (statusId === 'accept') {
-      const acceptSql = `
-        UPDATE report 
-        SET externalMaintainerId = ?, 
-            statusId = 3,
-            updatedAt = ?
-        WHERE id = ?
-          AND statusId = 2
-          AND externalOfficeId IN (
-            SELECT external_officeId FROM external_office_employee WHERE userId = ?
-          )
-      `;
-      db.run(acceptSql, [userId, now, reportId, userId], function (err) {
-        if (err) return reject(err);
-        return resolve({ ok: this.changes > 0 });
-      });
-      return;
-    }
+        // Update report status
+        const updateSql = `
+            UPDATE report 
+            SET statusId = ?, updatedAt = ?
+            WHERE id = ?
+                AND externalMaintainerId = ?
+                AND externalOfficeId IN (
+                    SELECT external_officeId FROM external_office_employee WHERE userId = ?
+                )
+        `;
+        db.run(updateSql, [numericStatus, now, reportId, userId, userId], function (err) {
+            if (err) return reject(err);
+            if (this.changes === 0) return resolve({ ok: false });
 
-    const updateSql = `
-      UPDATE report 
-      SET statusId = ?, 
-          updatedAt = ?
-      WHERE id = ?
-        AND externalMaintainerId = ?
-        AND externalOfficeId IN (
-          SELECT external_officeId FROM external_office_employee WHERE userId = ?
-        )
-    `;
-    db.run(updateSql, [Number(statusId), now, reportId, userId, userId], function (err) {
-      if (err) return reject(err);
-      return resolve({ ok: this.changes > 0 });
-    });
+            // Get report receivers
+            db.get(`SELECT id, userId, employeeId FROM report WHERE id = ?`, [reportId], (err, repRow) => {
+                if (err) return reject(err);
+                if (!repRow) return resolve({ ok: false });
+
+                // Compose message succinctly
+                const message = numericStatus === 3
+                    ? "Your report is being resolved"
+                    : "Your report has been resolved. Thank you for your contribution!";
+
+                const sendTime = dayjs().toString();
+
+                // Insert notification with senderId NULL to citizen
+                db.run(
+                    `INSERT INTO notification (reportId, receiverId, text, sendAt, channelId) VALUES (?, ?, ?, ?, 1)`,
+                    [reportId, repRow.userId, message, sendTime],
+                    function (err) {
+                        if (err) return reject(err);
+                        const notifId = this.lastID;
+                        db.get(
+                            `SELECT n.*, 
+                                            c.name as channelName,
+                                            sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
+                                            receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
+                             FROM notification n
+                             LEFT JOIN channel c ON n.channelId = c.id
+                             LEFT JOIN user sender ON n.senderId = sender.id
+                             LEFT JOIN user receiver ON n.receiverId = receiver.id
+                             WHERE n.id = ?`,
+                            [notifId],
+                            (err, notifRow) => {
+                                if (err || !notifRow) return reject(err);
+                                const notification = Mapper.mapRowToMessage(notifRow);
+
+                                // Insert comment with senderId NULL to employee
+                                db.run(
+                                    `INSERT INTO comment (reportId, receiverId, text, sendAt) VALUES (?, ?, ?, ?)`,
+                                    [reportId, repRow.employeeId || null, message, sendTime],
+                                    function (err) {
+                                        if (err) return reject(err);
+                                        const commId = this.lastID;
+                                        db.get(
+                                            `SELECT co.*, 
+                                                            sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
+                                                            receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
+                                             FROM comment co
+                                             LEFT JOIN user sender ON co.senderId = sender.id
+                                             LEFT JOIN user receiver ON co.receiverId = receiver.id
+                                             WHERE co.id = ?`,
+                                            [commId],
+                                            (err, commRow) => {
+                                                if (err || !commRow) return reject(err);
+                                                const comment = Mapper.mapRowToComment(commRow);
+                                                return resolve({ ok: true, notification, comment });
+                                            }
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
+            });
+        });
   });
 };
 

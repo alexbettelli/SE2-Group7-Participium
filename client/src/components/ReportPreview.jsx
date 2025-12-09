@@ -61,6 +61,7 @@ export default function ReportPreview(props) {
         const getStatuses = async () => {
             ReportAPI.getReportStatuses().then((data) => {
                 setStatuses(data);
+                console.log(report);
             }).catch((error) => {
                 console.error('Error fetching report statuses:', error);
             });
@@ -81,6 +82,8 @@ export default function ReportPreview(props) {
                 
                 if (result && result.notification) {
                     report.notifications = [...report.notifications, result.notification];
+                    if (result.comment) 
+                        report.comments = [...report.comments, result.comment]; 
                     setSelectedReport({ ...report });
                 }
                 if (result.ok) props.updateReports();
@@ -128,8 +131,11 @@ export default function ReportPreview(props) {
 
                     {!showAcceptButton && (
                         <div className="chat-btn-notification-wrapper">
-                            {report.unreadNotifications > 0 && (
+                            {report.unreadNotifications > 0 && props.user?.role?.id !== 6 && (
                                 <span className="chat-btn-notification-count">{report.unreadNotifications}</span>
+                            )}
+                            {report.unreadComments > 0 && props.user?.role?.id === 6 && (
+                                <span className="chat-btn-notification-count">{report.unreadComments}</span>
                             )}
                             <button className="btn-chat" type="button" onClick={(e) => { e.stopPropagation(); setSelectedReport(report); setChatWith(props.user?.role?.id === 6 ? "maintainer" : "user"); navigate('/chat'); }}>
                                 <span className="chat-btn-flex">
@@ -158,16 +164,21 @@ export default function ReportPreview(props) {
                   <span><i className="bi bi-building"></i>{' '}Assign to external company</span>
                 </button>
               ) : (
-                <button
-                  className="btn-chat"
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setSelectedReport(report); setChatWith("maintainer"); navigate('/chat');}}
-                >
-                  <span className="chat-btn-flex">
-                    <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
-                    <span>{' '}{report.externalOffice.name}</span>
-                  </span>
-                </button>
+                <div className="chat-btn-notification-wrapper">
+                    {report.unreadComments > 0 && (
+                        <span className="chat-btn-notification-count">{report.unreadComments}</span>
+                    )}
+                    <button
+                    className="btn-chat"
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setSelectedReport(report); setChatWith("maintainer"); navigate('/chat');}}
+                    >
+                    <span className="chat-btn-flex">
+                        <span><i className="bi bi-chat-dots-fill report-chat-icon"></i></span>
+                        <span>{' '}{report.externalOffice.name}</span>
+                    </span>
+                    </button>
+                </div>
               )}
 
               <button className="btn-change-status" type="button" onClick={(e) => { e.stopPropagation(); handleShow(); }}>

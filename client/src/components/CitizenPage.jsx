@@ -15,7 +15,6 @@ import * as turf from '@turf/turf';
 import ReportOverview from './ReportOverview.jsx';
 import ReportPopup from './ReportPopUp.jsx';
 import ReactDOM from "react-dom/client";
-import { useNavigate } from 'react-router';
 
 import GenericAPI from '../api/GenericAPI.mjs';
 import ReportAPI from '../api/ReportAPI.mjs';
@@ -24,7 +23,6 @@ import getStatusClass from '../utils/StatusColorsMapper.mjs';
 
 export default function CitizenPage(props) {
     const { user } = props;
-    const navigate = useNavigate();
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
