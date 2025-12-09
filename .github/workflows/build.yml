@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - name: Install server dependencies
         working-directory: ./server
-        run: npm ci
+        run: npm install
       - name: Run backend tests with coverage
         working-directory: ./server
         run: npm test
