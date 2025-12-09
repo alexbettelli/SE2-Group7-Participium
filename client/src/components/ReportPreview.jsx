@@ -169,7 +169,7 @@ export default function ReportPreview(props) {
                         <span className="chat-btn-notification-count">{report.unreadComments}</span>
                     )}
                     <button
-                    className="btn-chat"
+                    className="btn-assign-external"
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setSelectedReport(report); setChatWith("maintainer"); navigate('/chat');}}
                     >
