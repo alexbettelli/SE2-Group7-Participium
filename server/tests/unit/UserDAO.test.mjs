@@ -1,6 +1,7 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, vi } from 'vitest';
 import bcrypt from 'bcrypt';
 import UserDAO from '../../dao/UserDAO.mjs';
+import db from '../../data/db.mjs';
 import {
     setupTestDatabase,
     teardownTestDatabase
@@ -178,6 +179,71 @@ describe('UserDAO', () => {
 
             const result = await UserDAO.getUserById(employeeId);
             expect(result).toBeNull();
+        });
+    });
+
+    describe('UserDAO error handling', () => {
+        it('handles db errors in getUserByUsername', async () => {
+            const dbGetMock = vi.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.getUserByUsername('test')).rejects.toThrow('DB error');
+            dbGetMock.mockRestore();
+        });
+
+        it('handles db errors in getUserById', async () => {
+            const dbGetMock = vi.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.getUserById(1)).rejects.toThrow('DB error');
+            dbGetMock.mockRestore();
+        });
+
+        it('handles db errors in addNewUser', async () => {
+            const dbRunMock = vi.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.addNewUser({
+                username: 'test',
+                password: 'pass',
+                email: 'test@test.com',
+                firstName: 'Test',
+                lastName: 'User',
+                typeId: 1
+            })).rejects.toThrow('DB error');
+            dbRunMock.mockRestore();
+        });
+
+        it('handles db errors in getUnassignedEmployees', async () => {
+            const dbAllMock = vi.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.getUnassignedEmployees()).rejects.toThrow('DB error');
+            dbAllMock.mockRestore();
+        });
+
+        it('handles db errors in assignEmployeeToOffice', async () => {
+            const dbRunMock = vi.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.assignEmployeeToOffice(1, 1, 3)).rejects.toThrow('DB error');
+            dbRunMock.mockRestore();
+        });
+
+        it('handles db errors in deleteEmployeeById', async () => {
+            const dbRunMock = vi.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.deleteEmployeeById(1)).rejects.toThrow('DB error');
+            dbRunMock.mockRestore();
+        });
+
+        it('handles db errors in updateUserProfile', async () => {
+            const dbRunMock = vi.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+                callback(new Error('DB error'), null);
+            });
+            await expect(UserDAO.updateUserProfile(1, 'telegram', 1, 'img.png')).rejects.toThrow('DB error');
+            dbRunMock.mockRestore();
         });
     });
 });
