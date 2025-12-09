@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS channel (
 );
 CREATE TABLE IF NOT EXISTS comment (
   id INTEGER PRIMARY KEY,
-  reportId INTEGER,
+  reportId INTEGER NOT NULL,
   senderId INTEGER NULL,
   receiverId INTEGER NOT NULL,
   text TEXT NOT NULL,
