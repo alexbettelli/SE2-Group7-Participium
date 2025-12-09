@@ -13,15 +13,15 @@ export default function HomePage(props) {
 
   switch (props.user.role.id) {
     case 1:
-      return <CitizenPage user={props.user} />;
+      return <CitizenPage user={props.user} setChatWith={props.setChatWith}/>;
     case 2:
       return <AdminPage user={props.user} />;
     case 3:
       return <PrOfficerPage user={props.user} />;
     case 4:
-      return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} />;
+      return <TechnicalOfficeStaffMemberPage user={props.user} setSelectedReport={props.setSelectedReport} setChatWith={props.setChatWith}/>;
     case 6:
-      return <ExternalMaintainerPage user={props.user} setSelectedReport={props.setSelectedReport} />;
+      return <ExternalMaintainerPage user={props.user} setSelectedReport={props.setSelectedReport} setChatWith={props.setChatWith}/>;
     default:
       return <NotFound />;
   }

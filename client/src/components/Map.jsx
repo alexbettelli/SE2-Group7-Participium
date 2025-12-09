@@ -8,7 +8,7 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 
 export default function MapComponent(props) {
-    const { lat, lng, category } = props;
+    const { lat, lng, category, zoomable, movable } = props;
 
     const mapRef = useRef(null);
     const bufferLayerRef = useRef(null);
@@ -32,7 +32,11 @@ export default function MapComponent(props) {
         if (!mapRef.current) return;
 
         if (!mapRef.current._leaflet_id) {
-            const map = L.map(mapRef.current).setView([lat, lng], 13);
+            const map = L.map(mapRef.current, { 
+                zoomControl: zoomable !== undefined ? zoomable : true, 
+                dragging: movable !== undefined ? movable : true,
+                attributionControl: false
+            }).setView([lat, lng], 13);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
@@ -43,7 +47,7 @@ export default function MapComponent(props) {
         }
 
         const map = mapRef.current._mapInstance;
-        map.setView([lat, lng]);
+        map.setView([lat, lng], 13);
 
         map.eachLayer(layer => {
             if (layer instanceof L.Marker) {

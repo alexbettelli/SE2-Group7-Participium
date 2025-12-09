@@ -475,7 +475,8 @@ app.get("/reports/external-maintainer-my", isLogged, async (req, res) => {
   if (req.user.role.id !== 6) return res.status(403).json(new errors.ForbiddenError());
   try {
     const reports = await ReportDAO.getExternalMaintainerMyReports(req.user.id);
-    return res.status(200).json(reports);
+    console.log("Il server ritorna: " + reports);
+    return res.status(200).json({reports: reports});
   } catch (ex) {
     console.error(`ERROR: ${ex.message}`);
     return res.status(500).json(new errors.InternalServerError());
@@ -504,14 +505,18 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
 app.patch("/reports/external-maintainer/:id", isLogged, async (req, res) => {
   if (req.user.role.id !== 6) return res.status(403).json(new errors.ForbiddenError());
   try {
-    const notification = await ReportDAO.updateExternalMaintainerReportStatus(
+    const result = await ReportDAO.updateExternalMaintainerReportStatus(
       req.user.id, 
       req.params.id, 
       req.query.statusId
     );
-    if (!notification)
+    if (!result)
       return res.status(404).json(new errors.NotFoundError("Report not found."));
-    return res.status(200).json({ ok: true, notification });
+    return res.status(200).json({ 
+      ok: true, 
+      notification: result?.notification ?? null, 
+      comment: result?.comment ?? null 
+    });
   } catch (e) {
     console.error(`ERROR: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
@@ -707,13 +712,39 @@ app.post('/notifications/read', isLogged, async (req, res) => {
   }
 });
 
+
+//COMMENTS
+
+app.post('/comments', async (req, res) => { //missing validate({ body: schemas.comment })
+  try {
+    const message = req.body;
+    const fullMessage = await NotificationDAO.createComment(message);
+    return res.status(201).json(fullMessage);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    return res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.post('/comments/read', isLogged, async (req, res) => {
+  const { reportId } = req.body;
+  const userId = req.user.id;
+  let readComments = 0;
+  if (!reportId || !userId) {
+    return res.status(400).json(new errors.BadRequestError("Missing reportId or userId"));
+  }
+  try {
+    readComments = await NotificationDAO.setCommentsAsRead(userId, reportId);
+    res.status(201).json({ success: true, readComments });
+  } catch (err) {
+    res.status(500).json(new errors.InternalServerError());
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening at ${BASE_URL}`);
   console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
 });
-
-
-
 
 
 app.use((err, req, res, next) => {

@@ -23,6 +23,7 @@ export default function ReportsTable(props) {
                             isExternalMaintainer={props.isExternalMaintainer}
                             showAcceptButton={props.showAcceptButton}
                             onAcceptReport={props.onAcceptReport}
+                            setChatWith={props.setChatWith}
                         />
                     })}
                 </div>
@@ -49,7 +50,7 @@ ReportsTable.propTypes = {
 };
 
 function ReportRow(props) {
-    const { report, externalOffices = [], setSelectedReport, updateReports } = props; 
+    const { report, externalOffices = [], setSelectedReport, updateReports, setChatWith } = props; 
 
     return (
         <div className='reports-table-row'>
@@ -63,6 +64,7 @@ function ReportRow(props) {
                 isExternalMaintainer={props.isExternalMaintainer}
                 showAcceptButton={props.showAcceptButton}
                 onAcceptReport={props.onAcceptReport}
+                setChatWith={setChatWith}
             />
         </div>
     )

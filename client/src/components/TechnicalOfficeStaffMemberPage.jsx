@@ -50,6 +50,7 @@ export default function TechnicalOfficeStaffMemberPage(props) {
                 externalOffices={externalOffices}
                 setSelectedReport={props.setSelectedReport}
                 updateReports={updateReports}
+                setChatWith={props.setChatWith}
             />
         </div>
     )

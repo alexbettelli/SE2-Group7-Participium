@@ -48,7 +48,7 @@ function Message({id, reportId, sender, receiver, text, channel, sendAt, isRead}
     this.sendAt = dayjs(sendAt);
     this.isRead = isRead;
 }
-function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, externalOffice, employee, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications, comments}){
+function Report({id, title, description, latitude, longitude, address, userId, user, category, images, office, externalOffice, employee, externalMaintainer, createdAt, updatedAt, rejectReason, status, anonymous, notifications, unreadNotifications, comments, unreadComments}){
     this.id = id;
     this.title = title;
     this.description = description;
@@ -62,6 +62,7 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.office = office;//obj of type Office
     this.externalOffice = externalOffice;//obj of type Office
     this.employee = employee;//obj of type User
+    this.externalMaintainer = externalMaintainer; //obj of type User
     this.createdAt = dayjs(createdAt);
     this.updatedAt = dayjs(updatedAt);
     this.rejectReason = rejectReason;
@@ -69,15 +70,18 @@ function Report({id, title, description, latitude, longitude, address, userId, u
     this.anonymous = anonymous;
     this.notifications = notifications;//array of obj of type Message
     this.unreadNotifications = unreadNotifications;
+    this.unreadComments = unreadComments;
     this.comments = comments;//array of obj of type Comment
 }
 
-function Comment(id, reportId, user, text, createdAt){
+function Comment(id, reportId, sender, receiver, text, sendAt, isRead){
     this.id = id;
     this.reportId = reportId;
-    this.user = user;//obj of type User
+    this.sender = sender; // obj of type User
+    this.receiver = receiver; // obj of type User
     this.text = text;
-    this.createdAt = dayjs(createdAt);
+    this.sendAt = dayjs(sendAt);
+    this.isRead = isRead;
 }
 
 export {User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment};
