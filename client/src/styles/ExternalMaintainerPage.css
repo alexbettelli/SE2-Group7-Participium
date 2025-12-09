@@ -79,6 +79,11 @@
 .external-maintainer-page .report-preview-card .map-preview {
   display: none !important;
 }
+.external-maintainer-page .chat-btn-notification-count {
+  transform: scale(0.7);        
+  transform-origin: top right;  
+}
+
 
 @media (max-width: 1200px) {
     .two-columns {
