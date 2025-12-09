@@ -150,7 +150,7 @@ describe('E2E Employee Routes', () => {
         it("delete a non-existing employee", async () => {
             await loginAsAdmin(agent);
             const res = await agent.delete(`/employees/99999`);
-            expect(res.statusCode).toBe(400);
+            expect(res.statusCode).toBe(404);
         })
 
         it("delete an employee correctly", async () => {
