@@ -6,7 +6,9 @@ export default defineConfig({
     environment: 'node',
     setupFiles: './tests/setup.mjs',
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
     },
     include: ['tests/**/*.test.js','tests/**/*.test.mjs'],
     env: {
