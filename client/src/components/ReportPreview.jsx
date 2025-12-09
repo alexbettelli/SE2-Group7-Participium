@@ -61,7 +61,6 @@ export default function ReportPreview(props) {
         const getStatuses = async () => {
             ReportAPI.getReportStatuses().then((data) => {
                 setStatuses(data);
-                console.log(report);
             }).catch((error) => {
                 console.error('Error fetching report statuses:', error);
             });
@@ -80,8 +79,9 @@ export default function ReportPreview(props) {
                     result = await ReportAPI.updateReportStatus(report.id, selectedStatusId);
                 }
                 
-                if (result && result.notification) {
-                    report.notifications = [...report.notifications, result.notification];
+                if (result) {
+                    if (result.notification) 
+                        report.notifications = [...report.notifications, result.notification];
                     if (result.comment) 
                         report.comments = [...report.comments, result.comment]; 
                     setSelectedReport({ ...report });

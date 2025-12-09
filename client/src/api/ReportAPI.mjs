@@ -144,7 +144,9 @@ const getExternalMaintainerMyReports = async () => {
     });
 
     if (res.ok) {
-        return await res.json();
+        const result = await res.json();
+        const reports = Array.isArray(result) ? result : (result?.reports ?? []);
+        return reports;
     } else {
         const errMessage = await res.json();
         throw new Error(errMessage.error || 'Error fetching my reports');

@@ -24,11 +24,19 @@ function NavHeader(props) {
   };
 
   useEffect(() => {
-    if (!user || !user?.id || (user?.role.id !== 1 && user?.role.id !== 4))
+    if (!user || !user?.id || (user?.role.id !== 1 && user?.role.id !== 4 && user?.role.id !== 6))
       return;
     const fetchUnreadNotifications = async () => {
       try {
-        const reports = user.role.id === 1 ? await ReportAPI.getMyReports() : await ReportAPI.getAssignedReports();
+          let reports = [];
+          if (user.role.id === 1) {
+            reports = await ReportAPI.getMyReports();
+          } else if (user.role.id === 4) {
+            reports = await ReportAPI.getAssignedReports();
+          } else if (user.role.id === 6) {
+            reports = await ReportAPI.getExternalMaintainerMyReports();
+          }
+        console.log(reports);
         const totalUnreadNotifications = reports.reduce(
           (sum, report) => sum + (report.unreadNotifications || 0) + (report.unreadComments || 0),
           0
@@ -85,7 +93,7 @@ function NavHeader(props) {
         {/* Right side: Icons + Buttons */}
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto navbar-nav-custom">
-            {user && (user.role?.id === 1 || user.role?.id === 4) && (
+            {user && (user.role?.id === 1 || user.role?.id === 4 || user.role?.id === 6) && (
               <div
                 onClick={() => {
                   user.role.id === 1 ? navigate("/myreports") : navigate("/");

@@ -110,7 +110,7 @@ export default function ChatPage(props) {
                                     key={msg.id ?? `${msg.sendAt ?? 'no-time'}-${msg.sender?.id ?? 'no-sender'}-${msg.receiver?.id ?? 'no-receiver'}-${idx}`}
                                     style={{
                                         display: 'flex',
-                                        justifyContent: ((msg.sender && msg.sender.id === user.id) || (!msg.sender && user.role.id !== 1)) ? 'flex-end' : 'flex-start',
+                                        justifyContent: ((msg.sender && msg.sender.id === user.id) || (!msg.sender && user.id !== msg.receiver.id)) ? 'flex-end' : 'flex-start',
                                         width: '100%'
                                     }}
                                 >

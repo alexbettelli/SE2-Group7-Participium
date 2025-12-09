@@ -464,8 +464,57 @@ export const getExternalMaintainerMyReports = (userId) => {
 export const updateExternalMaintainerReportStatus = (userId, reportId, statusId) => {
   return new Promise((resolve, reject) => {
         const now = dayjs().toString();
+
+        if (statusId === 'accept') {
+            const acceptSql = `
+                UPDATE report 
+                SET externalMaintainerId = ?, 
+                    statusId = 3,
+                    updatedAt = ?
+                WHERE id = ?
+                AND statusId = 2
+                AND externalOfficeId IN (
+                    SELECT external_officeId FROM external_office_employee WHERE userId = ?
+                )
+            `;
+            db.run(acceptSql, [userId, now, reportId, userId], function (err) {
+                if (err) return reject(err);
+                if (this.changes === 0) return resolve({ ok: false });
+
+                db.get(`SELECT employeeId FROM report WHERE id = ?`, [reportId], (err, repRow) => {
+                    if (err) return reject(err);
+                    const sendTime = dayjs().toString();
+                    const message = "The maintainer accepted the report and is starting work";
+                    db.run(
+                        `INSERT INTO comment (reportId, senderId, receiverId, text, sendAt) VALUES (?, NULL, ?, ?, ?)`,
+                        [reportId, repRow?.employeeId || null, message, sendTime],
+                        function (err) {
+                            if (err) return reject(err);
+                            const commId = this.lastID;
+                            db.get(
+                                `SELECT co.*, 
+                                        sender.id as senderId, sender.username as senderUsername,
+                                        receiver.id as receiverId, receiver.username as receiverUsername
+                                 FROM comment co
+                                 LEFT JOIN user sender ON co.senderId = sender.id
+                                 LEFT JOIN user receiver ON co.receiverId = receiver.id
+                                 WHERE co.id = ?`,
+                                [commId],
+                                (err, commRow) => {
+                                    if (err || !commRow) return reject(err);
+                                    const comment = Mapper.mapRowToComment(commRow);
+                                    return resolve({ ok: true, comment });
+                                }
+                            );
+                        }
+                    );
+                });
+            });
+            return;
+        }
+
         const numericStatus = Number(statusId);
-        // Only allow In Progress (3) or Resolved (6)
+        // can only be In Progress (3) or Resolved (6)
         if (!(numericStatus === 3 || numericStatus === 6)) {
             return resolve({ ok: false });
         }
@@ -491,8 +540,8 @@ export const updateExternalMaintainerReportStatus = (userId, reportId, statusId)
 
                 // Compose message succinctly
                 const message = numericStatus === 3
-                    ? "Your report is being resolved"
-                    : "Your report has been resolved. Thank you for your contribution!";
+                    ? "The maintainer is working on the report"
+                    : "The report has been resolved by the maintainer!";
 
                 const sendTime = dayjs().toString();
 
