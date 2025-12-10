@@ -35,7 +35,7 @@ export default function UnassignedEmployeeList(props) {
 }
 
 function EmployeeRow(props) {
-    const { employee, roles, offices, externalOffices, onAssign, onExternalAssign } = props;
+    const { employee, roles, offices, externalOffices, onAssign } = props;
     const [selectedRole, setSelectedRole] = useState('');
     const [selectedOffice, setSelectedOffice] = useState('');
 
