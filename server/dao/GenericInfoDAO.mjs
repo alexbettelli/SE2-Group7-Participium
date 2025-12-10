@@ -43,7 +43,7 @@ const getExternalOffices = () => {
 const getRoles = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user_type 
-      Where id IN (3,4)`; //  3 = public relations, 4 = technician
+      Where id IN (3,4,6)`; //  3 = public relations, 4 = technician, 6 = external maintainer
         db.all(query, [], (err, rows) => {
             if (err) {
                 return reject(err);
