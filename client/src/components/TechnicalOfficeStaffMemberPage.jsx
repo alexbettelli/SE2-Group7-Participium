@@ -46,7 +46,7 @@ export default function TechnicalOfficeStaffMemberPage(props) {
             <h6>This is the dashboard where you can manage your assigned reports.</h6>
             <ReportsTable
                 user={props.user}
-                reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) - (a.unreadNotifications || 0))}
+                reports={[...reports].sort((a, b) => (b.unreadNotifications || 0) + (b.unreadComments || 0) - (a.unreadNotifications || 0) - (a.unreadComments || 0))}
                 externalOffices={externalOffices}
                 setSelectedReport={props.setSelectedReport}
                 updateReports={updateReports}

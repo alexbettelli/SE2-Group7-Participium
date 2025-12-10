@@ -94,7 +94,7 @@ export default function ChatPage(props) {
             <div className="chat-header-row">
                 <div className="chat-officer-label">
                     {chatWith=== "user" && (user.role.id !== 1 ? report.user.username : (report.employee ? report.employee.username : 'No officer assigned'))}
-                    {chatWith=== "maintainer" && (user.role.id !== 4 ? report.employee.username : (report.externalMaintainer ? report.externalMaintainer.username : 'No external maintainer assigned'))}
+                    {chatWith=== "maintainer" && (user.role.id !== 4 ? report.employee.username : (report.externalMaintainer ? report.externalMaintainer.username : 'No maintainer assigned'))}
                 </div>
                 <div className="chat-report-title">
                     REPORT: "{report.title}"
@@ -103,7 +103,7 @@ export default function ChatPage(props) {
             <div className="chat-container-fixed">
                 <div className="chat-messages-scroll" ref={chatScrollRef}>
                     {messages.length === 0 ? (
-                        <div>There are no messages in the chat yet</div>
+                        <div>There are no messages in the chat yet  -  wait until a maintainer accepts the report </div>
                     ) : (
                         <>
                             {messages.map((msg, idx) => (
@@ -126,7 +126,7 @@ export default function ChatPage(props) {
                         </>
                     )}
                 </div>
-                {user.role.id !== 1 && (
+                {(user.role.id ===6 || (user.role.id === 4 && report.externalMaintainer)) && (
                     <div className="chat-notification-form">
                         <input
                             type="text"

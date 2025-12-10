@@ -27,7 +27,7 @@ const USERS = [
     { username: 'admin', password: 'adminpassword', email: 'admin@email.it', firstName: 'ad', lastName: 'min', typeId: 2, allowEmailNotification: 0 },
     { username: 'userPr', password: 'prpassword', email: 'userPr@email.it', firstName: 'user', lastName: 'Pr', typeId: 3, allowEmailNotification: 0 },
     { username: 'userOfficer', password: 'officerpassword', email: 'userOfficer@email.it', firstName: 'user', lastName: 'officer', typeId: 4, allowEmailNotification: 0 },
-    { username: 'externalMaintainer', password: 'maintainerpassword', email: 'externalMaintainer@email.it', firstName: 'external', lastName: 'maintainer', typeId: 6, allowEmailNotification: 0 }
+    { username: 'externalMaintainer', password: 'externalpassword', email: 'externalOfficer@email.it', firstName: 'external', lastName: 'Maintainer', typeId: 6, allowEmailNotification: 0 }
 ];
 const REPORT_CATEGORIES = [
     'Roads and Infrastructure',
@@ -56,6 +56,11 @@ const EXTERNAL_OFFICES = [
   { name: 'ICEF S.r.l', catId: 3 },
   { name: 'GTT S.p.A', catId: 4 }
 ];
+
+const EXTERNAL_OFFICE_EMPLOYEE = [
+    { external_officeId: 1, userId: 5 }
+];
+
 const REPORTS = [
     {
         title: "report1",
@@ -157,20 +162,12 @@ const insertInitialData = async () => {
         );
     }
 
-
-    const externalMaintainer = await new Promise((res, rej) =>
-      db.get(`SELECT id FROM user WHERE username = ?`, ['externalMaintainer'], (err, row) => err ? rej(err) : res(row))
-    );
-    const extOfficeCat1 = await new Promise((res, rej) =>
-      db.get(`SELECT id FROM external_office WHERE catId = 1 LIMIT 1`, [], (err, row) => err ? rej(err) : res(row))
-    );
-    await new Promise((res, rej) =>
-      db.run(
-        `INSERT INTO external_office_employee (external_officeId, userId) VALUES (?, ?)`,
-        [extOfficeCat1.id, externalMaintainer.id],
-        (err) => err ? rej(err) : res()
-      )
-    );
+    // Insert relation between external office and employee
+    for (const relation of EXTERNAL_OFFICE_EMPLOYEE) {
+        await new Promise((res, rej) =>
+            db.run(`INSERT INTO external_office_employee (external_officeId, userId) VALUES (?, ?)`, [relation.external_officeId, relation.userId], (err) => err ? rej(err) : res())
+        );
+    }
 };
 export const setupTestDatabase = async () => {
     try {
