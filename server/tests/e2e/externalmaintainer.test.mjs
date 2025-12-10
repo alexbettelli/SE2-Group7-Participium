@@ -72,7 +72,7 @@ describe('E2E external maintainer routes', () => {
     const { report, externalOffice } = await prepareAssignedReport();
 
     await logout(agent);
-    await login(agent, 'externalMaintainer', 'maintainerpassword');
+    await login(agent, 'externalMaintainer', 'externalpassword');
 
     const okRes = await agent.get('/reports/external-office-assigned');
     expect(okRes.status).toBe(200);
@@ -92,7 +92,7 @@ describe('E2E external maintainer routes', () => {
     const { report } = await prepareAssignedReport();
 
     await logout(agent);
-    await login(agent, 'externalMaintainer', 'maintainerpassword');
+    await login(agent, 'externalMaintainer', 'externalpassword');
 
     // Without accept it can be empty
     const mineBefore = await agent.get('/reports/external-maintainer-my');
@@ -119,7 +119,7 @@ describe('E2E external maintainer routes', () => {
 
     // Maintainer
     await logout(agent);
-    await login(agent, 'externalMaintainer', 'maintainerpassword');
+    await login(agent, 'externalMaintainer', 'externalpassword');
 
     // Accept: expected 200 in future, currently 500; state remains Assigned
     const acceptRes = await agent.patch(`/reports/external-maintainer/${report.id}`).query({ statusId: 'accept' });
@@ -135,7 +135,7 @@ describe('E2E external maintainer routes', () => {
     const allReportsRes = await agent.get('/reports');
     const other = allReportsRes.body.find(r => r.category?.id !== 1) || allReports.body.find(r => r.id !== report.id) || allReports.body[0];
     await logout(agent);
-    await login(agent, 'externalMaintainer', 'maintainerpassword');
+    await login(agent, 'externalMaintainer', 'externalpassword');
     const notMineRes = await agent.patch(`/reports/external-maintainer/${other.id}`).query({ statusId: 6 });
     expect([200, 404, 403]).toContain(notMineRes.status);
 
@@ -151,7 +151,7 @@ describe('E2E external maintainer routes', () => {
     const { report } = await prepareAssignedReport({ alsoAssignMunicipal: true });
 
     await logout(agent);
-    await login(agent, 'externalMaintainer', 'maintainerpassword');
+    await login(agent, 'externalMaintainer', 'externalpassword');
 
     const acceptRes = await agent.patch(`/reports/external-maintainer/${report.id}`).query({ statusId: 'accept' });
     // If 200, proceed to change state; if 500, skip (current behavior)
