@@ -76,7 +76,7 @@ export default function ReportPreview(props) {
                 if (isExternalMaintainer) {
                     result = await ReportAPI.updateExternalMaintainerReportStatus(report.id, selectedStatusId);
                 } else {
-                    result = await ReportAPI.updateReportStatus(report.id, selectedStatusId);
+                    result = await ReportAPI.updateReportStatus(report.id, selectedStatusId? selectedStatusId : 3);
                 }
                 
                 if (result) {
