@@ -19,7 +19,8 @@ const USER_TYPES = [
     { type: 'System Administrator' },
     { type: 'Municipal Public Relations Officer' },
     { type: 'Technical Office Staff Member' },
-    { type: 'Unassigned Employee' }
+    { type: 'Unassigned Employee' },
+    { type: 'External Maintainer' }
 ];
 const USERS = [
     { username: 'user', password: 'userpassword', email: 'user@email.it', firstName: 'us', lastName: 'er', typeId: 1, allowEmailNotification: 1 },
@@ -50,10 +51,10 @@ const OFFICES = [
 ];
 
 const EXTERNAL_OFFICES = [
-    { name: 'LAVORINCORSO', catId: 1 },
-    { name: 'AMIAT S.p.A', catId: 2 },
-    { name: 'ICEF S.r.l', catId: 3 },
-    { name: 'GTT S.p.A', catId: 4 }
+  { name: 'LAVORINCORSO', catId: 1 },
+  { name: 'AMIAT S.p.A', catId: 2 },
+  { name: 'ICEF S.r.l', catId: 3 },
+  { name: 'GTT S.p.A', catId: 4 }
 ];
 
 const EXTERNAL_OFFICE_EMPLOYEE = [
