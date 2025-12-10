@@ -1,15 +1,18 @@
 import './App.css'
-import {Routes, Route, Navigate} from 'react-router';
-import { useEffect, useState } from 'react'
-import API from './api/API.mjs'
-import AuthenticateForm from './components/Authentication';
+import { Routes, Route, Navigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import LoggingAPI from './api/LoggingAPI.mjs';
+import UserAPI from './api/UserAPI.mjs'
 import NotFound from './components/NotFound';
 import DefaultLayout from './components/DefaultLayout';
 import HomePage from './components/HomePage';
-import { ReportOverviewPage } from './components/ReportOverviewPage.jsx';
+import ReportOverviewPage from './components/ReportOverviewPage.jsx';
 import MyReportsPage from './components/MyReportsPage.jsx';
 import ChatPage from './components/ChatPage.jsx';
 import ProfilePage from './components/ProfilePage';
+import ExternalMaintainerPage from './components/ExternalMaintainerPage.jsx';
+import AuthenticationScreen from './components/Authentication';
+import HelpCenter from './components/HelpCenter';
 
 
 function App() {
@@ -18,22 +21,23 @@ function App() {
   const [loginError, setLoginError] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
   const [unreadNotifications, setUnreadNotifications] = useState(null);
+  const [chatWith, setChatWith] = useState(null);
 
   useEffect(() => {
-      API.getUserInfo()
+    UserAPI.getUserInfo()
       .then((user) => {
-          setLoggedIn(true);
-          setUser(user);
-        }) 
-      .catch(  e => {
+        setLoggedIn(true);
+        setUser(user);
+      })
+      .catch(e => {
         setLoggedIn(false);
         setUser(null);
-        });
-    }, []);
+      });
+  }, []);
 
-  const handleLogin = async(credentials) => {
+  const handleLogin = async (credentials) => {
     try {
-      const user = await API.login(credentials);
+      const user = await LoggingAPI.login(credentials);
       setLoggedIn(true);
       setUser(user);
       setLoginError("");
@@ -42,20 +46,21 @@ function App() {
     }
   }
   const handleLogout = async () => {
-    await API.logOut();
+    await LoggingAPI.logOut();
     setLoggedIn(false);
     setUser(null);
   };
 
   return (
     <Routes>
-      <Route element={<DefaultLayout user={user} handleLogout={handleLogout} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications}/>}>     
-        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport}/> : <AuthenticateForm handleLogin={handleLogin} loginError={loginError} />}/> 
-        <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/"  />} />
-        <Route path="/profile" element={user && user.role?.id === 1 ? ( <ProfilePage user={user} setUser={setUser} /> ) : (<Navigate to="/" replace />) } />
-        <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} /> : <Navigate to="/"  />} />
-        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications}/> : <Navigate to="/"  />} />
-        <Route path="*" element={<NotFound />}/>
+      <Route element={<DefaultLayout user={user} handleLogout={handleLogout} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} />}>
+        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/> : <AuthenticationScreen handleLogin={handleLogin} loginError={loginError} />} />
+        <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/" />} />
+        <Route path="/profile" element={user && user.role?.id === 1 ? (<ProfilePage user={user} setUser={setUser} />) : (<Navigate to="/" replace />)} />
+        <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/> : <Navigate to="/" />} />
+        <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} chatWith={chatWith}/> : <Navigate to="/" />} />
+        <Route path="/help" element={<HelpCenter user={user} />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

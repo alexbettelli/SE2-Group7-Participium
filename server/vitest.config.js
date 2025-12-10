@@ -4,9 +4,15 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: './tests/setup.mjs',
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
     },
     include: ['tests/**/*.test.js','tests/**/*.test.mjs'],
+    env: {
+      UPLOADS_DIR: 'tests/test_uploads'
+    }
   },
 });

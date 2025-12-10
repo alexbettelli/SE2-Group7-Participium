@@ -17,8 +17,28 @@
             "description": "Operations for user authentication"
         },
         {
+            "name": "Employees",
+            "description": "Operations for employees management"
+        },
+        {
+            "name": "Offices",
+            "description": "Operations for offices management"
+        },
+        {
+            "name": "Roles",
+            "description": "Operations for roles management"
+        },
+        {
+            "name": "Categories",
+            "description": "Operations for categories management"
+        },
+        {
             "name": "Reports",
             "description": "Operations for reports handling"
+        },
+        {
+            "name": "Users",
+            "description": "Operations for users management"
         },
         {
             "name": "Notifications",
@@ -28,13 +48,14 @@
             "name": "Statistics",
             "description": "Operations for statistics retrieval"
         }
+        
     ],
     "paths": {
-        "/api/users": {
+        "/users/temporary": {
             "post": {
                 "tags": [ "Authentication" ],
-                "summary": "Create a new user",
-                "description": "This endpoint allows the creation of a new user in the system.",
+                "summary": "Create a new temporary user",
+                "description": "This endpoint allows the creation of a temporary user in the system. After the creation an endpoint is sent via email",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -61,11 +82,8 @@
                         "description": "Created",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": { "type": "integer" }
-                                    }
+                                "example": {
+                                    "message": "OTP generated and sent to email."
                                 }
                             }
                         }
@@ -78,7 +96,7 @@
                                     "$ref": "#/components/schemas/error"
                                 },
                                 "example": {
-                                    "message": "Invalid user data provided."
+                                    "message": "An OTP has already been generated and is still valid."
                                 }
                             }
                         }
@@ -112,7 +130,108 @@
                 }
             }
         },
-        "/api/session": {
+        "/otp/resend": {
+            "post": {
+                "tags": [ "Authentication" ],
+                "summary": "Resend OTP email",
+                "description": "This endpoint allows to resend the OTP to the user email.",
+                "responses": {
+                    "201": {
+                        "description": "Crated",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "OTP generated and sent to email."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You can request a new OTP only after 1 minute from the previous generation."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/temporary/verify": {
+            "post": {
+                "tags": [ "Authentication" ],
+                "summary": "Verify OTP and create user",
+                "description": "This endpoint allows to verify the OTP sent via email and create the user in the system.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "otp": { "type": "string" }
+                                },
+                                "required": [ "otp" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "The OTP is invalid or has expired."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Unable to save the user"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/session": {
             "post": {
                 "tags": [ "Authentication" ],
                 "summary": "Perform login",
@@ -170,7 +289,7 @@
                 }
             }
         },
-        "/api/session/current": {
+        "/session/current": {
             "get": {
                 "tags": [ "Authentication" ],
                 "summary": "Get current logged-in user information",
@@ -244,7 +363,7 @@
             }
         },
 
-        "/api/reports/": {
+        "/users/reports": {
             "post": {
                 "tags": [ "Reports" ],
                 "summary": "Create a new report",
@@ -310,7 +429,612 @@
                 }
             }
         },
-        "/api/reports/approved": {
+        "/users/myreports": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve user's reports",
+                "description": "Retrieve all reports created by the logged-in user. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/unassigned": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve unassigned reports",
+                "description": "Retrieve all reports that are not assigned to any office. This operation requires authentication and can only be performed by Municipal Public Relations Officers.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/external-office-assigned": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve reports assigned to external offices and that has not been accepeted yet",
+                "description": "Retrieve all reports assigned to external offices. This operation requires authentication and can only be performed by external maintainers.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/external-maintainer-my": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve reports assigned to the logged-in external maintainer and that has been accepted",
+                "description": "Retrieve all reports assigned to the logged-in external maintainer. This operation requires authentication and can only be performed by external maintainers.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/external-maintainer/:id": {
+            "patch": {
+                "tags": [ "Reports" ],
+                "summary": "Update the status of the report assigned to the logged-in external maintainer",
+                "description": "This operation allows the logged-in external maintainer to accept or reject a report assigned to them. This operation requires authentication and can only be performed by external maintainers.",
+                "security": [ { "cookieAuth": [] } ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "description": "The ID of the report",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Report not found."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/assigned": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve assigned reports",
+                "description": "Retrieve all reports that are assigned to an office and to an employee. This operation requires authentication and can only be performed by technical office staff members.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/statuses": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve report statuses",
+                "description": "Retrieve all possible report statuses. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": { "type": "integer" },
+                                                "type": { "type": "string" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/assign": {
+            "post": {
+                "tags": [ "Reports" ],
+                "summary": "Assign a report to an office and an employee",
+                "description": "This endpoint allows to assign a report to an office and to an employee. This operation requires authentication and can only be performed by Municipal Public Relations Officers.",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reportId": { "type": "integer" },
+                                    "userId": { "type": "integer" },
+                                    "categoryId": { "type": "integer" },
+                                    "officeId": { "type": "integer" },
+                                    "employeeId": { "type": "integer" }
+                                },
+                                "required": [ "reportId", "officeId", "employeeId", "categoryId", "userId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/assignExternal": {
+            "post": {
+                "tags": [ "Reports" ],
+                "summary": "Assign a report to an external office",
+                "description": "This endpoint allows to assign a report to an external office. This operation requires authentication and can only be performed by a technical office staff member.",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reportId": { "type": "integer" },
+                                    "externalOfficeId": { "type": "integer" }
+                                },
+                                "required": [ "reportId", "externalOfficeId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/reject": {
+            "post": {
+                "tags": [ "Reports" ],
+                "summary": "Reject a report",
+                "description": "This endpoint allows to reject a report. This operation requires authentication and can only be performed by Municipal Public Relations Officers.",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userId": { "type": "integer" },
+                                    "reportId": { "type": "integer" },
+                                    "reason": { "type": "string", "maxLength": 255 }
+                                },
+                                "required": [ "reportId", "reason", "userId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/approved": {
             "get": {
                 "tags": [ "Reports" ],
                 "summary": "Retrieve approved reports",
@@ -342,94 +1066,7 @@
                 }
             }
         },
-        "/api/reports/{reportID}": {
-            "get": {
-                "tags": [ "Reports" ],
-                "summary": "Retrieve a report",
-                "description": "Retrieve the report with a given ID",
-                "parameters": [
-                    {
-                        "name": "reportID",
-                        "description": "The ID of the report to retrieve",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "integer" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/report"
-                                },
-                                "example": {
-                                    "user": "string",
-                                    "title": "string",
-                                    "description": "stringstri",
-                                    "latitude": "string",
-                                    "longitude": "string",
-                                    "address": "string",
-                                    "category": "string",
-                                    "status": "string",
-                                    "createdAt": "2025-11-05T16:12:25.471Z",
-                                    "updatedAt": "2025-11-05T16:12:25.471Z",
-                                    "rejectReason": "string",
-                                    "comments": [
-                                        {
-                                            "officer": "string",
-                                            "comment": "string",
-                                            "createdAt": "2025-11-05T16:12:25.471Z"
-                                        }
-                                    ],
-                                    "images": [
-                                        {
-                                            "imageURL": "string"
-                                        }
-                                    ]
-                                }
-                            }
-                        }   
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/error"
-                                },
-                                "example": {
-                                    "message": "Invalid report ID provided."
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/error"
-                                },
-                                "example": {
-                                    "message": "Report not found."
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/error"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
+        "/reports/{reportID}": {
             "patch": {
                 "tags": [ "Reports" ],
                 "summary": "Update the status of the report",
@@ -530,42 +1167,41 @@
             }
         },
 
-        "/api/notifications": {
+
+        "/employees": {
             "post": {
-                "tags": [ "Notifications" ],
-                "summary": "Send a notification",
-                "description": "This endpoint allows a logged-in user to send a notification. This operation requires authentication.",
+                "tags": [ "Employees" ],
+                "summary": "Create a new employee",
+                "description": "This endpoint allows to create a new employee in the system. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "reportId": { "type": "integer" },
-                                    "receiverId": { "type": "integer" },
-                                    "text": { "type": "string" },
-                                    "channelId": { "type": "integer" }
-                                },
-                                "additionalProperties": false,
-                                "required": [ "reportId", "receiverId", "text", "channelId" ]
+                                "$ref": "#/components/schemas/user"
+                            },
+                            "example": {
+                                "username": "string",
+                                "email": "string",
+                                "password": "string",
+                                "firstName": "string",
+                                "lastName": "string",
+                                "typeId": 5,
+                                "allowEmailNotifications": 1,
+                                "telegramUsername": "string",
+                                "imageURL": "string"
                             }
                         }
                     }
                 },
                 "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
+                    "201": {
+                        "description": "Created",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/error"
-                                },
                                 "example": {
-                                    "message": "Invalid notification data provided."
+                                    "id": 1
                                 }
                             }
                         }
@@ -596,49 +1232,57 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "409": {
+                        "description": "Conflict Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "This user already exists."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
                                 }
                             }
                         }
                     }
                 }
-            },
-             "get": {
-                "tags": [ "Notifications" ],
-                "summary": "Retrieve user notifications",
-                "description": "This endpoint allows a logged-in user to retrieve their notifications. It is also possible to filter according to the channel. This operation requires authentication.",
+            }
+        },
+        "/employees/{id}": {
+            "delete": {
+                "tags": [ "Employees" ],
+                "summary": "Delete an employee",
+                "description": "This endpoint allows to delete an employee from the system. This operation requires authentication and can only be performed by admin",
                 "security": [ { "cookieAuth": [] } ],
                 "parameters": [
                     {
-                        "name": "userID",
-                        "description": "The ID of the user",
-                        "in": "query",
+                        "name": "id",
+                        "description": "The ID of the employee to delete",
+                        "in": "path",
                         "required": true,
-                        "schema": { "type": "integer" }
-                    },
-                    {
-                        "name": "channelID",
-                        "description": "The ID of the channel from wich to retrieve notifications",
-                        "in": "query",
-                        "required": false,
                         "schema": { "type": "integer" }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Created",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/notification"
-                                    }
+                                "example": {
+                                    "message": "Employee deleted successfully."
                                 }
                             }
                         }
@@ -651,7 +1295,7 @@
                                     "$ref": "#/components/schemas/error"
                                 },
                                 "example": {
-                                    "message": "Invalid user ID or channel ID provided."
+                                    "message": "Employee ID is required."
                                 }
                             }
                         }
@@ -690,17 +1334,157 @@
                                     "$ref": "#/components/schemas/error"
                                 },
                                 "example": {
-                                    "message": "User or channel not found."
+                                    "message": "Employee not found."
                                 }
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "503": {
+                        "description": "Service Unavailable",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/unassigned": {
+            "get": {
+                "tags": [ "Employees" ],
+                "summary": "Retrieve unassigned employees",
+                "description": "This endpoint retrieves all employees that are not assigned to any office. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/user"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/assign": {
+            "post": {
+                "tags": [ "Employees" ],
+                "summary": "Assign an employee to an office",
+                "description": "This endpoint allows to assign an employee to an office. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "employeeId": { "type": "integer" },
+                                    "officeId": { "type": "integer" },
+                                    "roleId": { "type": "integer"  }
+                                },
+                                "required": [ "employeeId", "officeId", "roleId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Employee assigned successfully."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
                                 }
                             }
                         }
@@ -709,18 +1493,291 @@
             }
         },
 
-        "/api/statistics/public": {
+        "/offices": {
             "get": {
-                "tags": [ "Statistics" ],
-                "summary": "Retrieve public statistics",
-                "description": "This operation allows to retrieve public statistics.",
+                "tags": [ "Offices" ],
+                "summary": "Retrieve all offices",
+                "description": "This endpoint retrieves all offices in the system. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/public_stats"
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "integer" },
+                                            "name": { "type": "string" },
+                                            "address": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/externalOffices": {
+            "get": {
+                "tags": [ "Offices" ],
+                "summary": "Retrieve all external offices",
+                "description": "This endpoint retrieves all external offices in the system. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "integer" },
+                                            "name": { "type": "string" },
+                                            "address": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/roles": {
+            "get": {
+                "tags": [ "Roles" ],
+                "summary": "Retrieve all roles",
+                "description": "This endpoint retrieves all roles in the system. This operation requires authentication and can only be performed by admin users.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "integer" },
+                                            "name": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/categories": {
+            "get": {
+                "tags": [ "Categories" ],
+                "summary": "Retrieve all categories",
+                "description": "This endpoint retrieves all categories in the system. This operation requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "integer" },
+                                            "name": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/api/user/profile": {
+            "put": {
+                "tags": [ "Users" ],
+                "summary": "Update user profile",
+                "description": "This endpoint allows a user to update their profile information. This operation requires authentication and can only be performed by citizens.",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/user"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
                                 }
                             }
                         }
@@ -731,6 +1788,9 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "An unexpected error occurred."
                                 }
                             }
                         }
@@ -738,19 +1798,19 @@
                 }
             }
         },
-        "/api/statistics/private": {
-            "get": {
-                "tags": [ "Statistics" ],
-                "summary": "Retrieve private statistics",
-                "description": "This operation allows an administrator to retrieve private statistics. This operation requires authentication.",
+        "/api/user/profile/photo": {
+            "delete": {
+                "tags": [ "Users" ],
+                "summary": "Delete user profile photo",
+                "description": "This endpoint allows a user to delete their profile photo. This operation requires authentication and can only be performed by citizens.",
                 "security": [ { "cookieAuth": [] } ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/private_stats"
+                                "example": {
+                                    "message": "Profile photo deleted successfully"
                                 }
                             }
                         }
@@ -787,6 +1847,131 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "An unexpected error occurred."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/notifications": {
+            "post": {
+                "tags": [ "Notifications" ],
+                "summary": "Create a new notification",
+                "description": "This endpoint allows to create a new notification in the system",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/notification"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid notification data provided."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/read": {
+            "post": {
+                "tags": [ "Notifications" ],
+                "summary": "Mark notifications of a report as read",
+                "description": "This endpoint allows to mark multiple notifications as read. This endpoint requires authentication.",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reportId": { "type": "integer" }
+                                },
+                                "required": [ "reportId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid notification IDs provided."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "An unexpected error occurred."
                                 }
                             }
                         }
@@ -882,6 +2067,17 @@
                     "channelId": { "type": "integer" }
                 },
                 "required": [ "receiverId", "text", "channelId" ]
+            },
+            "comment": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "reportId": { "type": "integer" },
+                    "senderId": { "type": ["integer", "null"] },
+                    "receiverId": { "type": "integer" },
+                    "text": { "type": "string" }
+                },
+                "required": [ "reportId", "receiverId", "text" ]
             },
             "public_stats": {
                 "type": "object",
@@ -1040,4 +2236,4 @@
             }
         }
     }
-}
+}   

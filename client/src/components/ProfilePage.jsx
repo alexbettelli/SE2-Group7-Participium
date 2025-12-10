@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import API from '../api/API.mjs';
 import '../styles/commonStyle.css';
 import '../styles/ProfilePage.css';
+
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import PropTypes from 'prop-types';
+
+import UserAPI from '../api/UserAPI.mjs';
+
 
 export default function ProfilePage({ user, setUser }) {
   const navigate = useNavigate();
@@ -13,7 +17,7 @@ export default function ProfilePage({ user, setUser }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [photoRemoved, setPhotoRemoved] = useState(false); 
+  const [photoRemoved, setPhotoRemoved] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -36,7 +40,7 @@ export default function ProfilePage({ user, setUser }) {
       setError('Image size must be less than 5MB');
       return;
     }
-    if(photoPreview && photoPreview.startsWith('blob:')){
+    if (photoPreview && photoPreview.startsWith('blob:')) {
       URL.revokeObjectURL(photoPreview);
     }
     setProfilePhoto(file);
@@ -61,20 +65,20 @@ export default function ProfilePage({ user, setUser }) {
     setError('');
     try {
       if (photoRemoved && user.imageUrl) {
-        await API.deleteProfilePhoto();
+        await UserAPI.deleteProfilePhoto();
         setPhotoPreview(null);
         setUser(prevUser => ({ ...prevUser, imageUrl: null }));
       }
-      if(!photoRemoved || profilePhoto){
+      if (!photoRemoved || profilePhoto) {
         const formData = new FormData();
         if (profilePhoto && !photoRemoved) {
-          formData.append('profilePhoto', profilePhoto); 
+          formData.append('profilePhoto', profilePhoto);
         }
         formData.append('telegramUsername', telegramUsername.trim());
         formData.append('allowEmailNotification', allowEmailNotification ? 1 : 0);
-        const updatedUser = await API.updateProfile(formData);
+        const updatedUser = await UserAPI.updateProfile(formData);
         setUser(updatedUser);
-      }  
+      }
       setPhotoRemoved(false);
       setMessage('Profile updated successfully!');
     } catch (err) {
@@ -82,7 +86,7 @@ export default function ProfilePage({ user, setUser }) {
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
   if (!user) return null;
 
@@ -133,21 +137,21 @@ export default function ProfilePage({ user, setUser }) {
           <div className="profile-col profile-col-info">
             <div className="info-display">
               <div className="info-item">
-                <label>Full Name</label>
+                <div className="info-label">Full Name</div>
                 <div className="info-value">
                   <i className="bi bi-person-fill"></i>
                   {user.firstName} {user.lastName}
                 </div>
               </div>
               <div className="info-item">
-                <label>Username</label>
+                <div className="info-label">Username</div>
                 <div className="info-value">
                   <i className="bi bi-at"></i>
                   {user.username}
                 </div>
               </div>
               <div className="info-item">
-                <label>Email</label>
+                <div className="info-label">Email</div>
                 <div className="info-value">
                   <i className="bi bi-envelope-fill"></i>
                   {user.email}
@@ -209,3 +213,16 @@ export default function ProfilePage({ user, setUser }) {
     </div>
   );
 }
+
+ProfilePage.propTypes = {
+  user: PropTypes.shape({
+    firstName: PropTypes.string.isRequired,
+    lastName: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    telegramUsername: PropTypes.string,
+    allowEmailNotification: PropTypes.number,
+    imageUrl: PropTypes.string
+  }),
+  setUser: PropTypes.func.isRequired
+};

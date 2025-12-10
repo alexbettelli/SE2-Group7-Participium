@@ -1,5 +1,7 @@
-import {useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router';
+import '../styles/CitizenPage.css';
+
+import { useEffect, useRef, useState } from 'react';
+
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import "leaflet.markercluster";
@@ -9,20 +11,23 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css';
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 import * as turf from '@turf/turf';
-import '../styles/CitizenPage.css';
-import API from '../api/API.mjs';
+
 import ReportOverview from './ReportOverview.jsx';
 import ReportPopup from './ReportPopUp.jsx';
 import ReactDOM from "react-dom/client";
 
+import GenericAPI from '../api/GenericAPI.mjs';
+import ReportAPI from '../api/ReportAPI.mjs';
+import HelpIcon from './HelpIcon.jsx';
+import getStatusClass from '../utils/StatusColorsMapper.mjs';
+import PropTypes from 'prop-types'; 
 
-
-export default function CitizenPage({user}){
-    const navigate = useNavigate();
+export default function CitizenPage(props) {
+    const { user } = props;
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markerRef = useRef(null);
-    const abortControllerRef = useRef(null);    
+    const abortControllerRef = useRef(null);
     const clusterGroupRef = useRef(null);
 
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -41,31 +46,19 @@ export default function CitizenPage({user}){
     const [submittedReport, setSubmittedReport] = useState(null);
     const [reports, setReports] = useState([]);
     const [approvedReports, setApprovedReports] = useState([]);
-    const [reportDetails, setReportDetails] = useState({})
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'Resolved':
-                return 'status-completed'; // Verde
-            case 'Pending Approval':
-                return 'status-pending'; // Giallo/Arancione
-            case 'Rejected':
-                return 'status-rejected'; // Rosso
-            case 'In Progress':
-                return 'status-in-progress'; // Blu/Azzurro
-            default:
-                return 'status-default'; // Grigio/Default
-        }
-    };
+    const [reportDetails, setReportDetails] = useState({});
+    const [locationError, setLocationError] = useState('');
+    
     const categoryColors = {
         "Roads and Infrastructure": "lightblue",
         "Waste and Cleanliness": "black",
         "Green Areas and Public Parks": "darkred",
         "Public Transport and Mobility": "purple"
     };
-    const  getMarkerIcon = (categoryName) => {
-        const color = categoryColors[categoryName] || "blue"; // Default color        
+    const getMarkerIcon = (categoryName) => {
+        const color = categoryColors[categoryName] || "blue"; // Default color
         return L.AwesomeMarkers.icon({
-            icon: 'fa-circle',     
+            icon: 'fa-circle',
             markerColor: color,
             prefix: 'fa',
             iconColor: 'white'
@@ -92,18 +85,21 @@ export default function CitizenPage({user}){
             L.DomEvent.disableClickPropagation(div);
             L.DomEvent.disableScrollPropagation(div);
 
+            const content = div.querySelector('.legend-content');
+            const btn = div.querySelector('.legend-toggle-btn');
+
             // Collapse by default
-            div.querySelector('.legend-content').style.display = 'none';
-            div.querySelector('.legend-toggle-btn').onclick = function() {
-                const content = div.querySelector('.legend-content');
+            content.style.display = 'none';
+            btn.addEventListener('click', (e) => {
                 if (content.style.display === 'none') {
                     content.style.display = 'block';
-                    this.textContent = 'Hide Legend';
+                    e.currentTarget.textContent = 'Hide Legend';
                 } else {
                     content.style.display = 'none';
-                    this.textContent = 'Legenda';
+                    e.currentTarget.textContent = 'Show Legend';
                 }
-            };
+            });
+
             return div;
         };
         legend.addTo(map);
@@ -111,12 +107,11 @@ export default function CitizenPage({user}){
     useEffect(() => {
         getAllReports();
     }, []);
-    
-    const getAllReports = async () =>{
+
+    const getAllReports = async () => {
         try {
-            const reports = await API.getAllReports();            
+            const reports = await ReportAPI.getAllReports();
             setReports(reports);
-            console.log(reports)
             const approvedReports = reports.filter(report => [2, 3, 4].includes(report.status.id));
             setApprovedReports(approvedReports);
         } catch (error) {
@@ -126,7 +121,7 @@ export default function CitizenPage({user}){
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const cats = await API.getCategories();
+                const cats = await GenericAPI.getCategories();
                 setCategories(cats);
             } catch (error) {
                 console.error('Error fetching categories:', error);
@@ -165,22 +160,6 @@ export default function CitizenPage({user}){
             mapInstanceRef.current.on('click', async (e) => {
                 const { lat, lng } = e.latlng;
 
-                // Check if inside Turin boundary
-                const boundary = mapInstanceRef.current._turinBoundary;
-                if (boundary) {
-                    const point = turf.point([lng, lat]);
-                    const boundaryGeoJSON = boundary.toGeoJSON();
-                    const inside = boundaryGeoJSON.features.some(feature =>
-                        turf.booleanPointInPolygon(point, feature)
-                    );
-
-                    if (!inside) {
-                        alert("Please select a location inside the City of Turin.");
-                        return;
-                    }
-                }
-
-
                 if (abortControllerRef.current) {
                     abortControllerRef.current.abort();
                 }
@@ -189,12 +168,32 @@ export default function CitizenPage({user}){
                     mapInstanceRef.current.removeLayer(markerRef.current);
                 }
 
-                
-                markerRef.current = L.marker([lat, lng], {icon : getMarkerIcon()}).addTo(mapInstanceRef.current);
+
+                markerRef.current = L.marker([lat, lng], { icon: getMarkerIcon() }).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
+                setActiveTab('form');
+
+                const boundary = mapInstanceRef.current._turinBoundary;
+                let isInside = true;
+
+                if (boundary) {
+                    const point = turf.point([lng, lat]);
+                    const boundaryGeoJSON = boundary.toGeoJSON();
+                    isInside = boundaryGeoJSON.features.some(feature =>
+                        turf.booleanPointInPolygon(point, feature)
+                    );
+                }
+
+                if (!isInside) {
+                    setLocationError("Please select a location inside the City of Turin.");
+                    setAddress('');
+                    setLoadingAddress(false);
+                    return;
+                }
+
+                setLocationError('');
                 setAddress('');
                 setLoadingAddress(true);
-                setActiveTab('form');
 
                 abortControllerRef.current = new AbortController();
 
@@ -235,7 +234,7 @@ export default function CitizenPage({user}){
 
         // Rimuovi cluster precedente
         if (clusterGroupRef.current) {
-        mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
         }
 
         // Crea il gruppo cluster
@@ -246,9 +245,9 @@ export default function CitizenPage({user}){
             iconCreateFunction: (cluster) => {
                 const count = cluster.getChildCount();
                 let color;
-                 if (count < 10) color = "#4caf50";  
-                else if (count < 15) color = "#f1c40f";  
-                else if (count < 20) color = "#e67e22";  
+                if (count < 10) color = "#4caf50";
+                else if (count < 15) color = "#f1c40f";
+                else if (count < 20) color = "#e67e22";
                 else color = "#e74c3c";
 
                 return L.divIcon({
@@ -272,17 +271,17 @@ export default function CitizenPage({user}){
         });
 
         // Aggiungi marker al gruppo
-        approvedReports.forEach((report) => {
-        if (report.latitude && report.longitude) {
-            const popupContainer = document.createElement("div");    
-            ReactDOM.createRoot(popupContainer).render(<ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick}/>);
-
+        for (const report of approvedReports) {
+            if (!report.latitude || !report.longitude) continue;
+            const popupContainer = document.createElement("div");
+            ReactDOM.createRoot(popupContainer).render(
+                <ReportPopup report={report} handlePopUpDetailsClick={handlePopUpDetailsClick} />
+            );
             const marker = L.marker([report.latitude, report.longitude], {
-                icon: getMarkerIcon(report.category.categoryName)
-            }).bindPopup(popupContainer);            
-            clusterGroup.addLayer(marker); 
+                icon: getMarkerIcon(report.category?.categoryName)
+            }).bindPopup(popupContainer);
+            clusterGroup.addLayer(marker);
         }
-        });
 
         // Aggiungi il gruppo alla mappa
         clusterGroup.addTo(mapInstanceRef.current);
@@ -290,12 +289,12 @@ export default function CitizenPage({user}){
 
         // Cleanup
         return () => {
-        if (mapInstanceRef.current && clusterGroupRef.current) {
-            mapInstanceRef.current.removeLayer(clusterGroupRef.current);
-        }
+            if (mapInstanceRef.current && clusterGroupRef.current) {
+                mapInstanceRef.current.removeLayer(clusterGroupRef.current);
+            }
         };
     }, [approvedReports]);
-    
+
 
     const handleImageChange = (e) => {
         const newFiles = Array.from(e.target.files);
@@ -376,12 +375,12 @@ export default function CitizenPage({user}){
                 latitude: selectedLocation.lat,
                 longitude: selectedLocation.lng,
                 address: address,
-                catId: parseInt(catId),
+                catId: Number.parseInt(catId, 10),
                 images: images,
                 anonymous: isAnonymous
             };
 
-            const result = await API.submitReport(reportData);
+            const result = await ReportAPI.submitReport(reportData);
 
             const reportForOverview = {
                 id: result.reportId,
@@ -428,8 +427,10 @@ export default function CitizenPage({user}){
         setSelectedLocation(null);
         setAddress('');
         setLoadingAddress(false);
+        setLocationError('');
         if (!keepTab) {
             setActiveTab('reports');
+            ResetZoom();
         }
     };
 
@@ -449,13 +450,14 @@ export default function CitizenPage({user}){
         setActiveTab(tab);
         setSubmitMessage('');
         setReportDetails({});
+        setLocationError('');
         resetForm();
-        //ResetZoom();
+
     };
-    const zoomToReportLocation = (report) =>{
+    const zoomToReportLocation = (report) => {
         if (report.latitude && report.longitude && mapInstanceRef.current) {
-            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17,{
-                animate: true,      
+            mapInstanceRef.current.flyTo([report.latitude, report.longitude], 17, {
+                animate: true,
                 duration: 1.5
             });
         }
@@ -465,17 +467,17 @@ export default function CitizenPage({user}){
             ...report,
             status: report.status?.statusName ?? "N/A",
             category: report.category?.categoryName ?? "N/A",
-            username : report.user?.username ?? "Anonymous"
+            username: report.user?.username ?? "Anonymous"
         };
-        setActiveTab('details');        
-        setReportDetails(normalizedReport);    
+        setActiveTab('details');
+        setReportDetails(normalizedReport);
         zoomToReportLocation(normalizedReport);
-    }    
+    }
     const handlePopUpDetailsClick = (report) => {
         showReportDetails(report);
     }
     const ResetZoom = () => {
-         mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, {animate: true,  duration: 1});
+        mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, { animate: true, duration: 1 });
     }
     return (
         <div className="citizen-page-container">
@@ -520,14 +522,14 @@ export default function CitizenPage({user}){
                                     <p className="empty-message">THERE ARE NO REPORTS IN PROGRESS</p>
                                 ) : (
                                     approvedReports.map((report) => (
-                                    <div key={report.id} className="report-card" onClick={() => showReportDetails(report)}  style={{ cursor: "pointer", border:"1px solid grey" }}>
-                                        <h3>{report.title}</h3>
-                                        <p>
-                                        <strong>Category:</strong> {report.category?.categoryName}<br />
-                                        <strong>Address:</strong> {report.address}
-                                         <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
-                                        </p>
-                                    </div>
+                                        <div key={report.id} className="report-card" onClick={() => showReportDetails(report)} style={{ cursor: "pointer", border: "1px solid grey" }}>
+                                            <h3>{report.title}</h3>
+                                            <p>
+                                                <strong>Category:</strong> {report.category?.categoryName}<br />
+                                                <strong>Address:</strong> {report.address}
+                                                <span className={`status-badge ${getStatusClass(report.status?.statusName)}`}>{report.status?.statusName}</span>
+                                            </p>
+                                        </div>
                                     ))
                                 )}
                             </div>
@@ -549,131 +551,156 @@ export default function CitizenPage({user}){
                         )}
 
                         {activeTab === 'form' && (
-                            <>
-                                {submittedReport ? (
-                                    <ReportOverview user={user}
-                                        report={submittedReport}
-                                        onBackToHome={resetForm}
-                                        showSuccessBanner={true}
-                                    />
-                                ) : selectedLocation ? (
-                                    <>
-                                        <div className="location-info-box">
-                                            <div className="location-header">
-                                                <strong>Selected Location</strong>
-                                                <button className="reset-button" onClick={clearSelection}>
-                                                    Reset
-                                                </button>
-                                            </div>
-                                            <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
-                                            <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address}</p>
-                                        </div>
+                          (() => {
+                            if (submittedReport) {
+                              return (
+                                <ReportOverview
+                                  user={user}
+                                  report={submittedReport}
+                                  onBackToHome={resetForm}
+                                  showSuccessBanner={true}
+                                />
+                              );
+                            }
+                            if (selectedLocation) {
+                              return (
+                                <>
+                                  {locationError && (
+                                    <div className="error-message">{locationError}</div>
+                                  )}
+                                  <div className="location-info-box">
+                                    <div className="location-header">
+                                      <strong>
+                                        Selected Location
+                                        <HelpIcon text="Make sure the location is inside Turin city boundaries. The address will be automatically retrieved." />
+                                      </strong>
+                                      <button className="reset-button" onClick={clearSelection}>Reset</button>
+                                    </div>
+                                    <p><strong>Coordinates:</strong> {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                                    <p><strong>Address:</strong> {loadingAddress ? 'Fetching address...' : address || ''}</p>
+                                  </div>
+                                  {!locationError && (
+                                    <form className="report-form" onSubmit={handleSubmit}>
+                                      <h3>Report Details</h3>
 
-                                        <form className="report-form" onSubmit={handleSubmit}>
-                                            <h3>Report Details</h3>
+                                      <div className="form-group">
+                                          <label>Title <span>*</span>
+                                              <HelpIcon text="A brief, descriptive title for your report (5-100 characters)." />
+                                          </label>
+                                          <input
+                                              type="text"
+                                              className="form-input"
+                                              value={title}
+                                              onChange={(e) => setTitle(e.target.value)}
+                                              required
+                                          />
+                                      </div>
 
-                                            <div className="form-group">
-                                                <label>Title <span>*</span></label>
-                                                <input
-                                                    type="text"
-                                                    className="form-input"
-                                                    value={title}
-                                                    onChange={(e) => setTitle(e.target.value)}
-                                                    required
-                                                />
-                                            </div>
+                                      <div className="form-group">
+                                          <label>Description <span>*</span>
+                                              <HelpIcon text="Provide detailed information about the issue (10-255 characters)." />
+                                          </label>
+                                          <textarea
+                                              className="form-textarea"
+                                              value={description}
+                                              onChange={(e) => setDescription(e.target.value)}
+                                              required
+                                          />
+                                      </div>
 
-                                            <div className="form-group">
-                                                <label>Description <span>*</span></label>
-                                                <textarea
-                                                    className="form-textarea"
-                                                    value={description}
-                                                    onChange={(e) => setDescription(e.target.value)}
-                                                    required
-                                                />
-                                            </div>
+                                      <div className="form-group">
+                                          <label>Category <span>*</span>
+                                              <HelpIcon text="Select the category that best matches your issue." />
+                                          </label>
+                                          <select
+                                              className="form-select"
+                                              value={catId}
+                                              onChange={(e) => setCatId(e.target.value)}
+                                              size="1"
+                                              required
+                                          >
+                                              <option value="">Select a category</option>
+                                              {categories.map(cat => (
+                                                  <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
+                                              ))}
+                                          </select>
+                                      </div>
 
-                                            <div className="form-group">
-                                                <label>Category <span>*</span></label>
-                                                <select
-                                                    className="form-select"
-                                                    value={catId}
-                                                    onChange={(e) => setCatId(e.target.value)}
-                                                    size="1"
-                                                    required
-                                                >
-                                                    <option value="">Select a category</option>
-                                                    {categories.map(cat => (
-                                                        <option key={cat.id} value={cat.id}>{cat.categoryName}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                      <div className="form-group">
+                                          <label>Photos (1-3 required) <span>*</span>
+                                              <HelpIcon text="Upload 1 to 3 photos showing the issue. Clear photos help staff understand the problem better." />
+                                          </label>
+                                          <label className="file-input-label">
+                                              <input
+                                                  type="file"
+                                                  className="file-input"
+                                                  accept="image/*"
+                                                  multiple
+                                                  onChange={handleImageChange}
+                                              />
+                                              <span className="file-input-button">Choose Files</span>
+                                          </label>
+                                          {imagePreviews.length > 0 && (
+                                              <div className="image-previews">
+                                                  {imagePreviews.map((preview, index) => (
+                                                      <div key={index} className="preview-item">
+                                                          <img src={preview} alt={`Preview ${index + 1}`} />
+                                                          <button
+                                                              type="button"
+                                                              className="remove-image-button"
+                                                              onClick={() => removeImage(index)}
+                                                          >
+                                                              ×
+                                                          </button>
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          )}
+                                      </div>
 
-                                            <div className="form-group">
-                                                <label>Photos (1-3 required) <span>*</span></label>
-                                                <label className="file-input-label">
-                                                    <input
-                                                        type="file"
-                                                        className="file-input"
-                                                        accept="image/*"
-                                                        multiple
-                                                        onChange={handleImageChange}
-                                                    />
-                                                    <span className="file-input-button">Choose Files</span>
-                                                </label>
-                                                {imagePreviews.length > 0 && (
-                                                    <div className="image-previews">
-                                                        {imagePreviews.map((preview, index) => (
-                                                            <div key={index} className="preview-item">
-                                                                <img src={preview} alt={`Preview ${index + 1}`} />
-                                                                <button
-                                                                    type="button"
-                                                                    className="remove-image-button"
-                                                                    onClick={() => removeImage(index)}
-                                                                >
-                                                                    ×
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
+                                      {submitMessage && !submitMessage.includes('success') && (
+                                          <div className="error-message">
+                                              {submitMessage}
+                                          </div>
+                                      )}
 
-                                            {/* <div className="form-group">
-                                                <label className="checkbox-label">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isAnonymous}
-                                                        onChange={(e) => setIsAnonymous(e.target.checked)}
-                                                        className="checkbox-input"
-                                                    />
-                                                    <span>Submit as anonymous (your name will not be visible in public reports)</span>
-                                                </label>
-                                            </div> */}
-
-                                            {submitMessage && !submitMessage.includes('success') && (
-                                                <div className="error-message">
-                                                    {submitMessage}
-                                                </div>
-                                            )}
-
-                                            <button
-                                                type="submit"
-                                                className="submit-button"
-                                                disabled={submitting}
-                                            >
-                                                {submitting ? 'Submitting...' : 'Submit Report'}
-                                            </button>
-                                        </form>
-                                    </>
-                                ) : (
-                                    <p className="empty-message">Please select a location on the map first.</p>
-                                )}
-                            </>
-                        )}
+                                      <button
+                                          type="submit"
+                                          className="submit-button"
+                                          disabled={submitting}
+                                      >
+                                          {submitting ? 'Submitting...' : 'Submit Report'}
+                                      </button>
+                                    </form>
+                                    )}
+                                  </>
+                                );
+                              }
+                              return (
+                                <div className="empty-message" style={{ padding: '2rem', textAlign: 'center' }}>
+                                  Click on the map to select a location inside the City of Turin.
+                                </div>
+                              );
+                            })()
+                         )}
                     </div>
                 </div>
             </div>
         </div>
     );
 }
+
+// PropTypes e defaultProps
+CitizenPage.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string,
+    role: PropTypes.shape({
+      id: PropTypes.number,
+    }),
+  }),
+};
+
+CitizenPage.defaultProps = {
+  user: null,
+};

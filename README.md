@@ -314,7 +314,7 @@ Defines all the channels able to send messages.
 
   - **Scope**: Main interface for citizens to submit reports about city issues. This component integrates three key features:
 
-- **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city. The component loads and displays the official administrative boundaries of the City of Turin using a GeoJSON file (`/geo/torino.geojson`) based on OpenStreetMap relation [44880](https://www.openstreetmap.org/relation/44880). The boundary is displayed as a green outlined polygon with semi-transparent fill, and the map automatically adjusts its view to fit the city boundaries when loaded.
+- **Map Display**: The component uses Leaflet to render an interactive map centered on Turin (coordinates 45.0703, 7.6868). The map displays OpenStreetMap tiles and provides users with a visual way to explore the city and identify problem locations. The map is fully interactive, allowing users to zoom, pan, and navigate to different areas of the city. The component loads and displays the official administrative boundaries of the City of Turin using a GeoJSON file (`/geo/torino.geojson`) based on OpenStreetMap relation [43992](https://www.openstreetmap.org/relation/43992). The boundary is displayed as a green outlined polygon with semi-transparent fill, and the map automatically adjusts its view to fit the city boundaries when loaded.
 
 - **Location Selection**: When users click on the map, the component first validates that the selected location is within the City of Turin boundaries using Turf.js for point-in-polygon checking. If a user attempts to select a location outside the city boundaries, an alert message is displayed: "Please select a location inside the City of Turin." Only clicks within the official city boundaries are processed. Once a valid location is selected, the component places a marker at that exact location and automatically retrieves the corresponding street address using OpenStreetMap's Nominatim reverse geocoding API. The selected coordinates (latitude and longitude) are stored, and the address is displayed in a location info box. Users can see both the precise coordinates and the human-readable address before proceeding. If they want to change their selection, they can click the "Reset Location" button to clear the marker and start over.
 
@@ -327,6 +327,40 @@ Defines all the channels able to send messages.
   - An anonymous checkbox option that allows citizens to submit reports without their name being visible in public reports. When checked, the report's `anonymous` flag is set to 1 in the database, but the `userId` is still stored for internal tracking purposes.
 
   The form performs client-side validation to ensure all required fields are filled correctly and that image constraints are met. Upon successful submission, users are redirected to the report overview page to see their submitted report.
+
+## User account verification
+The creation of a user account requires the verification of it through an OTP code sent to the email. This procedure requires several steps:
+1. Creating a temporary user.
+2. Generating and sending a 6-character OTP.
+3. Optionally resending a new OTP (minimum delay: 1 minute).
+4. Verifying the OTP and creating the final user account.
+
+### Registration flow overview
+#### Endpoints
+- `/users/temporary`: creates temporary user + sends OTP via email.
+- `/otp/resend`: it is optional, and it consists on resending the OTP. It can be done after a minimum time of 1 minute of the previous sending.
+- `/users/temporary/verify`: verifies OTP and creates the final user
+
+### Environment variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OTP_EXPIRATION_MINUTES` | How long the OTP is valid | `30` |
+
+### Email delivery system
+The application uses **Nodemailer** with Gmail SMTP to send OTP emails.  
+A custom HTML email template is built using **Handlebars**, and CSS is inlined using **Juice**.
+
+Each email contains:
+- The user’s full name
+- Their username
+- A 6-character OTP (letters + numbers)
+
+Example OTP: `A9F3BD`
+
+### Security notes
+- OTP validity period is configurable through the environment variable.
+- Resending an OTP is rate-limited (1 minute cooldown).
+- Server never exposes nor stores the plain OTP, but it is stored in the user session in the hashed form thanks to **bcrypt**
 
 ## Users
 

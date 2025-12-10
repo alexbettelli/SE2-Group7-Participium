@@ -23,6 +23,21 @@
     flex-shrink: 0;
 }
 
+.report-preview-card .card-section .map-preview {
+    width: 200px;
+    height: 200px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    margin-left: 1rem;
+}
+
+.report-preview-card .card-section .map-preview .leaflet-container {
+    width: 200px !important;
+    height: 100% !important;
+    border-radius: 20px;
+}
+
 .card-main-info {
     margin-left: 1.5rem;
     max-width: 45%;
@@ -38,42 +53,6 @@
 .card-main-info p {
     margin: 0.3rem 0;
     line-height: 1.6;
-}
-
-.status-badge {
-    background: #f39c12;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
-    display: inline-block;
-}
-
-.status-badge.status-completed {
-    background: #2cc455;
-    box-shadow: 0 2px 4px rgba(26, 188, 96, 0.4);
-}
-
-.status-badge.status-pending {
-    background: #f39c12;
-    box-shadow: 0 2px 4px rgba(243, 156, 18, 0.4);
-}
-
-.status-badge.status-rejected {
-    background: #e74c3c;
-    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.4);
-}
-
-.status-badge.status-in-progress {
-    background: #3498db;
-    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.4);
-}
-
-.status-badge.status-default {
-    background: #95a5a6;
-    box-shadow: 0 2px 4px rgba(149, 165, 166, 0.4);
 }
 
 .report-id-badge {
@@ -129,7 +108,6 @@ div.report-view{
 }
 
 div.report-view-header {
-    position: relative;
     border-bottom: 1px solid #ccc;
     display: flex;
     align-items: center;
@@ -248,6 +226,42 @@ div.field p {
     gap: 0.7rem;
 }
 
+
+.btn-chat {
+    background: var(--color-green);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.7rem 2.2rem;
+    box-shadow: 0 4px 16px rgba(83, 153, 135, 0.18);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    position: relative;
+    outline: none;
+    white-space: nowrap;
+}
+
+.btn-chat:hover {
+    background: var(--color-green);
+    box-shadow: 0 8px 24px rgba(83, 153, 135, 0.28);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.btn-chat:active {
+    background: var(--color-green);
+    transform: scale(0.98);
+}
+
+.chat-btn-flex {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
 .chat-btn-notification-wrapper {
     position: relative;
     display: inline-block;
@@ -298,6 +312,37 @@ div.field p {
     background: var(--color-wine-light);
     transform: scale(0.98);
 }
+
+.btn-assign-external {
+    background: linear-gradient(90deg, #2D9CDB 0%, #1572D6 100%);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.7rem 2.2rem;
+    box-shadow: 0 6px 18px rgba(21, 114, 214, 0.18);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    position: relative;
+    outline: none;
+    white-space: nowrap;
+}
+
+.btn-assign-external:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(21, 114, 214, 0.22);
+}
+
+.btn-assign-external:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(21, 114, 214, 0.14);
+}
+
+
 
 .btn-close-modal {
     background: var(--color-wine-light);
@@ -364,6 +409,10 @@ div.field p {
     .report-preview-card .card-section img {
         width: 150px;
         height: 150px;
+    }
+
+    .report-preview-card .card-section .map-preview {
+        display: none;
     }
     
     .card-main-info {
@@ -703,4 +752,97 @@ div.field.description-field {
     div.map-container-popup {
         height: 200px;
     }
+}
+
+
+.external-assignment-backdrop {
+    background-color: rgba(0,0,0,0.48) !important;
+    backdrop-filter: blur(3px);
+}
+
+/* Both modals - centered positioning */
+.external-assignment-dialog,
+.status-modal-dialog {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: min(640px, calc(100% - 2rem)) !important;
+    z-index: 1060 !important;
+    pointer-events: auto;
+}
+
+.external-assignment-content,
+.status-modal-content {
+    max-height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+    border-radius: 12px !important;
+}
+
+@media (max-width: 480px) {
+    .external-assignment-dialog,
+    .status-modal_dialog {
+        top: 10% !important;
+        transform: translateX(-50%) !important;
+        width: calc(100% - 1rem) !important;
+    }
+}
+
+/* Header - both modals */
+.external-assignment-content .modal-header,
+.status-modal-content .modal-header {
+    background: linear-gradient(90deg, rgba(250,250,252,1), rgba(245,247,250,1));
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 0.85rem 1rem;
+}
+
+/* Body - both modals */
+.external-assignment-content .modal-body,
+.status-modal-content .modal-body {
+    padding: 1rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(250,250,252,0.98));
+}
+
+/* Select styling */
+.external-select {
+    width: 100%;
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(0,0,0,0.08);
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(21,21,21,0.03);
+    background: #fff;
+}
+
+/* Footer + buttons - both modals */
+.external-assignment-content .modal-footer,
+.status-modal-content .modal-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(0,0,0,0.04);
+    background: transparent;
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 0.56rem 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.modal-btn:hover { transform: translateY(-2px); }
+
+.modal-btn:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+
+/* small screen adjustments */
+@media (max-width: 480px) {
+    .external-assignment-dialog { margin: 1rem; }
+    .external-assignment-content .modal-body { padding: 0.75rem; }
+    .modal-btn { padding: 0.5rem 0.8rem; }
 }

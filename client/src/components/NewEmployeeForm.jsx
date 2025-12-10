@@ -1,8 +1,10 @@
+import '../styles/NewEmployeeForm.css';
 
 import { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
-import API from '../api/API.mjs';
-import '../styles/NewEmployeeForm.css';
+import PropTypes from 'prop-types';
+
+import UserAPI from '../api/UserAPI.mjs';
 
 function NewEmployeeForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -35,15 +37,15 @@ function NewEmployeeForm({ onSuccess }) {
       setError('La password deve avere almeno 6 caratteri.');
       return;
     }
-    if( form.email.indexOf('@') === -1 ) {
+    if (form.email.indexOf('@') === -1) {
       setError('Inserisci un indirizzo email valido.');
       return;
     }
-    if( form.email.indexOf('.') === -1 ) {
+    if (form.email.indexOf('.') === -1) {
       setError('Inserisci un indirizzo email valido.');
       return;
     }
-    
+
 
     try {
       const data = {
@@ -54,30 +56,31 @@ function NewEmployeeForm({ onSuccess }) {
         lastName: form.lastName
       };
 
-      await API.createNewEmployee(data);
+      await UserAPI.createNewEmployee(data);
       setSuccess('Employee created successfully.');
       setForm({ username: '', password: '', email: '', firstName: '', lastName: '' });
       if (onSuccess) await onSuccess();
-      
+
     } catch (err) {
       setError(err?.message || String(err) || 'Error: employee not created.');
-    } 
+    }
   };
 
   return (
     <div className="new-employee-form-container">
-      <div
+      <button
         className="new-employee-form-title"
-        style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', width: '100%', padding: '0', textAlign: 'left' }}
         onClick={() => setShowForm((v) => !v)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowForm((v) => !v); } }}
         aria-expanded={showForm}
-        tabIndex={0}
+        type="button"
       >
         <span>Create an employee account</span>
         <span style={{ fontSize: '1.5rem', marginLeft: '1rem', transition: 'transform 0.2s', transform: showForm ? 'rotate(90deg)' : 'rotate(0deg)' }}>
           ▶
         </span>
-      </div>
+      </button>
       {showForm && (
         <div>
           {error && <div className="error-message">{error}</div>}
@@ -159,5 +162,9 @@ function NewEmployeeForm({ onSuccess }) {
     </div>
   );
 }
+
+NewEmployeeForm.propTypes = {
+  onSuccess: PropTypes.func
+};
 
 export default NewEmployeeForm;

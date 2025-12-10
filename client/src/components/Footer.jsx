@@ -1,8 +1,8 @@
 import { Container, Row, Col } from "react-bootstrap";
 import "../styles/Footer.css";
 
-function DefaultFooter(){
-    return(
+function DefaultFooter() {
+    return (
         <footer className="footer-participium">
             <Container fluid className="py-5">
                 <Row className="justify-content-center text-center">
@@ -21,7 +21,7 @@ function DefaultFooter(){
                         </div>
                     </Col>
                 </Row>
-                
+
                 <Row className="mt-4 pt-4 border-top justify-content-center">
                     <Col lg={8} className="text-center">
                         <p className="footer-copyright mb-0">

@@ -1,0 +1,13 @@
+<div id="outer">
+  <div id="inner">
+    <h1>Welcome to Participium, {{username}}!</h1>
+    <p>Hello {{fullName}}, thank you for joining Participium, we're excited to have you on board!</p>
+    <p>In order to complete your registration, please use the following OTP code:</p>
+    <div id="otp-box" style="display: flex; align-items: center; justify-content: center">
+      {{#each otp}}
+        <div class="otp-digit">{{this}}</div>
+      {{/each}}
+    </div>
+    <p style="font-size: 14px; color: #999; margin-top: 10px;">The code will expire in 30 minutes.</p>
+  </div>
+</div>

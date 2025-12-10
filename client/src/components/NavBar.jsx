@@ -1,11 +1,12 @@
-import { Navbar, Container, Nav, Button } from "react-bootstrap";
-import {useState, useEffect } from 'react';
+import { Navbar, Container, Nav } from "react-bootstrap";
+import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router";
-import API from '../api/API.mjs';
+import ReportAPI from '../api/ReportAPI.mjs';
 import "../styles/NavBar.css";
+import PropTypes from 'prop-types';
 
-function NavHeader(props){
-  const {user, handleLogout, unreadNotifications, setUnreadNotifications} = props;
+function NavHeader(props) {
+  const { user, handleLogout, unreadNotifications, setUnreadNotifications } = props;
   const navigate = useNavigate();
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [expanded, setExpanded] = useState(false);
@@ -23,21 +24,24 @@ function NavHeader(props){
     }
   };
 
-  useEffect(() => {
-      if(!user || !user?.id || (user?.role.id !== 1 && user?.role.id !== 4))
-            return;
-      const fetchUnreadNotifications = async () => {
-        try {
-            const reports = user.role.id === 1 ? await API.getMyReports() : await API.getAssignedReports();
-            const totalUnreadNotifications = reports.reduce((sum, report) => sum + (report.unreadNotifications || 0), 0);
-            setUnreadNotifications(totalUnreadNotifications);
-        } catch (error) {
-            console.error('Error fetching unread notifications:', error);
-        }
-      };
+useEffect(() => {
+  if (!user?.id || (user?.role?.id !== 1 && user?.role?.id !== 4)) return;
 
-      fetchUnreadNotifications();
-  }, [user]);
+  const fetchUnreadNotifications = async () => {
+    try {
+      const reports = user.role.id === 1
+        ? await ReportAPI.getMyReports()
+        : await ReportAPI.getAssignedReports();
+      const totalUnreadNotifications = reports.reduce((sum, r) => sum + (r.unreadNotifications || 0), 0);
+      setUnreadNotifications?.(totalUnreadNotifications);
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+    }
+  };
+
+  fetchUnreadNotifications();
+}, [user]);
+
 
   useEffect(() => {
     if (user?.imageUrl) {
@@ -48,17 +52,17 @@ function NavHeader(props){
   }, [user]);
 
 
-  return(    
+  return (
     <Navbar expand="lg" expanded={expanded} onToggle={setExpanded} className="navbar-participium">
       <Container fluid className="navbar-container">
-        
+
         {/* Left side: Brand + Logo + Welcome message */}
         <div className="navbar-left">
           <Navbar.Brand onClick={handleHomeClick} className="navbar-brand-participium">
-            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />
+            <img src="/logo.png" alt="Participium Logo" className="navbar-logo" />{' '}
             PARTICIPIUM
           </Navbar.Brand>
-          
+
           {user ? (
             <span className="navbar-user">
               Welcome, <span className="username-bold">{user.username || 'User'}</span>
@@ -71,8 +75,8 @@ function NavHeader(props){
         </div>
 
         {/* Hamburger toggle for mobile */}
-        <Navbar.Toggle 
-          aria-controls="navbar-nav" 
+        <Navbar.Toggle
+          aria-controls="navbar-nav"
           className="navbar-toggler-custom"
           onClick={() => setExpanded(!expanded)}
         >
@@ -82,14 +86,14 @@ function NavHeader(props){
         {/* Right side: Icons + Buttons */}
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto navbar-nav-custom">
-            {user && (user.role?.id === 1 || user.role?.id === 4)  && (
-              <div 
+            {user && (user.role?.id === 1 || user.role?.id === 4 || user.role?.id === 6) && (
+              <div
                 onClick={() => {
                   user.role.id === 1 ? navigate("/myreports") : navigate("/");
                   setExpanded(false);
-                }} 
+                }}
                 className="navbar-icon-wrapper"
-              >  
+              >
                 {unreadNotifications > 0 ? (
                   <span className="navbar-notification-wrapper">
                     <i className="bi bi-envelope navbar-profile-icon"></i>
@@ -99,18 +103,18 @@ function NavHeader(props){
               </div>
             )}
 
-            {user && user.role?.id === 1 && ( 
-              <div 
+            {user && user.role?.id === 1 && (
+              <div
                 onClick={() => {
                   navigate("/profile");
                   setExpanded(false);
-                }} 
+                }}
                 className="navbar-icon-wrapper"
               >
                 {profilePhoto ? (
-                  <img 
-                    src={profilePhoto} 
-                    alt="Profile" 
+                  <img
+                    src={profilePhoto}
+                    alt="Profile"
                     className="navbar-profile-icon"
                   />
                 ) : (
@@ -119,16 +123,29 @@ function NavHeader(props){
               </div>
             )}
 
-            <button 
+            <button
               onClick={handleHomeClick}
               className="nav-home-btn"
             >
               Home
             </button>
-          
+            <button
+              onClick={() => {
+                navigate("/help");
+                setExpanded(false);
+              }}
+              className="nav-home-btn"
+              style={{ marginLeft: '0.5rem' }}
+            >
+              <i className="bi bi-question-circle" style={{ marginRight: '0.3rem' }} aria-hidden="true" />
+              {' '}
+              Help
+            </button>
+           
+
             {user && handleLogout && (
-              <button 
-                className="nav-home-btn" 
+              <button
+                className="nav-home-btn"
                 onClick={handleLogoutClick}
               >
                 Logout
@@ -137,8 +154,22 @@ function NavHeader(props){
           </Nav>
         </Navbar.Collapse>
       </Container>
-    </Navbar>   
+    </Navbar>
   );
 }
+
+NavHeader.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string,
+    imageUrl: PropTypes.string,
+    role: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    }).isRequired,
+  }),
+  handleLogout: PropTypes.func,
+  unreadNotifications: PropTypes.number,
+  setUnreadNotifications: PropTypes.func,
+};
 
 export default NavHeader;
