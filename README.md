@@ -329,28 +329,35 @@ Defines all the channels able to send messages.
   The form performs client-side validation to ensure all required fields are filled correctly and that image constraints are met. Upon successful submission, users are redirected to the report overview page to see their submitted report.
 
 ## User account verification
+
 The creation of a user account requires the verification of it through an OTP code sent to the email. This procedure requires several steps:
+
 1. Creating a temporary user.
 2. Generating and sending a 6-character OTP.
 3. Optionally resending a new OTP (minimum delay: 1 minute).
 4. Verifying the OTP and creating the final user account.
 
 ### Registration flow overview
+
 #### Endpoints
+
 - `/users/temporary`: creates temporary user + sends OTP via email.
 - `/otp/resend`: it is optional, and it consists on resending the OTP. It can be done after a minimum time of 1 minute of the previous sending.
 - `/users/temporary/verify`: verifies OTP and creates the final user
 
 ### Environment variables
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OTP_EXPIRATION_MINUTES` | How long the OTP is valid | `30` |
+
+| Variable                 | Description               | Default |
+| ------------------------ | ------------------------- | ------- |
+| `OTP_EXPIRATION_MINUTES` | How long the OTP is valid | `30`    |
 
 ### Email delivery system
+
 The application uses **Nodemailer** with Gmail SMTP to send OTP emails.  
 A custom HTML email template is built using **Handlebars**, and CSS is inlined using **Juice**.
 
 Each email contains:
+
 - The user’s full name
 - Their username
 - A 6-character OTP (letters + numbers)
@@ -358,6 +365,7 @@ Each email contains:
 Example OTP: `A9F3BD`
 
 ### Security notes
+
 - OTP validity period is configurable through the environment variable.
 - Resending an OTP is rate-limited (1 minute cooldown).
 - Server never exposes nor stores the plain OTP, but it is stored in the user session in the hashed form thanks to **bcrypt**
@@ -398,9 +406,19 @@ Example OTP: `A9F3BD`
 
 <br>
 
-
-
-
+- **External Maintainer**
+  **LAVORINCORSO**
+  **username** : paolo.acerbi
+  **password** : PaoloAcerbi
+  **AMIAT S.p.A**
+  **username** : giorgio.scalvini
+  **password** : GiorgioScalvini
+  **ICEF S.r.l**
+  **username** : luca.valeri
+  **password** : LucaValeri
+  **GTT S.p.A**
+  **username** : lucia.gallo
+  **password** : LuciaGallo
 
 # Running Docker Containers
 
@@ -410,26 +428,31 @@ This guide explains how to run the Docker containers for the repository `338059/
 
 ## Prerequisites
 
-* [Docker](https://www.docker.com/) installed
-* [Docker Compose](https://docs.docker.com/compose/) installed (optional, only for the Compose method)
-*  Make a folder for the project
+- [Docker](https://www.docker.com/) installed
+- [Docker Compose](https://docs.docker.com/compose/) installed (optional, only for the Compose method)
+- Make a folder for the project
+
 ```bash
 mkdir <folder_name>
 cd <folder_name>
 ```
+
 ---
+
 ## Method 1: Docker Compose (recommended)
 
 ### Step 1 - Download file docker-compose.yml
 
-* Direct download
+- Direct download
+
 ```bash
 curl -L -o docker-compose.yml https://raw.githubusercontent.com/alexbettelli/SE2-Group7-Participium/main/docker-compose.yml
 ```
-* Download manually by [GitHub](https://github.com/alexbettelli/SE2-Group7-Participium/tree/main)
 
+- Download manually by [GitHub](https://github.com/alexbettelli/SE2-Group7-Participium/tree/main)
 
 ### Step 2 - Pull the Docker Compose
+
 ```bash
 docker compose pull
 ```
@@ -439,16 +462,18 @@ docker compose pull
 ```bash
 docker-compose up -d
 ```
-### Step 4 -  Access the application
+
+### Step 4 - Access the application
+
 Open the browser on http://localhost:5173
 
 ### Step 5 - Stop and remove the containers:
-
 
 ```bash
 docker-compose down
 docker-compose down -v
 ```
+
 **Attention: `docker-compose down -v` removes all the volumes and data**
 
 ---
@@ -458,6 +483,7 @@ docker-compose down -v
 If you prefer to run containers manually:
 
 ### Step 1 Pull the Docker Images
+
 First, download the required Docker images:
 
 ```bash
@@ -466,7 +492,9 @@ docker pull 338059/se2-participium:client-latest
 ```
 
 ---
+
 ### Step 2 Run the single Docker Images
+
 ```bash
 # Start the server
 docker run -d --name participium-server -p 3001:3001 -v participium-db:/app/data -v participium-uploads:/app/uploads -e NODE_ENV=production -e BASE_URL=http://localhost:3001 -e CORS_ORIGIN=http://localhost:5173 338059/se2-participium:server-latest
@@ -476,7 +504,9 @@ docker run -d --name participium-server -p 3001:3001 -v participium-db:/app/data
 docker run -d --name participium-client -p 5173:80 -e VITE_API_URL=http://localhost:3001 --link participium-server:server 338059/se2-participium:client-latest
 
 ```
+
 ### Step 3 - Access the application
+
 Open the browser on http://localhost:5173
 
 ### Step 4 Stop and remove the containers:
@@ -485,15 +515,16 @@ Open the browser on http://localhost:5173
 docker stop participium-server participium-client
 docker rm participium-server participium-client
 ```
+
 **Attention: `docker rm participium-server participium-client` removes all the volumes and data**
 
 ---
 
 ## 5. Notes
 
-* Default ports: **3001** for the server, **5173** for the client.
-* Volumes `participium-db` and `participium-uploads` persist data across container restarts(not removes).
-* Useful commands:
+- Default ports: **3001** for the server, **5173** for the client.
+- Volumes `participium-db` and `participium-uploads` persist data across container restarts(not removes).
+- Useful commands:
 
 ```bash
 docker-compose restart
@@ -504,4 +535,3 @@ docker logs participium-client
 ---
 
 These instructions allow you to easily run the project using either Docker Compose or standalone Docker commands.
-
