@@ -69,12 +69,26 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
                     }
                     resolve();
                 });
-            } else {
+            } else if (roleId == 6) {
+                const insertEmployeeExternalOffice = `
+              INSERT INTO external_office_employee (external_officeId, userId)
+              VALUES (?, ?)
+                `;
+                db.run(insertEmployeeExternalOffice, [officeId, employeeId], function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                });
+            }
+             else {
                 resolve();
             }
         });
     });
 }
+
+
 const deleteEmployeeById = (employeeId) => {
     return new Promise((resolve, reject) => {
         const deleteUserSql = `

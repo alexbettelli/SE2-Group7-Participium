@@ -11,6 +11,7 @@ import GenericAPI from '../api/GenericAPI.mjs';
 export default function AdminPage({ user }) {
   const [employees, setEmployees] = useState([]);
   const [offices, setOffices] = useState([]);
+  const [externalOffices, setExternalOffices] = useState([]);
   const [roles, setRoles] = useState([]);
 
   useEffect(() => {
@@ -41,9 +42,19 @@ export default function AdminPage({ user }) {
       }
     };
 
+    const fetchExternalOffices = async () => {
+      try {
+        const externalOffices = await GenericAPI.getExternalOffices();
+        setExternalOffices(externalOffices);
+      } catch (error) {
+        console.error("Error fetching external offices:", error);
+      }
+    };
+
     fetchEmployees();
     fetchRoles();
     fetchOffices();
+    fetchExternalOffices();
   }, []);
 
   const updateEmployeeList = async () => {
@@ -75,7 +86,7 @@ export default function AdminPage({ user }) {
         <NewEmployeeForm onSuccess={() => updateEmployeeList()} />
       </section>
       <section className="admin-page-section">
-        <UnassignedEmployeeList employees={employees} roles={roles} offices={offices} onAssign={assignEmployeeToOffice} />
+        <UnassignedEmployeeList employees={employees} roles={roles} offices={offices} externalOffices={externalOffices} onAssign={assignEmployeeToOffice} />
       </section>
     </div>
   );

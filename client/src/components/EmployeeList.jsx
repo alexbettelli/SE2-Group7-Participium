@@ -13,8 +13,8 @@ export default function UnassignedEmployeeList(props) {
                         <th> Username </th>
                         <th> First Name </th>
                         <th> Last Name</th>
-                        <th> Assign to role </th>
-                        <th> Assign to office </th>
+                        <th> Choose the role </th>
+                        <th> Assign to  </th>
                         {props.employees.length !== 0 && <th></th>}
                     </tr>
                 </thead>
@@ -24,6 +24,7 @@ export default function UnassignedEmployeeList(props) {
                             employee={m}
                             roles={props.roles || []}
                             offices={props.offices || []}
+                            externalOffices={props.externalOffices || []}
                             onAssign={props.onAssign}
                         />
                     )}
@@ -34,7 +35,7 @@ export default function UnassignedEmployeeList(props) {
 }
 
 function EmployeeRow(props) {
-    const { employee, roles, offices, onAssign } = props;
+    const { employee, roles, offices, externalOffices, onAssign, onExternalAssign } = props;
     const [selectedRole, setSelectedRole] = useState('');
     const [selectedOffice, setSelectedOffice] = useState('');
 
@@ -79,11 +80,12 @@ function EmployeeRow(props) {
                 </Form.Select>
             </td>
 
-            {selectedRole === '3' ? (
+            {selectedRole === '3' && (
                 <td style={{ minWidth: 240, textAlign: 'center' }}>
                     <span className="no-office-badge">— no office required —</span>
-                </td>
-            ) : (
+                </td> 
+            )}
+            {selectedRole === '4' && (
                 <td style={{ minWidth: 240 }}>
                     <Form.Select
                         size="sm"
@@ -98,6 +100,26 @@ function EmployeeRow(props) {
                     </Form.Select>
                 </td>
             )}
+            {selectedRole === '6' && (
+                <td style={{ minWidth: 240 }}>
+                    <Form.Select
+                        size="sm"
+                        value={selectedOffice}
+                        onChange={(e) => setSelectedOffice(e.target.value)}
+                        className={selectedOffice === '' ? 'employee-select-unselected' : 'employee-select'}
+                    >
+                        <option value="">-- choose company --</option>
+                        {externalOffices.map(eo => (
+                            <option key={eo.id} value={eo.id}>{eo.name}</option>
+                        ))}
+                    </Form.Select>
+                </td>
+            )}
+            {!selectedRole && (
+                <td style={{ minWidth: 240, textAlign: 'center' }}>
+                    <span className="no-office-badge">— select a role first —</span>
+                </td>
+            )}
 
             <td style={{ width: 120 }}>
                 <button
@@ -105,7 +127,7 @@ function EmployeeRow(props) {
                     onClick={handleAssign}
                     disabled={
                         !selectedRole ||
-                        (selectedRole !== '3' && !selectedOffice)
+                        (selectedRole !== '3' && !selectedOffice) 
                     }
                 >
                     Assign
@@ -130,6 +152,10 @@ UnassignedEmployeeList.propTypes = {
         id: PropTypes.number.isRequired,
         name: PropTypes.string.isRequired
     })).isRequired,
+    externalOffices: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired
+    })).isRequired,
     onAssign: PropTypes.func.isRequired
 };
 
@@ -145,6 +171,10 @@ EmployeeRow.propTypes = {
         type: PropTypes.string.isRequired
     })).isRequired,
     offices: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired
+    })).isRequired,
+    externalOffices: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number.isRequired,
         name: PropTypes.string.isRequired
     })).isRequired,

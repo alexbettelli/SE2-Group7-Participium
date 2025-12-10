@@ -67,9 +67,9 @@ describe('GenericInfoDAO', () => {
         it('returns mucipal users roles', async () => {
             const roles = await GenericInfoDAO.getRoles();
             expect(Array.isArray(roles)).toBe(true);
-            expect(roles).toHaveLength(2);
+            expect(roles).toHaveLength(3);
             const ids = roles.map(c => c.id);
-            expect(ids).toEqual([3, 4]);
+            expect(ids).toEqual([3, 4, 6]);
         }
         )
     })

@@ -31,7 +31,10 @@ describe('GET /roles', () => {
         expect(result.status).toBe(401);
     });
     it('200 OK', async () => {
-        const roles = [{ "id": 3, "type": "Municipal Public Relations Officer" }, { "id": 4, "type": "Technical Office Staff Member" }];
+        const roles = [{ "id": 3, "type": "Municipal Public Relations Officer" }, 
+            { "id": 4, "type": "Technical Office Staff Member" }, 
+            { "id": 6, "type": "External Maintainer" }
+        ];
      
         await loginAsAdmin(agent);
         const result = await agent.get('/roles');
