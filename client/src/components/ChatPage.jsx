@@ -103,7 +103,7 @@ export default function ChatPage(props) {
             <div className="chat-container-fixed">
                 <div className="chat-messages-scroll" ref={chatScrollRef}>
                     {messages.length === 0 ? (
-                        <div>There are no messages in the chat yet  -  wait until a maintainer accepts the report </div>
+                        <div>There are no messages in the chat yet</div>
                     ) : (
                         <>
                             {messages.map((msg, idx) => (
