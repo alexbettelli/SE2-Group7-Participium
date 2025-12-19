@@ -35,6 +35,17 @@ const getUserByUsername = (username) => {
         });
     });
 }
+
+const checkUserExists = (username, email) => {
+    return new Promise((res, rej) => {
+        const query = `SELECT COUNT(*) as total FROM user WHERE username = ? OR email = ?`;
+        db.get(query, [username, email], (err, row) => {
+            if(err) rej(err);
+            res(row['total'] > 0);
+        });
+    });
+}
+
 const getUnassignedEmployees = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
@@ -169,6 +180,7 @@ const UserDAO = {
     getUnassignedEmployees,
     assignEmployeeToOffice,
     deleteEmployeeById,
-    updateUserProfile
+    updateUserProfile,
+    checkUserExists
 };
 export default UserDAO;

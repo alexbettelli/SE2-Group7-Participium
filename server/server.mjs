@@ -223,8 +223,8 @@ app.post("/users/temporary", async (req, res, next) => {
 
   try {
     const data = req.body;
-    const user = await UserDAO.getUserByUsername(data.username);
-    if (user) return res.status(409).json(new errors.ConflictError("This username already exists."));
+    const found = await UserDAO.checkUserExists(data.username, data.email);
+    if (found) return res.status(409).json(new errors.ConflictError("This user already exists."));
     const hashedPassword = await bcrypt.hash(data.password, 8);
     data.password = hashedPassword;
     req.session.tempUser = data;

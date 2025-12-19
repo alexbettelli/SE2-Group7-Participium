@@ -149,7 +149,7 @@ function RegistrationForm(props) {
             props.redirectVerify();
             return { success: true }
         } catch (error) {
-            return { error: 'Username already in use. Please choose another username or log in if you already have an account.' }
+            return { error: 'This user already exists. Please log in if you already have an account.' }
         }
     }
 
