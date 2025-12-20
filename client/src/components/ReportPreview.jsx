@@ -156,7 +156,7 @@ export default function ReportPreview(props) {
                     
                     {showAcceptButton && report.status.id === 2 && (
             <button className="btn-accept" type="button" onClick={(e) => { e.stopPropagation(); onAcceptReport(report.id); }}>
-              <i className="bi bi-check-circle"></i>{' '}Accept Report
+              <i className="bi bi-check-circle"></i>{'Take in Charge '}
             </button>
           )}
 
