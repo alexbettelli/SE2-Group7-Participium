@@ -54,8 +54,8 @@ export default function ChatPage(props) {
         try {
             const newMessage = (chatWith === "user") ? await NotificationAPI.submitNotification({
                 reportId: report.id,
-                senderId: report.employee.id || 1,
-                receiverId: report.user.id,
+                senderId: user.id || 1,
+                receiverId: report.user.id === user.id ? report.employee.id : report.user.id,
                 text: notificationText,
                 channelId: 1
             }) :
@@ -126,7 +126,7 @@ export default function ChatPage(props) {
                         </>
                     )}
                 </div>
-                {(user.role.id ===6 || (user.role.id === 4 && report.externalMaintainer)) && (
+                {(user.role.id === 6 || (user.role.id === 4 && (chatWith === "maintainer" && report.externalMaintainer) || chatWith === "user") || (user.role.id === 1 && report.employee)) && (
                     <div className="chat-notification-form">
                         <input
                             type="text"
