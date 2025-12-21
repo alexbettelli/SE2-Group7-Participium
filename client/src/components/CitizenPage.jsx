@@ -658,6 +658,17 @@ export default function CitizenPage(props) {
                                           )}
                                       </div>
 
+                                      <div className="form-group">
+                                          <label className="checkbox-label">
+                                              <input
+                                                  type="checkbox"
+                                                  checked={isAnonymous}
+                                                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                                              />
+                                              <span>Submit as Anonymous (your username will not be shown)</span>
+                                          </label>
+                                      </div>
+
                                       {submitMessage && !submitMessage.includes('success') && (
                                           <div className="error-message">
                                               {submitMessage}
