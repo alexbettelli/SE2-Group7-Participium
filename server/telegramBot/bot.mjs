@@ -39,6 +39,7 @@ const sendAuthRequiredMessage = (chatId) => {
   );
 };
 
+
 // ========== Login Handlers  ==========
 async function handleTelegramUsernameInput(chatId, text) {
   const session = getSession(chatId);
@@ -118,8 +119,8 @@ async function handlePasswordInput(chatId, text, messageId) {
   
   try {
     const result = await BOT_API.verifyPassword(session.username, password);
-    
-    if (!result) {
+
+    if (!result || !result.valid) {
       session.passwordErrors = session.passwordErrors + 1;
 
       if (session.passwordErrors < PASSWORD_ERRORS_LIMIT) {
@@ -142,19 +143,20 @@ async function handlePasswordInput(chatId, text, messageId) {
           { parse_mode: 'Markdown' }
         );
         return;
-      }   
+      }
     }
-    
+
     // Login riuscito
     session.authenticated = true;
-    session.user = result;
+    session.user = result.user || result; // fallback
+    session.token = result.token || null;
     session.state = STATE.IDLE;
     delete session.startedAt;
     delete session.passwordErrors;
     delete session.username;
     delete session.telegramUsername;
     delete session.userInfo;
-    
+
     bot.sendMessage(
       chatId,
       `✅ *Login successful!*\n\n` +
@@ -261,6 +263,7 @@ bot.onText(/\/logout/, (msg) => {
   );
 });
 
+
 bot.onText(/\/cancel/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
@@ -273,6 +276,9 @@ bot.onText(/\/cancel/, (msg) => {
   deleteSession(chatId);
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
 });
+
+
+
 
 // ========== Clean Up ==========
 setInterval(() => {

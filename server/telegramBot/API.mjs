@@ -1,5 +1,6 @@
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
+
 const verifyTelegramUsername = async(telegramUsername) => {
     try {
       const response = await fetch(`${BASE_URL}/bot/verify/username`, {
@@ -28,7 +29,7 @@ const verifyPassword = async(username, password) => {
     });
 
     const data = await response.json();
-    return data.valid ? data.user : false;
+    return data;
 
   } catch (error) {
     console.error('Error verifying password:', error);
@@ -36,7 +37,82 @@ const verifyPassword = async(username, password) => {
   }
 }
 
+const callProtected = async (path, { method = 'GET', body = null, token = null, headers = {} } = {}) => {
+  const finalHeaders = { ...headers };
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  if (!isFormData && body !== null && !finalHeaders['Content-Type']) {
+    finalHeaders['Content-Type'] = 'application/json';
+  }
+
+  if (token) {
+    finalHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  const fetchOptions = {
+    method,
+    headers: finalHeaders,
+    body: (() => {
+      if (body === null) 
+        return undefined;
+      if (isFormData) 
+        return body;
+      return JSON.stringify(body);
+    })()
+  };
+
+  const res = await fetch(`${BASE_URL}${path}`, fetchOptions);
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Request failed ${res.status} ${res.statusText} - ${text}`);
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) return res.json();
+  return res.text();
+};
+
+/*
+  GET:
+
+  const session = getSession(chatId);
+  if (!session?.token) { sendAuthRequiredMessage(chatId); return; }
+
+  try {
+    const reports = await BOT_API.callProtected('/reports', { 
+      method: 'GET', 
+      token: session.token 
+    });
+    ...
+  } catch (err) {
+    bot.sendMessage(chatId, `Errore: ${err.message}`);
+  }
+
+*/
+
+/*
+  POST:
+
+  const session = getSession(chatId);
+  if (!session?.token) { sendAuthRequiredMessage(chatId); return; }
+
+  try {
+    const result = await BOT_API.callProtected('/comments/read', {
+      method: 'POST',
+      body: { ... },
+      token: session.token
+    });
+    ...
+  } catch (err) {
+    bot.sendMessage(chatId, `Errore: ${err.message}`);
+  }
+
+*/
+
+
+
 const BOT_API = {
+    callProtected,
     verifyTelegramUsername,
     verifyPassword
 }

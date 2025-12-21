@@ -22,11 +22,14 @@ import nodemailer from 'nodemailer';
 import juice from 'juice';
 import Handlebars from 'handlebars';
 import './telegramBot/bot.mjs';
+import jwt from 'jsonwebtoken';
 
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
 import fsPromises from 'fs/promises';
 import fsSync from 'fs';
+
+
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -46,6 +49,9 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
 const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || 30;
 const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change_this_in_prod';
+const JWT_EXPIRES_IN = '1h'; 
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -140,8 +146,21 @@ passport.deserializeUser(async function (user, cb) {
 app.use(passport.authenticate('session'));
 
 export const isLogged = (req, res, next) => {
-  if (req.isAuthenticated()) return next();
-  else return res.status(401).json(new errors.UnauthorizedError());
+  if (req.isAuthenticated()) 
+    return next();
+  const authHeader = req.header('Authorization') || req.header('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'change_this_in_prod');
+      req.user = decoded; //now the routes have still access to the req.user value
+      return next();
+    } catch (err) {
+      return res.status(401).json(new errors.UnauthorizedError());
+    }
+  }
+
+  return res.status(401).json(new errors.UnauthorizedError());
 }
 
 //middleware to check if the user is a citizen (typeId === 1)
@@ -787,9 +806,13 @@ app.post('/bot/verify/password', async (req, res) => {
       return res.status(401).json({ valid: false });
     }
 
+    const payload = { id: userInfo.user.id, username: userInfo.user.username, role: userInfo.user.role };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }); //generates the JWT 
+
     return res.status(200).json({
       valid: true,
-      user: userInfo.user
+      user: userInfo.user,
+      token
     });
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
