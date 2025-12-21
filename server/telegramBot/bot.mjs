@@ -213,6 +213,19 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
+bot.onText(/\/contact/, (msg) => {
+  const chatId = msg.chat.id;
+
+  const text =
+    `📞 *Participium contacts*\n\n` +
+    `✉️ *Email*: participium.g7@gmail.com\n` +
+    `☎️ *Phone*: N/A\n\n` +
+    `🌐 *Website (local)*: http://localhost:5173\n` +
+    `🌐 *Project repo*: https://github.com/alexbettelli/SE2-Group7-Participium\n`;
+
+  bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+});
+
 bot.onText(/\/login/, (msg) => {
   const chatId = msg.chat.id;
   
