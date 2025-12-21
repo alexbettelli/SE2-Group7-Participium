@@ -87,8 +87,6 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
         });
     });
 }
-
-
 const deleteEmployeeById = (employeeId) => {
     return new Promise((resolve, reject) => {
         const deleteUserSql = `
@@ -151,16 +149,18 @@ const getUserById = (userId) => {
         });
     });
 };
-/* const getUsernameByUserId = (userId) => {    
+const getUsernameByTelegramUsername = (telegramUsername) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT username FROM user WHERE id = ?`;
-        db.get(query, [userId], (err, row) => {
+        const query = `SELECT username FROM user WHERE telegramUsername = ?`;
+        db.get(query, [telegramUsername], (err, row) => {
             if (err) return reject(err);
             if (!row) return resolve(null);
-            resolve(row.username);
+            
+            const username = row.username;
+            resolve(username);
         });
     });
-}; */
+};
 
 const UserDAO = {
     addNewUser,
@@ -169,6 +169,7 @@ const UserDAO = {
     getUnassignedEmployees,
     assignEmployeeToOffice,
     deleteEmployeeById,
-    updateUserProfile
+    updateUserProfile,
+    getUsernameByTelegramUsername
 };
 export default UserDAO;

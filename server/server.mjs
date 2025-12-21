@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 import nodemailer from 'nodemailer';
 import juice from 'juice';
 import Handlebars from 'handlebars';
+import './telegramBot/bot.mjs';
 
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
@@ -426,7 +427,6 @@ app.delete('/sessions/current', (req, res) => {
 
 
 // REPORTS
-
 app.get('/reports', isLogged, async (req, res) => {
   try {
     const reports = await ReportDAO.getAllReports();
@@ -742,6 +742,60 @@ app.post('/comments/read', isLogged, async (req, res) => {
   }
 });
 
+
+
+
+app.post('/bot/verify/username', async (req, res) => {
+  try {
+    const { telegramUsername } = req.body;
+    
+    if (!telegramUsername) {
+      return res.status(400).json(new errors.BadRequestError("Telegram username is required"));
+    }
+
+    const username = await UserDAO.getUsernameByTelegramUsername(telegramUsername);
+    
+    if (!username) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Ritorna solo i dati necessari (NO password)
+    return res.status(200).json({username : username});
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.post('/bot/verify/password', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json(new errors.BadRequestError("Username and password are required"));
+    }
+
+    const userInfo = await UserDAO.getUserByUsername(username);
+    
+    if (!userInfo) {
+      return res.status(401).json({ valid: false });
+    }
+
+    const match = await bcrypt.compare(password, userInfo.password);
+    
+    if (!match) {
+      return res.status(401).json({ valid: false });
+    }
+
+    return res.status(200).json({
+      valid: true,
+      user: userInfo.user
+    });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server listening at ${BASE_URL}`);
   console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);
