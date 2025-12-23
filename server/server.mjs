@@ -330,6 +330,19 @@ app.get('/employees/unassigned', isLogged, async (req, res) => {
   }
 });
 
+app.get('/employees/technical-officers', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+
+    const officers = await UserDAO.getTechnicalOfficers();
+    return res.status(200).json(officers);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
