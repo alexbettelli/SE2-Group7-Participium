@@ -119,8 +119,8 @@ function DeleteOfficeModal({show, handleClose, officeId, user, offices, retrieve
 
     return (
         <Modal show={show} onHide={handleClose} size='lg'>
-            <Modal.Header closeButton>
-                <Modal.Title>Delete office #{officeId}</Modal.Title>
+            <Modal.Header closeButton style={{ backgroundColor: 'var(--color-wine-dark)', color: '#fff' }}>
+                <Modal.Title style={{ color: '#fff' }}>Delete office #{officeId}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {
@@ -135,8 +135,8 @@ function DeleteOfficeModal({show, handleClose, officeId, user, offices, retrieve
                 }
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>Close</Button>
-                <Button variant="danger" onClick={() => deleteoffice(data)}>Delete</Button>
+                <Button variant="outline-secondary" onClick={handleClose}>Close</Button>
+                <Button onClick={() => deleteoffice(data)}>Delete</Button>
             </Modal.Footer>
         </Modal>
     )
@@ -147,7 +147,7 @@ function ReassignReportsModal({reports, user, offices, handleChange}) {
 
     return (
         <Table className="reports-table" hover>
-            <thead>
+            <thead style={{ textAlign: 'center' }}>
                 <tr>
                     <th> Report ID </th>
                     <th> Title </th>
@@ -157,7 +157,7 @@ function ReassignReportsModal({reports, user, offices, handleChange}) {
             <tbody>
                 {reports.map((report, index) => {
                     return (
-                        <tr key={index}>
+                        <tr key={index} style={{ textAlign: 'center' }}>
                             <td>{report.id}</td>
                             <td>{report.title}</td>
                             <td>
