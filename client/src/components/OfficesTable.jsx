@@ -77,8 +77,22 @@ function DeleteOfficeModal({show, handleClose, officeId, user, offices, retrieve
             };
         });
 
-        ReportAPI.reassignReports(data).then(() => {
-            console.log("Reassignment completed.");
+        if(Object.keys(data).length > 0) {
+            ReportAPI.reassignReports(data).then(() => {
+                console.log("Reassignment completed.");
+                OfficeAPI.deleteOfficeById(officeId).then(() => {
+                    console.log("Office deletion completed.");
+                    handleClose();
+                    retrieve();
+                }).catch(err => {
+                    console.error('Error deleting office:', err);
+                    setError('Error deleting office. Please try again.');
+                });
+            }).catch(err => {
+                console.error('Error reassigning reports:', err);
+                setError('Error reassigning reports. Please try again.');
+            });
+        } else {
             OfficeAPI.deleteOfficeById(officeId).then(() => {
                 console.log("Office deletion completed.");
                 handleClose();
@@ -87,10 +101,7 @@ function DeleteOfficeModal({show, handleClose, officeId, user, offices, retrieve
                 console.error('Error deleting office:', err);
                 setError('Error deleting office. Please try again.');
             });
-        }).catch(err => {
-            console.error('Error reassigning reports:', err);
-            setError('Error reassigning reports. Please try again.');
-        });
+        }
     }
 
     useEffect(() => {
