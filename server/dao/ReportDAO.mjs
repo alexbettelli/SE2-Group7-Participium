@@ -602,6 +602,70 @@ export const updateExternalMaintainerReportStatus = (userId, reportId, statusId)
   });
 };
 
+const getInProgressReportsByOfficeId = (officeId) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT r.*, u.username, em.username AS externalMaintainerUsername,
+                rc.categoryName,
+                i.id AS imageId, i.imageUrl,
+                s.statusName,
+                co.id AS commentId,
+                co.senderId AS commentSenderId,
+                csender.username AS commentSenderUsername,
+                co.receiverId AS commentReceiverId,
+                creceiver.username AS commentReceiverUsername,
+                co.text AS commentText,
+                co.sendAt AS commentSendAt,
+                co.isRead AS commentIsRead,
+                unreadC.unreadComments
+            FROM report r
+            JOIN user u ON r.userId = u.id
+            LEFT JOIN user em ON r.externalMaintainerId = em.id
+            JOIN report_category rc ON r.catId = rc.id
+            JOIN report_image i ON r.id = i.reportId
+            JOIN report_status s ON r.statusId = s.id
+            LEFT JOIN comment co ON r.id = co.reportId
+            LEFT JOIN user csender ON co.senderId = csender.id
+            LEFT JOIN user creceiver ON co.receiverId = creceiver.id
+            LEFT JOIN (
+            SELECT reportId, SUM(isRead = 0) AS unreadComments
+            FROM comment
+            GROUP BY reportId
+            ) AS unreadC ON unreadC.reportId = r.id
+            WHERE r.officeId = ? AND r.statusId = 3;
+        `;
+        db.get('SELECT COUNT(*) FROM office WHERE id = ?', [officeId], (err, row) => {
+            if (err) return reject(err);
+            if (row['COUNT(*)'] === 0) return reject(404);
+            db.all(query, [officeId], (err, rows) => {
+                if(err) return reject(err);
+                const reports = Mapper.mapRowsToReports(rows);
+                resolve(reports);
+            });
+        });
+    })
+}
+
+const reassignReports = (data) => {
+    /*const data = {
+        "report#1": "newOfficeId#2",
+        "report#2": "newOfficeId#3"
+    }*/
+    return new Promise((resolve, reject) => {
+        const query = `
+            UPDATE report
+            SET officeId = CASE
+                ${Object.keys(data).map(reportId => `WHEN id = ${reportId} THEN ${data[reportId]}`).join(' ')}
+            END
+            WHERE id IN (${Object.keys(data).join(', ')});
+        `
+        db.run(query, [], function(err) {
+            if(err) return reject(err);
+            resolve();
+        });
+    });
+};
+
 const ReportDAO = {
   getAllReports,
   getReportsByUserId,
@@ -614,6 +678,8 @@ const ReportDAO = {
   updateReportStatus,
   getExternalOfficeAssignedReports,
   getExternalMaintainerMyReports,
-  updateExternalMaintainerReportStatus
+  updateExternalMaintainerReportStatus,
+  getInProgressReportsByOfficeId,
+  reassignReports
 };
 export default ReportDAO;

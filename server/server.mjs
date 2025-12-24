@@ -16,6 +16,7 @@ import UserDAO from './dao/UserDAO.mjs';
 import GenericInfoDAO from './dao/GenericInfoDAO.mjs';
 import NotificationDAO from './dao/NotificationDAO.mjs';
 import ReportDAO from './dao/ReportDAO.mjs';
+import OfficeDAO from './dao/OfficeDAO.mjs';
 import otpGenerator from 'otp-generator';
 import dayjs from 'dayjs';
 import nodemailer from 'nodemailer';
@@ -593,6 +594,42 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 
+});
+
+app.get('/offices/:officeId/reports', isLogged, async (req, res) => {
+  if( req.user.role.id !== 2 ) return res.status(403).json(new errors.ForbiddenError());
+  const officeId = req.params.officeId;
+  try {
+    const reports = await ReportDAO.getInProgressReportsByOfficeId(officeId);
+    return res.status(200).json(reports);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    if(error === 404) return res.status(404).json(new errors.NotFoundError("Office not found."));
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.put('/reports/reassign', isLogged, async (req, res) => {
+  if( req.user.role.id !== 2 ) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    await ReportDAO.reassignReports(req.body);
+    return res.status(204).end();
+  } catch(error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.delete('/offices/:officeId', isLogged, async (req, res) => {
+  if( req.user.role.id !== 2 ) return res.status(403).json(new errors.ForbiddenError());
+  const officeId = req.params.officeId;
+  try {
+    await OfficeDAO.deleteOfficeById(officeId);
+    return res.status(200).json({ message: 'Office deleted successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
 });
 
 //PUT /api/user/profile

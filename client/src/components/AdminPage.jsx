@@ -1,6 +1,7 @@
 import '../styles/AdminPage.css';
 import { useEffect, useState } from "react";
 import PropTypes from 'prop-types';
+import OfficesTable from './OfficesTable.jsx';
 
 import NewEmployeeForm from './NewEmployeeForm.jsx';
 import UnassignedEmployeeList from './EmployeeList.jsx';
@@ -11,6 +12,7 @@ import GenericAPI from '../api/GenericAPI.mjs';
 export default function AdminPage({ user }) {
   const [employees, setEmployees] = useState([]);
   const [offices, setOffices] = useState([]);
+  const [retrieve, setRetrieve] = useState(true);
   const [externalOffices, setExternalOffices] = useState([]);
   const [roles, setRoles] = useState([]);
 
@@ -33,6 +35,8 @@ export default function AdminPage({ user }) {
       }
     };
 
+
+
     const fetchOffices = async () => {
       try {
         const offices = await GenericAPI.getOffices();
@@ -51,11 +55,14 @@ export default function AdminPage({ user }) {
       }
     };
 
-    fetchEmployees();
-    fetchRoles();
-    fetchOffices();
-    fetchExternalOffices();
-  }, []);
+    if(retrieve) {
+      fetchEmployees();
+      fetchRoles();
+      fetchOffices();
+      fetchExternalOffices();
+      setRetrieve(false);
+    }
+  }, [retrieve]);
 
   const updateEmployeeList = async () => {
     try {
@@ -88,6 +95,9 @@ export default function AdminPage({ user }) {
       <section className="admin-page-section">
         <UnassignedEmployeeList employees={employees} roles={roles} offices={offices} externalOffices={externalOffices} onAssign={assignEmployeeToOffice} />
       </section>
+      <section className='admin-page-section'>
+        <OfficesTable offices={offices} user={user} retrieve={() => setRetrieve(true) } />
+      </section>
     </div>
   );
 }
@@ -96,4 +106,4 @@ AdminPage.propTypes = {
   user: PropTypes.shape({
     username: PropTypes.string.isRequired,
   }).isRequired,
-}; 
+};

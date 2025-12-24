@@ -187,6 +187,30 @@ const assignReportToExternalOffice = async (reportId, externalOfficeId) => {
     }
 };
 
+const getInProgressReportsAssignedToOffice = async (officeId) => {
+    const res = await fetch(`${SERVER_URL}/offices/${officeId}/reports`, {
+        credentials: 'include'
+    });
+
+    if(res.ok)  return await res.json();
+    const errorMessage = await res.json();
+    throw new Error(errorMessage.error || 'Error fetching reports for office');
+};
+
+const reassignReports = async(data) => {
+    const res = await fetch(`${SERVER_URL}/reports/reassign`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data)
+    });
+
+    if(!res.ok) {
+        const errorMessage = await res.json();
+        throw new Error(errorMessage.error || 'Error reassigning reports');
+    }
+}
+
 const ReportAPI = {
     submitReport,
     getAllReports,
@@ -200,7 +224,9 @@ const ReportAPI = {
     getExternalOfficeAssignedReports,
     getExternalMaintainerMyReports,
     updateExternalMaintainerReportStatus,
-    assignReportToExternalOffice
+    assignReportToExternalOffice,
+    getInProgressReportsAssignedToOffice,
+    reassignReports
 };
 
 export default ReportAPI;
