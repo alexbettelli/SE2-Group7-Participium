@@ -837,6 +837,85 @@
     object-fit: cover;
 }
 
+.map-search-container {
+    width: 100%;
+    padding: 1rem;
+    background: var(--color-cream);
+    border-radius: 12px;
+    border: 2px solid rgba(112, 38, 50, 0.2);
+    box-shadow: 0 4px 12px rgba(112, 38, 50, 0.12);
+}
+
+.address-search-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.address-search-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid rgba(112, 38, 50, 0.2);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.address-search-input:focus {
+    border-color: var(--color-wine-light);
+    box-shadow: 0 0 0 3px rgba(112, 38, 50, 0.1);
+    outline: none;
+}
+
+.address-search-input.error {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.address-search-input.error:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+.address-search-button {
+    padding: 0.8rem 1.5rem;
+    background: var(--color-wine-dark);
+    color: var(--color-cream);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.address-search-button:hover {
+    background: var(--color-wine-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(112, 38, 50, 0.3);
+}
+
+.address-search-button:active {
+    transform: translateY(0);
+}
+
+.search-error {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(231, 76, 60, 0.15);
+    border: 2px solid #e74c3c;
+    border-radius: 8px;
+    color: #c0392b;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-error::before {
+    content: "⚠";
+    font-size: 1.2rem;
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
     .citizen-page-content {

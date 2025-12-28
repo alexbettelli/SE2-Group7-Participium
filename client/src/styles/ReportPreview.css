@@ -67,6 +67,16 @@
     display: inline-block;
 }
 
+.office-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+    color: #fff;
+}
+
 .wrapper {
     display: flex;
     align-items: center;

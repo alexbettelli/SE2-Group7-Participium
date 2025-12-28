@@ -70,6 +70,10 @@ export default function ReportPreview(props) {
     }, []);
 
     useEffect(() => {
+        console.log(props.report);
+    }, [])
+
+    useEffect(() => {
         const updateReportStatus = async () => {
             try {
                 let result;
@@ -112,6 +116,13 @@ export default function ReportPreview(props) {
         setExpanded(!expanded);
     };
 
+    const categoryColors = {
+        1: "lightblue",
+        2: "black",
+        3: "darkred",
+        4: "purple"
+    };
+
     return (
         <>
             <div className='report-preview-card' onClick={toggleExpanded}>
@@ -131,6 +142,7 @@ export default function ReportPreview(props) {
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
                         <div className="wrapper">
                             <span className="report-id-badge">Report #{report.id}</span>
+                            <span className='office-badge' style={{backgroundColor: `${categoryColors[report.office.id]}`}}>Office #{report.office.id}</span>
                             <span className={`status-badge ${getStatusClass(report.status.statusName)}`}>{report.status.statusName}</span>
                         </div>
                     </div>
@@ -156,7 +168,7 @@ export default function ReportPreview(props) {
                     
                     {showAcceptButton && report.status.id === 2 && (
             <button className="btn-accept" type="button" onClick={(e) => { e.stopPropagation(); onAcceptReport(report.id); }}>
-              <i className="bi bi-check-circle"></i>{' '}Accept Report
+              <i className="bi bi-check-circle"></i>{'Take in Charge '}
             </button>
           )}
 
@@ -383,8 +395,10 @@ function ReportView(props) {
                         <div className="fields">
                             <div className="field user-field">
                                 <h3>Reported by</h3>
-                                <p><strong>User id: </strong>{report.user.id}</p>
-                                <p><strong>Username: </strong>{report.user.username}</p>
+                                <p><strong>User id: </strong>{(report.anonymous || report.isAnonymous) ? 'Anonymous' : (report.user.id || 'Unknown')}</p>
+                                <p><strong>Username: </strong>
+                                    {(report.anonymous || report.isAnonymous) ? 'Anonymous' : (report.user.username || 'Unknown')}
+                                </p>
                             </div>
                             <div className="field">
                                 <h3>Reported on</h3>
@@ -398,6 +412,7 @@ function ReportView(props) {
                             <div className="field">
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
+                                <p><strong>Office ID: </strong>{report.office.id}</p>
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
                                 {report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p>}
                             </div>
