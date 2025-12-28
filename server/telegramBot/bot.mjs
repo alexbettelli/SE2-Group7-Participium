@@ -1,4 +1,3 @@
-// telegramBot/bot.mjs
 import TelegramBot from 'node-telegram-bot-api';
 import BOT_API from './API.mjs';
 
@@ -7,7 +6,7 @@ const PASSWORD_ERRORS_LIMIT = 3;
 const SESSION_EXPIRED_TIME = 15 * 60 * 1000;
 const CLEAN_INTERVAL = 10 * 60 * 1000;
 
-// Stati della sessione
+// Session states
 const STATE = {
   IDLE: 'idle',
   LOGIN_WAIT_TEL_USERNAME: 'login_waiting_telegram_username',
@@ -17,7 +16,7 @@ const STATE = {
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 const userSessions = new Map();
 
-// ========== Gestione Sessioni ==========
+// ========== Sessions management ==========
 const getSession = (chatId) => {
   return userSessions.get(chatId);
 };
@@ -180,7 +179,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
   
-  // Ignora comandi (gestiti da onText)
+  // Ignore default commands (managed by onText) and non-text messages
   if (!text || text.startsWith('/')) return;
   
   const session = getSession(chatId);
@@ -197,7 +196,7 @@ bot.on('message', async (msg) => {
       break;
       
     default:
-      // Stato sconosciuto o idle - ignora
+      // State unknown or idle - ignore
       break;
   }
 });
@@ -263,7 +262,6 @@ bot.onText(/\/logout/, (msg) => {
   );
 });
 
-
 bot.onText(/\/cancel/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
@@ -276,9 +274,6 @@ bot.onText(/\/cancel/, (msg) => {
   deleteSession(chatId);
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
 });
-
-
-
 
 // ========== Clean Up ==========
 setInterval(() => {

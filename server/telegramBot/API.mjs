@@ -72,45 +72,6 @@ const callProtected = async (path, { method = 'GET', body = null, token = null, 
   return res.text();
 };
 
-/*
-  GET:
-
-  const session = getSession(chatId);
-  if (!session?.token) { sendAuthRequiredMessage(chatId); return; }
-
-  try {
-    const reports = await BOT_API.callProtected('/reports', { 
-      method: 'GET', 
-      token: session.token 
-    });
-    ...
-  } catch (err) {
-    bot.sendMessage(chatId, `Errore: ${err.message}`);
-  }
-
-*/
-
-/*
-  POST:
-
-  const session = getSession(chatId);
-  if (!session?.token) { sendAuthRequiredMessage(chatId); return; }
-
-  try {
-    const result = await BOT_API.callProtected('/comments/read', {
-      method: 'POST',
-      body: { ... },
-      token: session.token
-    });
-    ...
-  } catch (err) {
-    bot.sendMessage(chatId, `Errore: ${err.message}`);
-  }
-
-*/
-
-
-
 const BOT_API = {
     callProtected,
     verifyTelegramUsername,
