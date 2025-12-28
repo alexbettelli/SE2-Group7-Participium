@@ -48,6 +48,8 @@ export default function CitizenPage(props) {
     const [approvedReports, setApprovedReports] = useState([]);
     const [reportDetails, setReportDetails] = useState({});
     const [locationError, setLocationError] = useState('');
+    const [searchAddress, setSearchAddress] = useState('');
+    const [searchError, setSearchError] = useState('');
     
     const categoryColors = {
         "Roads and Infrastructure": "lightblue",
@@ -168,10 +170,11 @@ export default function CitizenPage(props) {
                     mapInstanceRef.current.removeLayer(markerRef.current);
                 }
 
-
                 markerRef.current = L.marker([lat, lng], { icon: getMarkerIcon() }).addTo(mapInstanceRef.current);
                 setSelectedLocation({ lat, lng });
                 setActiveTab('form');
+                setSearchAddress('');
+                setSearchError('');
 
                 const boundary = mapInstanceRef.current._turinBoundary;
                 let isInside = true;
@@ -428,6 +431,8 @@ export default function CitizenPage(props) {
         setAddress('');
         setLoadingAddress(false);
         setLocationError('');
+        setSearchAddress('');
+        setSearchError('');
         if (!keepTab) {
             setActiveTab('reports');
             ResetZoom();
@@ -479,6 +484,113 @@ export default function CitizenPage(props) {
     const ResetZoom = () => {
         mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, { animate: true, duration: 1 });
     }
+
+    const handleSearchAddress = async (e) => {
+        e.preventDefault();
+        if (!searchAddress.trim()) {
+            setSearchError('Please enter an address');
+            return;
+        }
+
+        setSearchError('');
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1`,
+                {
+                    headers: {
+                        'User-Agent': 'Participium-CitizenApp'
+                    }
+                }
+            );
+            const data = await response.json();
+
+            if (data.length === 0) {
+                setSearchError('Address not found');
+                return;
+            }
+
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+
+            if (markerRef.current) {
+                mapInstanceRef.current.removeLayer(markerRef.current);
+            }
+
+            markerRef.current = L.marker([lat, lng], { icon: getMarkerIcon() }).addTo(mapInstanceRef.current);
+            setSelectedLocation({ lat, lng });
+            setActiveTab('form');
+
+            const boundary = mapInstanceRef.current._turinBoundary;
+            let isInside = true;
+
+            if (boundary) {
+                const point = turf.point([lng, lat]);
+                const boundaryGeoJSON = boundary.toGeoJSON();
+                isInside = boundaryGeoJSON.features.some(feature =>
+                    turf.booleanPointInPolygon(point, feature)
+                );
+            }
+
+            if (!isInside) {
+                setLocationError("Please select a location inside the City of Turin.");
+                setSearchError("Address not found in Turin. Please search for a location within Turin city.");
+                setAddress('');
+                setLoadingAddress(false);
+                if (markerRef.current) {
+                    mapInstanceRef.current.removeLayer(markerRef.current);
+                    markerRef.current = null;
+                }
+                setSelectedLocation(null);
+                return;
+            }
+
+            setLocationError('');
+            setAddress('');
+            setLoadingAddress(true);
+
+            abortControllerRef.current = new AbortController();
+
+            try {
+                const reverseResponse = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+                    {
+                        headers: {
+                            'User-Agent': 'Participium-CitizenApp'
+                        },
+                        signal: abortControllerRef.current.signal
+                    }
+                );
+                const reverseData = await reverseResponse.json();
+                setAddress(reverseData.display_name || 'Address not available');
+                setLoadingAddress(false);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    setAddress('Address not available');
+                    setLoadingAddress(false);
+                }
+            }
+            
+            mapInstanceRef.current.flyTo([lat, lng], 17, {
+                animate: true,
+                duration: 1.5
+            });
+            setSearchError('');
+        } catch (error) {
+            setSearchError('Error searching address');
+        }
+    }
+
+    const handleSearchInputChange = (e) => {
+        setSearchAddress(e.target.value);
+        if (searchError) {
+            setSearchError('');
+        }
+    }
     return (
         <div className="citizen-page-container">
             <div className="citizen-page-header">
@@ -490,6 +602,21 @@ export default function CitizenPage(props) {
                 <div className="map-section">
                     <div className="map-container-wrapper">
                         <div ref={mapRef} className="map-container" />
+                    </div>
+                    <div className="map-search-container">
+                        <form onSubmit={handleSearchAddress} className="address-search-form">
+                            <input
+                                type="text"
+                                value={searchAddress}
+                                onChange={handleSearchInputChange}
+                                placeholder="Search for an address..."
+                                className={`address-search-input ${searchError ? 'error' : ''}`}
+                            />
+                            <button type="submit" className="address-search-button">
+                                Search
+                            </button>
+                        </form>
+                        {searchError && <div className="search-error">{searchError}</div>}
                     </div>
                 </div>
 
