@@ -58,6 +58,29 @@ const getUnassignedEmployees = () => {
         });
     });
 }
+
+const getTechnicalOfficers = () => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT u.*, o.name as officeName, o.id as officeId
+            FROM user u
+            LEFT JOIN office_employee oe ON u.id = oe.userId
+            LEFT JOIN office o ON oe.officeId = o.id
+            WHERE u.typeId = 4
+        `; // typeId 4 = Technical Office Staff Member
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const officers = rows.map(row => ({
+                ...Mapper.mapRowToUser(row),
+                officeName: row.officeName || 'N/A',
+                officeId: row.officeId || null
+            }));
+            resolve(officers);
+        });
+    });
+}
 const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
     return new Promise((resolve, reject) => {
         const updateUser = `
@@ -178,6 +201,7 @@ const UserDAO = {
     getUserByUsername,
     getUserById,
     getUnassignedEmployees,
+    getTechnicalOfficers,
     assignEmployeeToOffice,
     deleteEmployeeById,
     updateUserProfile,
