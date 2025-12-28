@@ -11,7 +11,12 @@ const CLEAN_INTERVAL = 10 * 60 * 1000;
 const STATE = {
   IDLE: 'idle',
   LOGIN_WAIT_TEL_USERNAME: 'login_waiting_telegram_username',
-  LOGIN_WAIT_PASSWORD: 'login_waiting_password'
+  LOGIN_WAIT_PASSWORD: 'login_waiting_password',
+  REPORT_CREATION_WAIT_TITLE: 'report_creation_waiting_title',
+  REPORT_CREATION_WAIT_DESCRIPTION: 'report_creation_waiting_description',
+  REPORT_CREATION_WAIT_PHOTO: 'report_creation_waiting_photo',
+  REPORT_CREATION_WAIT_LOCATION: 'report_creation_waiting_location',
+  REPORT_CREATION_WAIT_CATEGORY: 'report_creation_waiting_category'
 };
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
@@ -175,6 +180,23 @@ async function handlePasswordInput(chatId, text, messageId) {
   }
 }
 
+function handleReportTitleInput(chatId, text) {
+  const session = getSession(chatId);
+
+  if(text.trim().length === 0) {
+    bot.sendMessage(chatId, '⚠️ Title cannot be empty. Please provide a valid title.');
+    return;
+  }
+
+  session.state = STATE.REPORT_CREATION_WAIT_DESCRIPTION;
+  session.reportData.title = text.trim();
+  bot.sendMessage(
+    chatId,
+    `Provide the *description* of the report.\n\n`,
+    { parse_mode: 'Markdown' }
+  );
+}
+
 // ========== Centralized Message Handler ==========
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -190,12 +212,14 @@ bot.on('message', async (msg) => {
   switch (session.state) {
     case STATE.LOGIN_WAIT_TEL_USERNAME:
       await handleTelegramUsernameInput(chatId, text);
-      break;
-      
+      break;  
     case STATE.LOGIN_WAIT_PASSWORD:
       await handlePasswordInput(chatId, text, msg.message_id);
       break;
-      
+    case STATE.REPORT_CREATION_WAIT_TITLE:
+      handleReportTitleInput(chatId, text);
+      break; 
+    
     default:
       // Stato sconosciuto o idle - ignora
       break;
@@ -275,6 +299,32 @@ bot.onText(/\/cancel/, (msg) => {
   
   deleteSession(chatId);
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
+});
+
+bot.onText(/\/new-report/, async msg => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if (!isAuthenticated(chatId)) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+
+  userSessions.set(chatId, {
+    state: STATE.REPORT_CREATION_WAIT_TITLE,
+    ...session,
+    reportData: {}
+  });
+
+  bot.sendMessage(
+    chatId,
+    `🆕 *New Report Creation*\n\n` +
+    `Provide the *title* of the report\n\n`+
+    `You can use /cancel to abort the operation.`,
+    { parse_mode: 'Markdown' }
+  );
+
+
 });
 
 

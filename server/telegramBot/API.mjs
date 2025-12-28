@@ -109,11 +109,15 @@ const callProtected = async (path, { method = 'GET', body = null, token = null, 
 
 */
 
+const createReport = async () => {
+
+}
 
 
 const BOT_API = {
     callProtected,
     verifyTelegramUsername,
-    verifyPassword
+    verifyPassword,
+    createReport
 }
 export default BOT_API
