@@ -147,14 +147,13 @@ export default function CitizenPage(props) {
                 .then(geojson => {
                     const boundaryLayer = L.geoJSON(geojson, {
                         style: {
-                            color: '#539987',
+                            color: '#912f40',
                             weight: 3,
                             fillOpacity: 0,
                         }
                     }).addTo(mapInstanceRef.current);
 
-                    mapInstanceRef.current.fitBounds(boundaryLayer.getBounds());
-                    mapInstanceRef.current.setView([45.0703, 7.6868], 10);
+                    mapInstanceRef.current.setView([45.0703, 7.6868], 13);
                     mapInstanceRef.current._turinBoundary = boundaryLayer;
                 })
                 .catch(err => console.error("Error loading Turin boundary:", err));
@@ -482,7 +481,7 @@ export default function CitizenPage(props) {
         showReportDetails(report);
     }
     const ResetZoom = () => {
-        mapInstanceRef.current.flyTo([45.0703, 7.6868], 10, { animate: true, duration: 1 });
+        mapInstanceRef.current.flyTo([45.0703, 7.6868], 13, { animate: true, duration: 1 });
     }
 
     const handleSearchAddress = async (e) => {
