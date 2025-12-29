@@ -15,6 +15,16 @@ function User(id, username, email, firstName, lastName, role, allowEmailNotifica
     this.telegramUsername = telegramUsername;
     this.imageUrl = imageUrl;
 }
+function Employee({id, username, email, firstName, lastName, role, offices}){
+    this.id = id,
+    this.username = username;
+    this.email = email; 
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.role = role;//obj of type Role
+    this.offices = offices;//array of obj of type office
+
+}
 function Category(id, categoryName){
     this.id = id;
     this.categoryName = categoryName;
@@ -84,4 +94,4 @@ function Comment(id, reportId, sender, receiver, text, sendAt, isRead){
     this.isRead = isRead;
 }
 
-export {User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment};
+export {User, Employee, Report, Message, Office, Role, Status, Image, Category, Channel, Comment};
