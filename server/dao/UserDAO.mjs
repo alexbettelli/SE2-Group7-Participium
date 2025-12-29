@@ -35,6 +35,17 @@ const getUserByUsername = (username) => {
         });
     });
 }
+
+const checkUserExists = (username, email) => {
+    return new Promise((res, rej) => {
+        const query = `SELECT COUNT(*) as total FROM user WHERE username = ? OR email = ?`;
+        db.get(query, [username, email], (err, row) => {
+            if(err) rej(err);
+            res(row['total'] > 0);
+        });
+    });
+}
+
 const getUnassignedEmployees = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
@@ -44,6 +55,29 @@ const getUnassignedEmployees = () => {
             }
             const employees = Mapper.mapRowsToUsers(rows);
             resolve(employees);
+        });
+    });
+}
+
+const getTechnicalOfficers = () => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT u.*, o.name as officeName, o.id as officeId
+            FROM user u
+            LEFT JOIN office_employee oe ON u.id = oe.userId
+            LEFT JOIN office o ON oe.officeId = o.id
+            WHERE u.typeId = 4
+        `; // typeId 4 = Technical Office Staff Member
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const officers = rows.map(row => ({
+                ...Mapper.mapRowToUser(row),
+                officeName: row.officeName || 'N/A',
+                officeId: row.officeId || null
+            }));
+            resolve(officers);
         });
     });
 }
@@ -167,9 +201,11 @@ const UserDAO = {
     getUserByUsername,
     getUserById,
     getUnassignedEmployees,
+    getTechnicalOfficers,
     assignEmployeeToOffice,
     deleteEmployeeById,
     updateUserProfile,
-    getUsernameByTelegramUsername
+    getUsernameByTelegramUsername,
+    checkUserExists
 };
 export default UserDAO;

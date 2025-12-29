@@ -1,4 +1,3 @@
-// telegramBot/bot.mjs
 import TelegramBot from 'node-telegram-bot-api';
 import BOT_API from './API.mjs';
 
@@ -7,7 +6,7 @@ const PASSWORD_ERRORS_LIMIT = 3;
 const SESSION_EXPIRED_TIME = 15 * 60 * 1000;
 const CLEAN_INTERVAL = 10 * 60 * 1000;
 
-// Stati della sessione
+// Session states
 const STATE = {
   IDLE: 'idle',
   LOGIN_WAIT_TEL_USERNAME: 'login_waiting_telegram_username',
@@ -22,7 +21,7 @@ const STATE = {
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 const userSessions = new Map();
 
-// ========== Gestione Sessioni ==========
+// ========== Sessions management ==========
 const getSession = (chatId) => {
   return userSessions.get(chatId);
 };
@@ -202,7 +201,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
   
-  // Ignora comandi (gestiti da onText)
+  // Ignore default commands (managed by onText) and non-text messages
   if (!text || text.startsWith('/')) return;
   
   const session = getSession(chatId);
@@ -221,7 +220,7 @@ bot.on('message', async (msg) => {
       break; 
     
     default:
-      // Stato sconosciuto o idle - ignora
+      // State unknown or idle - ignore
       break;
   }
 });
@@ -235,6 +234,19 @@ bot.onText(/\/start/, (msg) => {
     `I am the official bot of Group 7 Participium App, a platform for reporting and managing urban issues of the Municipality of Turin.\n\n` +    
     `Use the /login command to connect your Participium account and get started!`
   );
+});
+
+bot.onText(/\/contact/, (msg) => {
+  const chatId = msg.chat.id;
+
+  const text =
+    `📞 *Participium contacts*\n\n` +
+    `✉️ *Email*: participium.g7@gmail.com\n` +
+    `☎️ *Phone*: N/A\n\n` +
+    `🌐 *Website (local)*: http://localhost:5173\n` +
+    `🌐 *Project repo*: https://github.com/alexbettelli/SE2-Group7-Participium\n`;
+
+  bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
 });
 
 bot.onText(/\/login/, (msg) => {
@@ -287,7 +299,6 @@ bot.onText(/\/logout/, (msg) => {
   );
 });
 
-
 bot.onText(/\/cancel/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
@@ -326,9 +337,6 @@ bot.onText(/\/new-report/, async msg => {
 
 
 });
-
-
-
 
 // ========== Clean Up ==========
 setInterval(() => {

@@ -72,17 +72,11 @@ const ReportOverview = ({ user, report, onBackToHome, showSuccessBanner = true, 
 
                 <div className="overview-footer">
                     <div className="report-meta">
-                        {!report.isAnonymous && report.username && (
-                            <span className="author-info">
-                                Reported by: {report.username !== user.username ? report.username : 'YOU'}
-                            </span>
-                        )}
-                        {report.isAnonymous && (
-                            <span className="author-info anonymous">
-                                Anonymous Report
-                            </span>
-                        )}
-
+                        <span className="author-info">
+                            Reported by: {(report.isAnonymous || report.anonymous === true || report.anonymous === 1)
+                                ? 'Anonymous'
+                                : ((report.username || report.user?.username) ?? 'Anonymous')}
+                        </span>
                         {report.createdAt && (
                             <span className="timestamp-info">
                                 Submitted on: {new Date(report.createdAt).toLocaleString('it-IT')}
@@ -121,7 +115,11 @@ ReportOverview.propTypes = {
             imageUrl: PropTypes.string.isRequired
         })),
         username: PropTypes.string,
+        user: PropTypes.shape({
+            username: PropTypes.string,
+        }),
         isAnonymous: PropTypes.bool,
+        anonymous: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
         createdAt: PropTypes.string
     }).isRequired,
     onBackToHome: PropTypes.func,

@@ -243,8 +243,8 @@ app.post("/users/temporary", async (req, res, next) => {
 
   try {
     const data = req.body;
-    const user = await UserDAO.getUserByUsername(data.username);
-    if (user) return res.status(409).json(new errors.ConflictError("This username already exists."));
+    const found = await UserDAO.checkUserExists(data.username, data.email);
+    if (found) return res.status(409).json(new errors.ConflictError("This user already exists."));
     const hashedPassword = await bcrypt.hash(data.password, 8);
     data.password = hashedPassword;
     req.session.tempUser = data;
@@ -350,6 +350,19 @@ app.get('/employees/unassigned', isLogged, async (req, res) => {
   }
 });
 
+app.get('/employees/technical-officers', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+
+    const officers = await UserDAO.getTechnicalOfficers();
+    return res.status(200).json(officers);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
