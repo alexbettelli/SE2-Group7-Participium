@@ -111,14 +111,32 @@ const callProtected = async (path, { method = 'GET', body = null, token = null, 
 
 */
 
-const createReport = async () => {
-
-}
+const coordinatesToAddress = async (latitude, longitude) => {
+  return new Promise((resolve, reject) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if(data && data.address) {
+          const address = data.address;
+          const formattedAddress = `${address.road || ''}, ${address.town || ''}`;
+          //if(!['torino', 'turin'].includes(address.town.toLowerCase()) && ['torino', 'turin'].includes(address.city.toLowerCase())) reject(null);
+          resolve(formattedAddress);
+        } else {
+          resolve(null);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching address:', error);
+        resolve(null);
+      });
+  });
+};
 
 const BOT_API = {
     callProtected,
     verifyTelegramUsername,
     verifyPassword,
-    createReport
+    coordinatesToAddress
 }
 export default BOT_API

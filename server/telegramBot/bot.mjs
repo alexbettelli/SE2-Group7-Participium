@@ -179,6 +179,36 @@ async function handlePasswordInput(chatId, text, messageId) {
   }
 }
 
+const showReportMessage = (chatId, categories = undefined) => {
+  const session = getSession(chatId);
+  session.reportState = (session.reportState || 0) + 1;
+  const text = [
+    "Provide the *location* of the issue by sending it on the map.\n\n",
+    "Provide the *title* of the report.\n\n",
+    "Provide the *description* of the report.\n\n",
+    "Select the *category* of the report.\n\n",
+    "Provide from one to three *photos* for the report\n\n"
+  ];
+
+  bot.sendMessage(
+    chatId,
+    `🆕 *New Report Creation*\n` +
+    (session.reportState > 1 ? `*\nAddress*: ${session.reportData.location.address}\n` : '') +
+    (session.reportState > 2 ? `*Title*: ${session.reportData.title}\n` : '') +
+    (session.reportState > 3 ? `*Description*: ${session.reportData.description}\n` : '') +
+    (session.reportState > 4 ? `*Category*: ${session.reportData.category.name}\n` : '') +
+    `\n**Step *${session.reportState}*/5**\n` +
+    `${text[session.reportState - 1]}` +
+    `You can use /cancel to abort the operation.`,
+    { 
+      reply_markup: categories ? {
+        inline_keyboard: categories.map(category => ([{ text: category.categoryName, callback_data: category.id }])),
+      } : undefined,
+      parse_mode: 'Markdown' 
+    }
+  );
+}
+
 function handleReportTitleInput(chatId, text) {
   const session = getSession(chatId);
 
@@ -189,12 +219,73 @@ function handleReportTitleInput(chatId, text) {
 
   session.state = STATE.REPORT_CREATION_WAIT_DESCRIPTION;
   session.reportData.title = text.trim();
-  bot.sendMessage(
-    chatId,
-    `Provide the *description* of the report.\n\n`,
-    { parse_mode: 'Markdown' }
-  );
+
+  showReportMessage(chatId);
 }
+
+async function handleReportDescriptionInput(chatId, text) {
+  const session = getSession(chatId);
+  
+  if(text.trim().length === 0) {
+    bot.sendMessage(chatId, '⚠️ Description cannot be empty. Please provide a valid description.');
+    return;
+  }
+  
+  session.state = STATE.REPORT_CREATION_WAIT_CATEGORY;
+  session.reportData.description = text.trim();
+
+  try {
+    const categories = await BOT_API.callProtected('/categories', { method: 'GET', token: session.token });
+    showReportMessage(chatId, categories);
+  } catch {
+    bot.sendMessage(chatId, '❌ Error retrieving categories. Please try again later.');
+    return;
+  }
+}
+
+bot.on('location', (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if(!session || session.state !== STATE.REPORT_CREATION_WAIT_LOCATION) {
+    bot.sendMessage(chatId, '⚠️ No location upload in progress.');
+    return;
+  }
+
+  const location = msg.location;
+  console.log(`Received location: lat=${location.latitude}, lon=${location.longitude}`);
+  BOT_API.coordinatesToAddress(location.latitude, location.longitude).then(address => {
+    if(address) {  
+      session.reportData.location = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        address: address
+      };
+      session.state = STATE.REPORT_CREATION_WAIT_TITLE;
+      showReportMessage(chatId);
+    } else {
+      bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
+    }
+  }).catch(err => {
+    console.error('Error converting coordinates to address:', err);
+    bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
+  });
+
+});
+
+bot.on('photo', (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  
+  /*if(!session || session.state !== STATE.REPORT_CREATION_WAIT_PHOTO) {
+    bot.sendMessage(chatId, '⚠️ No photo upload in progress.');
+    return;
+  }*/
+
+  console.log("Received photo:");    
+  console.log(msg.photo);
+
+});
 
 // ========== Centralized Message Handler ==========
 bot.on('message', async (msg) => {
@@ -218,11 +309,32 @@ bot.on('message', async (msg) => {
     case STATE.REPORT_CREATION_WAIT_TITLE:
       handleReportTitleInput(chatId, text);
       break; 
-    
+    case STATE.REPORT_CREATION_WAIT_DESCRIPTION:
+      await handleReportDescriptionInput(chatId, text);
+      break;
     default:
       // State unknown or idle - ignore
       break;
   }
+});
+
+bot.on('callback_query', callback => {
+  const chatId = callback.message.chat.id;
+  const session = getSession(chatId);
+
+  if(!session || session.state !== STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    bot.answerCallbackQuery(callback.id, { text: '⚠️ No category selection in progress.' });
+    return;
+  }
+
+  session.reportData.category = {
+    id: callback.data,
+    name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+  };
+  console.log('Selected category:', session.reportData.category);
+  session.state = STATE.REPORT_CREATION_WAIT_PHOTO
+  bot.answerCallbackQuery(callback.id);
+  showReportMessage(chatId);
 });
 
 // ========== Commands ==========
@@ -312,7 +424,7 @@ bot.onText(/\/cancel/, (msg) => {
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
 });
 
-bot.onText(/\/new-report/, async msg => {
+bot.onText(/\/newreport/, async msg => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
 
@@ -321,21 +433,12 @@ bot.onText(/\/new-report/, async msg => {
     return;
   }
 
-  userSessions.set(chatId, {
-    state: STATE.REPORT_CREATION_WAIT_TITLE,
-    ...session,
-    reportData: {}
-  });
+  //session.state = STATE.REPORT_CREATION_WAIT_TITLE;
+  session.state = STATE.REPORT_CREATION_WAIT_LOCATION;
+  session.reportStep = 0;
+  session.reportData = {};
 
-  bot.sendMessage(
-    chatId,
-    `🆕 *New Report Creation*\n\n` +
-    `Provide the *title* of the report\n\n`+
-    `You can use /cancel to abort the operation.`,
-    { parse_mode: 'Markdown' }
-  );
-
-
+  showReportMessage(chatId);
 });
 
 // ========== Clean Up ==========
