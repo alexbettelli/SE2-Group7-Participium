@@ -1,0 +1,303 @@
+import TelegramBot from 'node-telegram-bot-api';
+import BOT_API from './API.mjs';
+
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8542311077:AAHdhD6LwBjjj2XW8sIc00ltb7wLQ7MBLB8';
+const PASSWORD_ERRORS_LIMIT = 3;
+const SESSION_EXPIRED_TIME = 15 * 60 * 1000;
+const CLEAN_INTERVAL = 10 * 60 * 1000;
+
+// Session states
+const STATE = {
+  IDLE: 'idle',
+  LOGIN_WAIT_TEL_USERNAME: 'login_waiting_telegram_username',
+  LOGIN_WAIT_PASSWORD: 'login_waiting_password'
+};
+
+const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+const userSessions = new Map();
+
+// ========== Sessions management ==========
+const getSession = (chatId) => {
+  return userSessions.get(chatId);
+};
+
+const deleteSession = (chatId) => {
+  userSessions.delete(chatId);
+};
+
+const isAuthenticated = (chatId) => {
+  const session = userSessions.get(chatId);
+  return session && session.authenticated;
+};
+
+const sendAuthRequiredMessage = (chatId) => {
+  bot.sendMessage(
+    chatId,
+    `⚠️ *You need to be authenticated to perform this command*.\n\nUse /login to login.`,
+    { parse_mode: 'Markdown' }
+  );
+};
+
+
+// ========== Login Handlers  ==========
+async function handleTelegramUsernameInput(chatId, text) {
+  const session = getSession(chatId);
+  
+  if (Date.now() - session.startedAt > SESSION_EXPIRED_TIME) {
+    deleteSession(chatId);
+    bot.sendMessage(chatId, '⏱️ Session expired. Use /login and retry.');
+    return;
+  }
+  
+  let telegramUsername = text.trim();
+  if (telegramUsername.length === 0) {
+    bot.sendMessage(chatId, '⚠️ Username incorrect. Retry.');
+    return;
+  }
+  if (!telegramUsername.startsWith('@')) {
+    telegramUsername = '@' + telegramUsername;
+  }
+  
+  try {
+    const username = await BOT_API.verifyTelegramUsername(telegramUsername);    
+    if (!username) {
+      deleteSession(chatId);
+      bot.sendMessage(
+        chatId,
+        `❌ *Login failed*\n\n` +
+        `No Participium account was found with the Telegram username ${telegramUsername}\n\n` +
+        `Please make sure to:\n` +
+        `1. Have registered an account on Participium\n` +
+        `2. Have set ${telegramUsername} in your profile\n\n` +
+        `Use /login to try again.`,
+        { parse_mode: 'Markdown' }
+      );
+      return;
+    }
+    
+    session.telegramUsername = telegramUsername;
+    session.username = username;
+    session.state = STATE.LOGIN_WAIT_PASSWORD;
+    session.passwordErrors = 0;
+    
+    bot.sendMessage(
+      chatId,
+      `📱 Username received: *${telegramUsername}*\n\n` +
+      `Now insert your *Participium password*.\n\n` +
+      `⚠️ The message will be deleted after validation!`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    console.error('Error during telegramUsername verification:', error);
+    deleteSession(chatId);
+    bot.sendMessage(
+      chatId,
+      `❌ Error during telegramUsername verification.\n\n` +
+      `Use /login and try again.`
+    );
+  }
+}
+async function handlePasswordInput(chatId, text, messageId) {
+  const session = getSession(chatId);
+
+  try {
+    await bot.deleteMessage(chatId, messageId);
+  } catch (err) {
+    console.error('Cannot delete message:', err);
+  }
+  
+  if (Date.now() - session.startedAt > SESSION_EXPIRED_TIME) {
+    deleteSession(chatId);
+    bot.sendMessage(chatId, '⏱️ Session expired. Use /login and retry.');
+    return;
+  }
+  
+  const password = text;
+  
+  bot.sendMessage(chatId, '🔄 Credential verification in progress...');
+  
+  try {
+    const result = await BOT_API.verifyPassword(session.username, password);
+
+    if (!result || !result.valid) {
+      session.passwordErrors = session.passwordErrors + 1;
+
+      if (session.passwordErrors < PASSWORD_ERRORS_LIMIT) {
+        bot.sendMessage(
+          chatId,
+          `❌ *Login failed*\n\n` +
+          `Incorrect password for account ${session.telegramUsername}\n\n` +
+          `You have *${PASSWORD_ERRORS_LIMIT - session.passwordErrors}* attempts left`,
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      } else {
+        deleteSession(chatId);
+        bot.sendMessage(
+          chatId,
+          `❌ *Login failed*\n\n` +
+          `Incorrect password for account ${session.telegramUsername}\n\n` +
+          `You have reached the attempts limit\n` +
+          `Use /login to try again.`,
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+    }
+
+    // Login riuscito
+    session.authenticated = true;
+    session.user = result.user || result; // fallback
+    session.token = result.token || null;
+    session.state = STATE.IDLE;
+    delete session.startedAt;
+    delete session.passwordErrors;
+    delete session.username;
+    delete session.telegramUsername;
+    delete session.userInfo;
+
+    bot.sendMessage(
+      chatId,
+      `✅ *Login successful!*\n\n` +
+      `Welcome, ${session.user.username}!\n\n` +
+      `Use /logout to disconnect.`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (err) {
+    console.error('Error during password verification:', err);
+    deleteSession(chatId);
+    bot.sendMessage(
+      chatId,
+      `❌ Error during password verification.\n\n` +
+      `Use /login and try again.`
+    );
+  }
+}
+
+// ========== Centralized Message Handler ==========
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  const text = msg.text;
+  
+  // Ignore default commands (managed by onText) and non-text messages
+  if (!text || text.startsWith('/')) return;
+  
+  const session = getSession(chatId);
+  if (!session) return;
+  
+  // Router based on session states
+  switch (session.state) {
+    case STATE.LOGIN_WAIT_TEL_USERNAME:
+      await handleTelegramUsernameInput(chatId, text);
+      break;
+      
+    case STATE.LOGIN_WAIT_PASSWORD:
+      await handlePasswordInput(chatId, text, msg.message_id);
+      break;
+      
+    default:
+      // State unknown or idle - ignore
+      break;
+  }
+});
+
+// ========== Commands ==========
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  bot.sendMessage(
+    chatId,
+    `I am the official bot of Group 7 Participium App, a platform for reporting and managing urban issues of the Municipality of Turin.\n\n` +    
+    `Use the /login command to connect your Participium account and get started!`
+  );
+});
+
+bot.onText(/\/contact/, (msg) => {
+  const chatId = msg.chat.id;
+
+  const text =
+    `📞 *Participium contacts*\n\n` +
+    `✉️ *Email*: participium.g7@gmail.com\n` +
+    `☎️ *Phone*: N/A\n\n` +
+    `🌐 *Website (local)*: http://localhost:5173\n` +
+    `🌐 *Project repo*: https://github.com/alexbettelli/SE2-Group7-Participium\n`;
+
+  bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+});
+
+bot.onText(/\/login/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  const session = getSession(chatId);
+  if (session && session.authenticated) {
+    bot.sendMessage(
+      chatId,
+      `ℹ️ You are already authenticaterd as *${session.user.username}*.\n\n` +
+      `Use /logout to disconnect.`,
+      { parse_mode: 'Markdown' }
+    );
+    return;
+  }
+  
+  userSessions.set(chatId, {
+    state: STATE.LOGIN_WAIT_TEL_USERNAME,
+    startedAt: Date.now(),
+    authenticated: false
+  });
+  
+  bot.sendMessage(
+    chatId,
+    `🔐 *Login Procedure*\n\n` +
+    `Insert your *Telegram username* registered on Participium web site.\n\n` +
+    `Format: @username or username\n\n` +
+    `Use /cancel to stop in progress operations.`,
+    { parse_mode: 'Markdown' }
+  );
+});
+
+bot.onText(/\/logout/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  
+  if (!session || !session.authenticated) {
+    bot.sendMessage(chatId, 'ℹ️ ERROR! You are not authenticated');
+    return;
+  }
+  
+  const username = session.user.username;
+  deleteSession(chatId);
+  
+  bot.sendMessage(
+    chatId,
+    `👋 Logout successful!\n\n` +
+    `Goodbye, ${username}.\n\n` +
+    `Use /login to login again.`
+  );
+});
+
+bot.onText(/\/cancel/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  
+  if (!session || session.state === STATE.IDLE) {
+    bot.sendMessage(chatId, 'ℹ️ No operations in progress.');
+    return;
+  }
+  
+  deleteSession(chatId);
+  bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
+});
+
+// ========== Clean Up ==========
+setInterval(() => {
+  const now = Date.now();
+  for (const [chatId, session] of userSessions.entries()) {
+    if (!session.authenticated && session.startedAt && now - session.startedAt > SESSION_EXPIRED_TIME) {
+      deleteSession(chatId);
+    }
+  }
+}, CLEAN_INTERVAL);
+
+console.log('✅ Telegram Bot started successfully');
+
+export default bot;
