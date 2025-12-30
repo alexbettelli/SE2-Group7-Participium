@@ -1,4 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
+import { Blob } from 'fetch-blob';
 import BOT_API from './API.mjs';
 import fs from 'fs';
 import path from 'path';
@@ -16,7 +17,13 @@ const CLEAN_INTERVAL = 10 * 60 * 1000;
 const STATE = {
   IDLE: 'idle',
   LOGIN_WAIT_TEL_USERNAME: 'login_waiting_telegram_username',
-  LOGIN_WAIT_PASSWORD: 'login_waiting_password'
+  LOGIN_WAIT_PASSWORD: 'login_waiting_password',
+  REPORT_CREATION_WAIT_TITLE: 'report_creation_waiting_title',
+  REPORT_CREATION_WAIT_DESCRIPTION: 'report_creation_waiting_description',
+  REPORT_CREATION_WAIT_PHOTO: 'report_creation_waiting_photo',
+  REPORT_CREATION_WAIT_LOCATION: 'report_creation_waiting_location',
+  REPORT_CREATION_WAIT_CATEGORY: 'report_creation_waiting_category',
+  REPORT_CREATION_WAIT_ANONYMOUS: 'report_creation_waiting_anonymous_choice',
 };
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
@@ -180,6 +187,153 @@ async function handlePasswordInput(chatId, text, messageId) {
   }
 }
 
+const showReportMessage = (chatId, categories = undefined) => {
+  const session = getSession(chatId);
+  session.reportState = (session.reportState || 0) + 1;
+  const text = [
+    "Provide the *location* of the issue by sending it on the map.\n\n",
+    "Provide the *title* of the report.\n\n",
+    "Provide the *description* of the report.\n\n",
+    "Select the *category* of the report.\n\n",
+    "Choose whether to submit the report *anonymously* or not.\n\n",
+    "Provide from one to three *photos* for the report\n\n"
+  ];
+
+  bot.sendMessage(
+    chatId,
+    `🆕 *New Report Creation*\n` +
+    (session.reportState > 1 ? `\n*Address*: ${session.reportData.location.address}\n` : '') +
+    (session.reportState > 2 ? `*Title*: ${session.reportData.title}\n` : '') +
+    (session.reportState > 3 ? `*Description*: ${session.reportData.description}\n` : '') +
+    (session.reportState > 4 ? `*Category*: ${session.reportData.category.name}\n` : '') +
+    (session.reportState > 5 ? `*Anonymous*: ${session.reportData.anonymous ? 'Yes' : 'No'}\n` : '') +
+    `\n**Step *${session.reportState}*/6**\n` +
+    `${text[session.reportState - 1]}` +
+    `You can use /cancel to abort the operation.`,
+    { 
+      reply_markup: session.reportState === 5 ? {
+        inline_keyboard: [
+          [
+            { text: 'Anonymous', callback_data: "true" },
+            { text: 'Not Anonymous', callback_data: "false" }
+          ]
+        ]
+      } : (categories ? {
+        inline_keyboard: categories.map(category => ([{ text: category.categoryName, callback_data: category.id }]))
+      } : undefined),
+      parse_mode: 'Markdown' 
+    }
+  );
+}
+
+function handleReportTitleInput(chatId, text) {
+  const session = getSession(chatId);
+
+  if(text.trim().length === 0) {
+    bot.sendMessage(chatId, '⚠️ Title cannot be empty. Please provide a valid title.');
+    return;
+  }
+
+  session.state = STATE.REPORT_CREATION_WAIT_DESCRIPTION;
+  session.reportData.title = text.trim();
+
+  showReportMessage(chatId);
+}
+
+async function handleReportDescriptionInput(chatId, text) {
+  const session = getSession(chatId);
+  
+  if(text.trim().length === 0) {
+    bot.sendMessage(chatId, '⚠️ Description cannot be empty. Please provide a valid description.');
+    return;
+  }
+  
+  session.state = STATE.REPORT_CREATION_WAIT_CATEGORY;
+  session.reportData.description = text.trim();
+
+  try {
+    const categories = await BOT_API.callProtected('/categories', { method: 'GET', token: session.token });
+    showReportMessage(chatId, categories);
+  } catch {
+    bot.sendMessage(chatId, '❌ Error retrieving categories. Please try again later.');
+    return;
+  }
+}
+
+bot.on('location', (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if(!session || session.state !== STATE.REPORT_CREATION_WAIT_LOCATION) {
+    bot.sendMessage(chatId, '⚠️ No location upload in progress.');
+    return;
+  }
+
+  const location = msg.location;
+  console.log(`Received location: lat=${location.latitude}, lon=${location.longitude}`);
+  BOT_API.coordinatesToAddress(location.latitude, location.longitude).then(address => {
+    if(address) {  
+      session.reportData.location = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        address: address
+      };
+      console.log(address);
+      session.state = STATE.REPORT_CREATION_WAIT_TITLE;
+      showReportMessage(chatId);
+    } else {
+      bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
+    }
+  }).catch(err => {
+    if(err === 409) {
+      bot.sendMessage(chatId, '❌ The selected location is outside Turin. Please send a location within Turin.');
+    } else {
+      bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
+    }
+  });
+
+});
+
+bot.on('photo', async (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  const photos = msg.photo;
+  const fileId = photos[photos.length - 1].file_id;
+
+  if(!session || session.state !== STATE.REPORT_CREATION_WAIT_PHOTO) {
+    bot.sendMessage(chatId, '⚠️ No photo upload in progress.');
+    return;
+  }
+
+  if(!session.reportData.photos) session.reportData.photos = [];
+
+  console.log(`Received ${photos.length}, actual ${session.reportData.photos.length}`);
+  if(session.reportData.photos.length >= 3) {
+    bot.sendMessage(chatId, '⚠️ You have already uploaded the maximum number of photos.');
+    return;
+  }
+
+  try {
+    const file = await bot.getFile(fileId);
+    const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${file.file_path}`;
+    console.log('Photo URL:', fileUrl);
+    const buffer = await BOT_API.getImageBuffer(fileUrl);
+    session.reportData.photos.push(buffer);
+    bot.sendMessage(
+      chatId, 
+      `✅ Photo received! You have uploaded ${session.reportData.photos.length} photo(s).` +
+      (session.reportData.photos.length < 3 ? `\nYou can send ${3 - session.reportData.photos.length} more photo(s)` : ``) +
+      `\n\nUse /done to create the report` +
+      `\nUse /cancel to abort the operation.`
+    );
+  } catch(error) {
+    console.error('Error getting photo file URL:', error);
+    bot.sendMessage(chatId, '❌ Error processing the photo. Please try again.');
+    return;
+  }
+  
+});
+
 // ========== Centralized Message Handler ==========
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -195,16 +349,46 @@ bot.on('message', async (msg) => {
   switch (session.state) {
     case STATE.LOGIN_WAIT_TEL_USERNAME:
       await handleTelegramUsernameInput(chatId, text);
-      break;
-      
+      break;  
     case STATE.LOGIN_WAIT_PASSWORD:
       await handlePasswordInput(chatId, text, msg.message_id);
       break;
-      
+    case STATE.REPORT_CREATION_WAIT_TITLE:
+      handleReportTitleInput(chatId, text);
+      break; 
+    case STATE.REPORT_CREATION_WAIT_DESCRIPTION:
+      await handleReportDescriptionInput(chatId, text);
+      break;
     default:
       // State unknown or idle - ignore
       break;
   }
+});
+
+bot.on('callback_query', callback => {
+  const chatId = callback.message.chat.id;
+  const session = getSession(chatId);
+
+  if(!session || (session.state !== STATE.REPORT_CREATION_WAIT_CATEGORY && session.state !== STATE.REPORT_CREATION_WAIT_ANONYMOUS)) {
+    bot.answerCallbackQuery(callback.id, { text: '⚠️ No selection in progress.' });
+    return;
+  }
+
+
+  if(session.state === STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    session.reportData.category = {
+      id: callback.data,
+      name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+    };
+    console.log('Selected category:', session.reportData.category);
+    session.state = STATE.REPORT_CREATION_WAIT_ANONYMOUS;
+  } else {
+    session.reportData.anonymous = callback.data === "true";
+    session.state = STATE.REPORT_CREATION_WAIT_PHOTO;
+  }
+
+  bot.answerCallbackQuery(callback.id);
+  showReportMessage(chatId);
 });
 
 // ========== Commands ==========
@@ -292,6 +476,62 @@ bot.onText(/\/cancel/, (msg) => {
   
   deleteSession(chatId);
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
+});
+
+bot.onText(/\/newreport/, async msg => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if (!isAuthenticated(chatId)) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+
+  session.state = STATE.REPORT_CREATION_WAIT_LOCATION; 
+  session.reportStep = 0;
+  session.reportData = {};
+
+  showReportMessage(chatId);
+});
+
+bot.onText(/\/done/, async msg => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if(!isAuthenticated(chatId)) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+
+  if(session.state !== STATE.REPORT_CREATION_WAIT_PHOTO || !session.reportData.photos || session.reportData.photos.length > 3) {
+    bot.sendMessage(chatId, 'There is not a report creation in progress or not enough photos uploaded (minimum 1, maximum 3).');
+    return;
+  }
+
+  const form = new FormData();
+  form.append('title', session.reportData.title);
+  form.append('description', session.reportData.description);
+  form.append('latitude', session.reportData.location.latitude);
+  form.append('longitude', session.reportData.location.longitude);
+  form.append('address', session.reportData.location.address);
+  form.append('catId', session.reportData.category.id);
+  form.append('anonymous', session.reportData.anonymous ? 'true' : 'false');
+
+  for (let i = 0; i < session.reportData.photos.length; i++) {
+    const photo = session.reportData.photos[i];
+    form.append('images', new Blob([photo], { type: 'image/jpg' }), `photo${i + 1}.jpg`);
+  }
+
+  BOT_API.callProtected('/users/reports', { method: 'POST', body: form, token: session.token }).then(response => {
+    bot.sendMessage(chatId, '✅ Report created successfully!');
+    session.state = STATE.IDLE;
+    delete session.reportData;
+    delete session.reportStep;
+    delete session.reportState;
+  }).catch(err => {
+    console.error('Error creating report:', err);
+    bot.sendMessage(chatId, '❌ Error creating the report. Please try again later.');
+  });
 });
 
 // Fetch report status   /reportstatus <id>
