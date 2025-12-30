@@ -1,4 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
+import { Blob } from 'fetch-blob';
 import BOT_API from './API.mjs';
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8542311077:AAHdhD6LwBjjj2XW8sIc00ltb7wLQ7MBLB8';
@@ -15,7 +16,8 @@ const STATE = {
   REPORT_CREATION_WAIT_DESCRIPTION: 'report_creation_waiting_description',
   REPORT_CREATION_WAIT_PHOTO: 'report_creation_waiting_photo',
   REPORT_CREATION_WAIT_LOCATION: 'report_creation_waiting_location',
-  REPORT_CREATION_WAIT_CATEGORY: 'report_creation_waiting_category'
+  REPORT_CREATION_WAIT_CATEGORY: 'report_creation_waiting_category',
+  REPORT_CREATION_WAIT_ANONYMOUS: 'report_creation_waiting_anonymous_choice',
 };
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
@@ -187,23 +189,32 @@ const showReportMessage = (chatId, categories = undefined) => {
     "Provide the *title* of the report.\n\n",
     "Provide the *description* of the report.\n\n",
     "Select the *category* of the report.\n\n",
+    "Choose whether to submit the report *anonymously* or not.\n\n",
     "Provide from one to three *photos* for the report\n\n"
   ];
 
   bot.sendMessage(
     chatId,
     `🆕 *New Report Creation*\n` +
-    (session.reportState > 1 ? `*\nAddress*: ${session.reportData.location.address}\n` : '') +
+    (session.reportState > 1 ? `\n*Address*: ${session.reportData.location.address}\n` : '') +
     (session.reportState > 2 ? `*Title*: ${session.reportData.title}\n` : '') +
     (session.reportState > 3 ? `*Description*: ${session.reportData.description}\n` : '') +
     (session.reportState > 4 ? `*Category*: ${session.reportData.category.name}\n` : '') +
-    `\n**Step *${session.reportState}*/5**\n` +
+    (session.reportState > 5 ? `*Anonymous*: ${session.reportData.anonymous ? 'Yes' : 'No'}\n` : '') +
+    `\n**Step *${session.reportState}*/6**\n` +
     `${text[session.reportState - 1]}` +
     `You can use /cancel to abort the operation.`,
     { 
-      reply_markup: categories ? {
-        inline_keyboard: categories.map(category => ([{ text: category.categoryName, callback_data: category.id }])),
-      } : undefined,
+      reply_markup: session.reportState === 5 ? {
+        inline_keyboard: [
+          [
+            { text: 'Anonymous', callback_data: "true" },
+            { text: 'Not Anonymous', callback_data: "false" }
+          ]
+        ]
+      } : (categories ? {
+        inline_keyboard: categories.map(category => ([{ text: category.categoryName, callback_data: category.id }]))
+      } : undefined),
       parse_mode: 'Markdown' 
     }
   );
@@ -261,30 +272,60 @@ bot.on('location', (msg) => {
         longitude: location.longitude,
         address: address
       };
+      console.log(address);
       session.state = STATE.REPORT_CREATION_WAIT_TITLE;
       showReportMessage(chatId);
     } else {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
     }
   }).catch(err => {
-    console.error('Error converting coordinates to address:', err);
-    bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
+    if(err === 409) {
+      bot.sendMessage(chatId, '❌ The selected location is outside Turin. Please send a location within Turin.');
+    } else {
+      bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
+    }
   });
 
 });
 
-bot.on('photo', (msg) => {
+bot.on('photo', async (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
-  
-  /*if(!session || session.state !== STATE.REPORT_CREATION_WAIT_PHOTO) {
+  const photos = msg.photo;
+  const fileId = photos[photos.length - 1].file_id;
+
+  if(!session || session.state !== STATE.REPORT_CREATION_WAIT_PHOTO) {
     bot.sendMessage(chatId, '⚠️ No photo upload in progress.');
     return;
-  }*/
+  }
 
-  console.log("Received photo:");    
-  console.log(msg.photo);
+  if(!session.reportData.photos) session.reportData.photos = [];
 
+  console.log(`Received ${photos.length}, actual ${session.reportData.photos.length}`);
+  if(session.reportData.photos.length >= 3) {
+    bot.sendMessage(chatId, '⚠️ You have already uploaded the maximum number of photos.');
+    return;
+  }
+
+  try {
+    const file = await bot.getFile(fileId);
+    const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${file.file_path}`;
+    console.log('Photo URL:', fileUrl);
+    const buffer = await BOT_API.getImageBuffer(fileUrl);
+    session.reportData.photos.push(buffer);
+    bot.sendMessage(
+      chatId, 
+      `✅ Photo received! You have uploaded ${session.reportData.photos.length} photo(s).` +
+      (session.reportData.photos.length < 3 ? `\nYou can send ${3 - session.reportData.photos.length} more photo(s)` : ``) +
+      `\n\nUse /done to create the report` +
+      `\nUse /cancel to abort the operation.`
+    );
+  } catch(error) {
+    console.error('Error getting photo file URL:', error);
+    bot.sendMessage(chatId, '❌ Error processing the photo. Please try again.');
+    return;
+  }
+  
 });
 
 // ========== Centralized Message Handler ==========
@@ -322,17 +363,24 @@ bot.on('callback_query', callback => {
   const chatId = callback.message.chat.id;
   const session = getSession(chatId);
 
-  if(!session || session.state !== STATE.REPORT_CREATION_WAIT_CATEGORY) {
-    bot.answerCallbackQuery(callback.id, { text: '⚠️ No category selection in progress.' });
+  if(!session || (session.state !== STATE.REPORT_CREATION_WAIT_CATEGORY && session.state !== STATE.REPORT_CREATION_WAIT_ANONYMOUS)) {
+    bot.answerCallbackQuery(callback.id, { text: '⚠️ No selection in progress.' });
     return;
   }
 
-  session.reportData.category = {
-    id: callback.data,
-    name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
-  };
-  console.log('Selected category:', session.reportData.category);
-  session.state = STATE.REPORT_CREATION_WAIT_PHOTO
+
+  if(session.state === STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    session.reportData.category = {
+      id: callback.data,
+      name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+    };
+    console.log('Selected category:', session.reportData.category);
+    session.state = STATE.REPORT_CREATION_WAIT_ANONYMOUS;
+  } else {
+    session.reportData.anonymous = callback.data === "true";
+    session.state = STATE.REPORT_CREATION_WAIT_PHOTO;
+  }
+
   bot.answerCallbackQuery(callback.id);
   showReportMessage(chatId);
 });
@@ -433,12 +481,51 @@ bot.onText(/\/newreport/, async msg => {
     return;
   }
 
-  //session.state = STATE.REPORT_CREATION_WAIT_TITLE;
-  session.state = STATE.REPORT_CREATION_WAIT_LOCATION;
+  session.state = STATE.REPORT_CREATION_WAIT_LOCATION; 
   session.reportStep = 0;
   session.reportData = {};
 
   showReportMessage(chatId);
+});
+
+bot.onText(/\/done/, async msg => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if(!isAuthenticated(chatId)) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+
+  if(session.state !== STATE.REPORT_CREATION_WAIT_PHOTO || !session.reportData.photos || session.reportData.photos.length > 3) {
+    bot.sendMessage(chatId, 'There is not a report creation in progress or not enough photos uploaded (minimum 1, maximum 3).');
+    return;
+  }
+
+  const form = new FormData();
+  form.append('title', session.reportData.title);
+  form.append('description', session.reportData.description);
+  form.append('latitude', session.reportData.location.latitude);
+  form.append('longitude', session.reportData.location.longitude);
+  form.append('address', session.reportData.location.address);
+  form.append('catId', session.reportData.category.id);
+  form.append('anonymous', session.reportData.anonymous ? 'true' : 'false');
+
+  for (let i = 0; i < session.reportData.photos.length; i++) {
+    const photo = session.reportData.photos[i];
+    form.append('images', new Blob([photo], { type: 'image/jpg' }), `photo${i + 1}.jpg`);
+  }
+
+  BOT_API.callProtected('/users/reports', { method: 'POST', body: form, token: session.token }).then(response => {
+    bot.sendMessage(chatId, '✅ Report created successfully!');
+    session.state = STATE.IDLE;
+    delete session.reportData;
+    delete session.reportStep;
+    delete session.reportState;
+  }).catch(err => {
+    console.error('Error creating report:', err);
+    bot.sendMessage(chatId, '❌ Error creating the report. Please try again later.');
+  });
 });
 
 // ========== Clean Up ==========

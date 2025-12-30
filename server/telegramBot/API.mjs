@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 
@@ -119,24 +121,38 @@ const coordinatesToAddress = async (latitude, longitude) => {
       .then(data => {
         if(data && data.address) {
           const address = data.address;
-          const formattedAddress = `${address.road || ''}, ${address.town || ''}`;
-          //if(!['torino', 'turin'].includes(address.town.toLowerCase()) && ['torino', 'turin'].includes(address.city.toLowerCase())) reject(null);
+          const formattedAddress = `${address.road || ''} (${address.house_number || ''}), ${address.postcode || ''} ${address.town || address.city || ''}`;
+          const filters = ['torino', 'turin'];
+          if(!filters.includes(address.city?.toLowerCase()) && !filters.includes(address.town?.toLowerCase())) {
+            reject(409);
+          }
           resolve(formattedAddress);
         } else {
-          resolve(null);
+          reject(500);
         }
       })
       .catch(error => {
         console.error('Error fetching address:', error);
-        resolve(null);
+        reject(500);
       });
   });
 };
+
+const getImageBuffer = async imageUrl => {
+  return new Promise((resolve, reject) => {
+    axios.get(imageUrl, { responseType: 'arraybuffer' }).then(res => {
+      resolve(Buffer.from(res.data));
+    }).catch(error => {
+      reject(error);
+    });
+  });
+}
 
 const BOT_API = {
     callProtected,
     verifyTelegramUsername,
     verifyPassword,
-    coordinatesToAddress
+    coordinatesToAddress,
+    getImageBuffer
 }
 export default BOT_API
