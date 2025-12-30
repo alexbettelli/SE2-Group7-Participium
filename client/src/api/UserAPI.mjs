@@ -76,6 +76,23 @@ const getUnassignedEmployees = async () => {
         throw new Error(errMessage.error || 'Error fetching unassigned employees');
     }
 };
+
+const getTechnicalOfficers = async () => {
+    const res = await fetch(SERVER_URL + '/employees/technical-officers', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+
+    if (res.ok) {
+        const officers = await res.json();
+        return officers;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching technical officers');
+    }
+};
+
 const assignEmployeeToOffice = async (employeeId, officeId, roleId) => {
     const res = await fetch(SERVER_URL + '/employees/assign', {
         method: 'POST',
@@ -98,6 +115,7 @@ const UserAPI = {
     getUserInfo,
     createNewEmployee,
     getUnassignedEmployees,
+    getTechnicalOfficers,
     assignEmployeeToOffice,
     updateProfile,
     deleteProfilePhoto

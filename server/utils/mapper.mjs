@@ -1,4 +1,4 @@
-import { User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment } from '../model/model.mjs';
+import { User, Employee, Report, Message, Office, Role, Status, Image, Category, Channel, Comment } from '../model/model.mjs';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
@@ -28,6 +28,38 @@ function mapRowToUser(row) {
 const mapRowsToUsers = (rows) => {
     return rows.map(mapRowToUser);
 }
+
+const mapRowsToEmployee = (rows) => {
+    return mapRowsToEmployees(rows)[0];
+}
+const mapRowsToEmployees = (rows) => { 
+
+    const grouped = rows.reduce((acc, row) => {
+        if (!acc[row.id]) {
+            acc[row.id] = {
+                id : row.id,
+                username : row.username,
+                email : row.email,
+                firstName : row.firstName,
+                lastName : row.lastName,
+                role : new Role( row.typeId, row.type ),
+                offices : []            
+            };
+        }
+
+        const employee = acc[row.id];
+
+        // add office if it not exists
+        if (row.officeId && !employee.offices.some(office => office.id === row.officeId)) {
+            employee.offices.push(new Office(row.officeId, row.officeName));
+        }     
+
+        return acc;
+    }, {});
+
+    return Object.values(grouped).map(r => new Employee({ ...r }));
+}
+
 
 //map a single office
 const mapRowToOffice = (rows) => {
@@ -254,6 +286,8 @@ const mapRowsToComments = (rows) => {
 const Mapper = {
     mapRowToUser,
     mapRowsToUsers,
+    mapRowsToEmployee,
+    mapRowsToEmployees, 
     mapRowToRole,
     mapRowsToRoles,
     mapRowToCategory,

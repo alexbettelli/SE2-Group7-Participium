@@ -58,6 +58,29 @@ const getUnassignedEmployees = () => {
         });
     });
 }
+
+const getTechnicalOfficers = () => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT u.*, o.name as officeName, o.id as officeId
+            FROM user u
+            LEFT JOIN office_employee oe ON u.id = oe.userId
+            LEFT JOIN office o ON oe.officeId = o.id
+            WHERE u.typeId = 4
+        `; // typeId 4 = Technical Office Staff Member
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const officers = rows.map(row => ({
+                ...Mapper.mapRowToUser(row),
+                officeName: row.officeName || 'N/A',
+                officeId: row.officeId || null
+            }));
+            resolve(officers);
+        });
+    });
+}
 const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
     return new Promise((resolve, reject) => {
         const updateUser = `
@@ -98,8 +121,6 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
         });
     });
 }
-
-
 const deleteEmployeeById = (employeeId) => {
     return new Promise((resolve, reject) => {
         const deleteUserSql = `
@@ -162,25 +183,29 @@ const getUserById = (userId) => {
         });
     });
 };
-/* const getUsernameByUserId = (userId) => {    
+const getUsernameByTelegramUsername = (telegramUsername) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT username FROM user WHERE id = ?`;
-        db.get(query, [userId], (err, row) => {
+        const query = `SELECT username FROM user WHERE telegramUsername = ?`;
+        db.get(query, [telegramUsername], (err, row) => {
             if (err) return reject(err);
             if (!row) return resolve(null);
-            resolve(row.username);
+            
+            const username = row.username;
+            resolve(username);
         });
     });
-}; */
+};
 
 const UserDAO = {
     addNewUser,
     getUserByUsername,
     getUserById,
     getUnassignedEmployees,
+    getTechnicalOfficers,
     assignEmployeeToOffice,
     deleteEmployeeById,
     updateUserProfile,
+    getUsernameByTelegramUsername,
     checkUserExists
 };
 export default UserDAO;

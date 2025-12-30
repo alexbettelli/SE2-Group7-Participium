@@ -666,6 +666,28 @@ const reassignReports = (data) => {
     });
 };
 
+const getReportById = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT r.*, 
+                   u.id as userId, u.username, 
+                   c.id as catId, c.categoryName,
+                   s.id as statusId, s.statusName,
+                   i.id as imageId, i.imageUrl
+            FROM report r
+            LEFT JOIN user u ON r.userId = u.id
+            LEFT JOIN report_category c ON r.catId = c.id
+            LEFT JOIN report_status s ON r.statusId = s.id
+            LEFT JOIN report_image i ON r.id = i.reportId
+            WHERE r.id = ?
+        `;
+        db.get(sql, [id], (err, row) => {
+            if (err) return reject(err);
+            resolve(Mapper.mapRowsToReport(row ? [row] : []));
+        });
+    });
+};
+
 const ReportDAO = {
   getAllReports,
   getReportsByUserId,
@@ -680,6 +702,7 @@ const ReportDAO = {
   getExternalMaintainerMyReports,
   updateExternalMaintainerReportStatus,
   getInProgressReportsByOfficeId,
-  reassignReports
+  reassignReports,
+  getReportById
 };
 export default ReportDAO;
