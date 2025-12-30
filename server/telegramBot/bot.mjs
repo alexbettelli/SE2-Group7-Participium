@@ -1,5 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import BOT_API from './API.mjs';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8542311077:AAHdhD6LwBjjj2XW8sIc00ltb7wLQ7MBLB8';
 const PASSWORD_ERRORS_LIMIT = 3;
@@ -286,6 +292,57 @@ bot.onText(/\/cancel/, (msg) => {
   
   deleteSession(chatId);
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
+});
+
+bot.onText(/^\/reportstatus(?:@[\w_]+)? (\d+)$/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+
+  if (!session || !session.authenticated || !session.token) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+
+  const reportId = match[1];
+
+  try {
+    const report = await BOT_API.callProtected(`/reports/${reportId}`, {
+      method: 'GET',
+      token: session.token
+    });
+
+    if (!report.user || report.user.id !== session.user.id) {
+      bot.sendMessage(chatId, "❌ You are not authorized to view this report or it doesn't exist.");
+      return;
+    }
+
+    let text = `📝 *Report #${report.id}*\n`;
+    text += `📌 *Title:* ${report.title}\n`;
+    text += `📊 *Status:* ${report.status?.statusName || report.status || 'N/A'}\n`;
+    text += `🏷️ *Category:* ${report.category?.categoryName || report.category || 'N/A'}\n`;
+    text += `📍 *Address:* ${report.address || 'N/A'}\n`;
+    text += `🗓️ *Created at:* ${report.createdAt ? new Date(report.createdAt).toLocaleString('it-IT') : 'N/A'}\n`;
+    text += `📝 *Description:*\n${report.description || 'N/A'}`;
+
+    await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+
+    for (const img of report.images) {
+      if (img.imageUrl) {
+        const fileName = path.basename(img.imageUrl);
+        const localPath = path.join(
+          __dirname, '..', '..', 'server', 'uploads', 'reports', String(report.id), fileName
+        );
+        if (fs.existsSync(localPath)) {
+          await bot.sendPhoto(chatId, fs.createReadStream(localPath));
+        } else {
+          await bot.sendMessage(chatId, "⚠️ Image not found on the server.");
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching report:', err);
+    bot.sendMessage(chatId, "❌ Error: Unable to fetch report. Make sure the ID is correct and you are logged in.");
+  }
 });
 
 // ========== Clean Up ==========
