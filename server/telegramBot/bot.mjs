@@ -294,6 +294,7 @@ bot.onText(/\/cancel/, (msg) => {
   bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
 });
 
+// Fetch report status   /reportstatus <id>
 bot.onText(/^\/reportstatus(?:@[\w_]+)? (\d+)$/, async (msg, match) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
