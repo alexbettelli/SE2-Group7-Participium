@@ -591,7 +591,7 @@ app.post('/reports/reject', isLogged, async (req, res) => {
   }
 });
 
-app.post('/users/reports', isLogged, upload.array('images', 3), /*validate({ body: schemas.report }),*/ async (req, res) => {
+app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body: schemas.report }), async (req, res) => {
   const images = req.files;
 
   if (images.length === 0) return res.status(400).json(new errors.BadRequestError());
