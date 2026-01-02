@@ -61,6 +61,22 @@ const deleteProfilePhoto = async () => {
 
     return response.json();
 };
+
+const getAllEmployees = async () => {
+    const res = await fetch(SERVER_URL + '/employees', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    }); 
+    if (res.ok) {
+        const employees = await res.json();
+        return employees;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching employees');
+    }
+};
+
 const getUnassignedEmployees = async () => {
     const res = await fetch(SERVER_URL + '/employees/unassigned', {
         method: 'GET',
@@ -109,7 +125,35 @@ const assignEmployeeToOffice = async (employeeId, officeId, roleId) => {
     }
 };
 
+const assignOfficerToOffice = async (officerId, officeId) => {
+    const res = await fetch(SERVER_URL + `/employees/technical-officers/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ officerId, officeId })
+    });
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error assigning officer to office');
+    }
+};
 
+const removeOfficerFromOffice = async (officerId, officeId) => {
+    const res = await fetch(SERVER_URL + `/employees/technical-officers/remove`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ officerId, officeId })
+    }); 
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error removing officer from office');
+    }
+};
 
 const UserAPI = {
     getUserInfo,
@@ -117,6 +161,8 @@ const UserAPI = {
     getUnassignedEmployees,
     getTechnicalOfficers,
     assignEmployeeToOffice,
+    assignOfficerToOffice,
+    removeOfficerFromOffice,
     updateProfile,
     deleteProfilePhoto
 };

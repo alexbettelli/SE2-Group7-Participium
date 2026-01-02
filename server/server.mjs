@@ -379,6 +379,34 @@ app.post('/employees/assign', isLogged, async (req, res) => {
   }
 });
 
+app.post('/employees/technical-officers/assign', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const { officerId, officeId } = req.body;
+    await UserDAO.assignOfficerToOffice(officerId, officeId);
+    return res.status(200).json({ message: 'Officer assigned successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.delete('/employees/technical-officers/remove', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const { officerId, officeId } = req.body;
+    await UserDAO.removeOfficerFromOffice(officerId, officeId);
+    return res.status(200).json({ message: 'Officer removed successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
 app.get('/offices', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.role.id !== 2 && req.user.role.id !== 3) {  // typeId 2 = admin, typeId 3 = PR officer

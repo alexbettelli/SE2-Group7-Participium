@@ -6,7 +6,7 @@
 	padding: 2rem;
 	background: linear-gradient(135deg, rgba(112,38,50,0.02) 0%, rgba(83,153,135,0.02) 50%, rgba(145,47,64,0.02) 100%);
 	min-height: 100vh;
-	overflow-x: hidden;
+	overflow: visible;
 }
 
 

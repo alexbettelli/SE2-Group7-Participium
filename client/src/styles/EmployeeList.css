@@ -10,7 +10,7 @@
     box-shadow: 0 12px 40px rgba(112,38,50,0.13), 0 4px 18px rgba(83,153,135,0.09);
     border: 2px solid rgba(112,38,50,0.12);
     position: relative;
-    overflow-x: auto;
+    overflow: visible;
 }
 
 .employee-list-title {
