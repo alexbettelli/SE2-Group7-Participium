@@ -216,3 +216,27 @@ ChatPage.propTypes = {
     unreadNotifications: PropTypes.number.isRequired,
     setUnreadNotifications: PropTypes.func.isRequired
 };
+ChatPage.propTypes = {
+    report: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        notifications: PropTypes.arrayOf(PropTypes.object).isRequired,
+        user: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            username: PropTypes.string.isRequired
+        }).isRequired,
+        employee: PropTypes.shape({
+            id: PropTypes.number,
+            username: PropTypes.string
+        })
+    }).isRequired,
+    user: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        role: PropTypes.shape({
+            id: PropTypes.number.isRequired
+        }).isRequired
+    }).isRequired,
+    unreadNotifications: PropTypes.number.isRequired,
+    setUnreadNotifications: PropTypes.func.isRequired,
+    chatWith: PropTypes.oneOf(['user', 'maintainer']).isRequired
+};

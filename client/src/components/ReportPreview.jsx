@@ -324,8 +324,10 @@ ReportPreview.propTypes = {
       name: PropTypes.string,
     }),
     unreadNotifications: PropTypes.number,
+    unreadComments: PropTypes.number,
     rejectReason: PropTypes.string,
     notifications: PropTypes.array,
+    comments: PropTypes.array,
   }).isRequired,
 
   externalOffices: PropTypes.arrayOf(
@@ -349,6 +351,7 @@ ReportPreview.propTypes = {
   isExternalMaintainer: PropTypes.bool,
   showAcceptButton: PropTypes.bool,
   onAcceptReport: PropTypes.func,
+  setChatWith: PropTypes.func.isRequired
 };
 
 ReportPreview.defaultProps = {
