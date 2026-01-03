@@ -402,19 +402,6 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
-bot.onText(/\/contact/, (msg) => {
-  const chatId = msg.chat.id;
-
-  const text =
-    `📞 *Participium contacts*\n\n` +
-    `✉️ *Email*: participium.g7@gmail.com\n` +
-    `☎️ *Phone*: N/A\n\n` +
-    `🌐 *Website (local)*: http://localhost:5173\n` +
-    `🌐 *Project repo*: https://github.com/alexbettelli/SE2-Group7-Participium\n`;
-
-  bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
-});
-
 bot.onText(/\/login/, (msg) => {
   const chatId = msg.chat.id;
   
@@ -465,6 +452,20 @@ bot.onText(/\/logout/, (msg) => {
   );
 });
 
+bot.onText(/\/contact/, (msg) => {
+  const chatId = msg.chat.id;
+
+  const text =
+    `📞 *Participium contacts*\n\n` +
+    `✉️ *Email*: participium.g7@gmail.com\n` +
+    `☎️ *Phone*: N/A\n\n` +
+    `🌐 *Website (local)*: http://localhost:5173\n` +
+    `🌐 *Project repo*: https://github.com/alexbettelli/SE2-Group7-Participium\n`;
+
+  bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+});
+
+
 bot.onText(/\/cancel/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
@@ -473,9 +474,26 @@ bot.onText(/\/cancel/, (msg) => {
     bot.sendMessage(chatId, 'ℹ️ No operations in progress.');
     return;
   }
+  if (isAuthenticated(chatId)) {
+    session.state = STATE.IDLE;
+    if(session.reportData){
+      delete session.reportData;
+      delete session.reportStep;
+      delete session.reportState;
+    }   
+    
+    bot.sendMessage(
+      chatId, 
+      '✅ Operation cancelled successfully.\n\n' +
+      `You are still logged in as *${session.user.username}*.`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+  else{
+    deleteSession(chatId);
+    bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
+  }
   
-  deleteSession(chatId);
-  bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
 });
 
 bot.onText(/\/newreport/, async msg => {
