@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 
@@ -111,11 +113,46 @@ const callProtected = async (path, { method = 'GET', body = null, token = null, 
 
 */
 
+const coordinatesToAddress = async (latitude, longitude) => {
+  return new Promise((resolve, reject) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if(data && data.address) {
+          const address = data.address;
+          const formattedAddress = `${address.road || ''} (${address.house_number || ''}), ${address.postcode || ''} ${address.town || address.city || ''}`;
+          const filters = ['torino', 'turin'];
+          if(!filters.includes(address.city?.toLowerCase()) && !filters.includes(address.town?.toLowerCase())) {
+            reject(409);
+          }
+          resolve(formattedAddress);
+        } else {
+          reject(500);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching address:', error);
+        reject(500);
+      });
+  });
+};
 
+const getImageBuffer = async imageUrl => {
+  return new Promise((resolve, reject) => {
+    axios.get(imageUrl, { responseType: 'arraybuffer' }).then(res => {
+      resolve(Buffer.from(res.data));
+    }).catch(error => {
+      reject(error);
+    });
+  });
+}
 
 const BOT_API = {
     callProtected,
     verifyTelegramUsername,
-    verifyPassword
+    verifyPassword,
+    coordinatesToAddress,
+    getImageBuffer
 }
 export default BOT_API

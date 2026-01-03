@@ -6,7 +6,9 @@ import '../styles/EmployeeList.css';
 export default function UnassignedEmployeeList(props) {
     return (
         <div className="employee-list-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <h2 className="employee-list-title" style={{ textAlign: 'center', width: '100%' }}>Unassigned Employees {props.employees.length === 0 ? " - None" : ` - ${props.employees.length}`}</h2>
+            <p className="employee-count" style={{ textAlign: 'center', width: '100%', color: 'var(--color-wine-light)', fontWeight: 600, marginBottom: '1rem' }}>
+                Total: {props.employees.length}
+            </p>
             <Table className="employee-list-table" hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
                 <thead>
                     <tr style={{ textAlign: 'center' }}>

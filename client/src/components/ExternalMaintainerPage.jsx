@@ -49,7 +49,7 @@ export default function ExternalMaintainerPage(props) {
             
             <div className="two-columns">
                 <div className="column">
-                    <h2><i className="bi bi-clipboard-check"></i> Reports to Accept ({assignedReports.length})</h2>
+                    <h2><i className="bi bi-clipboard-check"></i> Not Assigned Reports ({assignedReports.length})</h2>
                     <ReportsTable
                         user={props.user}
                         reports={assignedReports}
