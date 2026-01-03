@@ -70,9 +70,11 @@ const callProtected = async (path, { method = 'GET', body = null, token = null, 
   const contentType = res.headers.get('content-type') || '';
   if (contentType.includes('application/json')) return res.json();
   return res.text();
-};
+}
 
-/*
+//Ex. to use the callProtected function to access routes protected by isLogged:
+
+/* 
   GET:
 
   const session = getSession(chatId);
