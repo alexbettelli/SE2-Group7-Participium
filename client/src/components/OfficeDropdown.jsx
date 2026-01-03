@@ -6,9 +6,7 @@ import '../styles/OfficeDropdown.css';
 export default function OfficeDropdown({offices,selectedOffices, onSelect, onDeselect}) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [tempSelected, setTempSelected] = useState([]);
-  const [dropdownStyle, setDropdownStyle] = useState({});
   const dropdownRef = useRef(null);
-  const buttonRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -16,37 +14,14 @@ export default function OfficeDropdown({offices,selectedOffices, onSelect, onDes
         setIsDropdownOpen(false);
       }
     }
-
-    function handleScrollOrResize() {
-      if (isDropdownOpen) {
-        setIsDropdownOpen(false);
-      }
-    }
-
     document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", handleScrollOrResize, true);
-    window.addEventListener("resize", handleScrollOrResize);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("scroll", handleScrollOrResize, true);
-      window.removeEventListener("resize", handleScrollOrResize);
     };
-  }, [dropdownRef, isDropdownOpen]);
+  }, [dropdownRef]);
 
   useEffect(() => {
-    if (isDropdownOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      
-      setDropdownStyle({
-        position: 'fixed',
-        top: `${rect.bottom + 4}px`,
-        left: `${rect.left}px`,
-        minWidth: `${rect.width}px`,
-        zIndex: 9999,
-        maxWidth: '95vw'
-      });
-
+    if (isDropdownOpen) {
       setTempSelected(selectedOffices || []);
     }
   }, [isDropdownOpen, selectedOffices]);
@@ -79,11 +54,11 @@ export default function OfficeDropdown({offices,selectedOffices, onSelect, onDes
   return (
     <>
       <fieldset className = "office-dropdown" ref={dropdownRef}>
-        <button ref={buttonRef} onClick = {() => setIsDropdownOpen(!isDropdownOpen)}>
+        <button onClick = {() => setIsDropdownOpen(!isDropdownOpen)}>
           {selectedOffices?.length > 0 ? `${selectedOffices.length} Selected` : 'Select Offices'}
         </button>
         {isDropdownOpen && (
-          <div className="panel" style={dropdownStyle}>
+          <div className="panel">
             {offices?.map((office) => {
               const isAssigned = tempSelected.includes(office.id);
               return (
@@ -122,7 +97,5 @@ OfficeDropdown.propTypes = {
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired
   })).isRequired,
-  selectedOffices: PropTypes.arrayOf(PropTypes.number),
-  onSelect: PropTypes.func.isRequired,
-  onDeselect: PropTypes.func.isRequired
+  onSelect: PropTypes.func.isRequired
 };
