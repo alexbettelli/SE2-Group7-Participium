@@ -48,14 +48,20 @@ export default function ChatPage(props) {
         }
     }, [loading]);
 
+    // Compute send-permission clearly to avoid precedence/parentheses bugs
+    const canSend = (user?.role?.id === 6)
+        || (user?.role?.id === 4 && ((chatWith === "maintainer" && report.externalMaintainer) || chatWith === "user"))
+        || (user?.role?.id === 1 && !!report.employee);
+
+    
     const handleSendNotification = async () => {
         if (!notificationText.trim()) return;
         setSending(true);
         try {
             const newMessage = (chatWith === "user") ? await NotificationAPI.submitNotification({
                 reportId: report.id,
-                senderId: report.employee.id || 1,
-                receiverId: report.user.id,
+                senderId: user.id || 1,
+                receiverId: report.user.id === user.id ? report.employee.id : report.user.id,
                 text: notificationText,
                 channelId: 1
             }) :
@@ -103,7 +109,45 @@ export default function ChatPage(props) {
             <div className="chat-container-fixed">
                 <div className="chat-messages-scroll" ref={chatScrollRef}>
                     {messages.length === 0 ? (
-                        <div>There are no messages in the chat yet</div>
+                        (() => {
+                            console.log(report);
+                            console.log(user);
+                            const placeholderText = (chatWith === "user")
+                                ? (!report.employee ? (
+                                        <span>
+                                            Your report is currently under review.<br /> <br />  
+                                            Messaging will be enabled once an officer has been assigned.<br />
+                                            You will receive a notification as soon as your report is accepted.<br /><br />
+                                            Thank you for your patience, the Participium Team
+                                        </span>
+                                    ) 
+                                    : 'There are no messages in the chat yet')
+                                : (!report.externalMaintainer ? (
+                                    <span>
+                                            The report has been forwarded to the external company.<br /> <br />  
+                                            Messaging will be enabled once a maintainer takes in charge the report.<br />
+                                            You will receive a notification as soon as the request is accepted.<br /><br />
+                                            Thank you for your patience, the Participium Team
+                                        </span>
+                                        
+                                    ) 
+                                    : 'There are no messages in the chat yet');
+                            const placeholderSender = { id: 0, username: "system" } ;
+                            const placeholderMsg = {
+                                id: `placeholder-${chatWith}`,
+                                text: placeholderText,
+                                sender: placeholderSender,
+                                receiver: { id: user.id },
+                                sendAt: new Date().toISOString()
+                            };
+                            return (
+                                <div style={{ display: 'flex', justifyContent: 'flex-start', width: '80%' }}>
+                                    <div className={`chat-message-wrapper chat-message-left`}>
+                                        <Message message={placeholderMsg} user={user} />
+                                    </div>
+                                </div>
+                            );
+                        })()
                     ) : (
                         <>
                             {messages.map((msg, idx) => (
@@ -126,7 +170,7 @@ export default function ChatPage(props) {
                         </>
                     )}
                 </div>
-                {(user.role.id ===6 || (user.role.id === 4 && report.externalMaintainer)) && (
+                {canSend && (
                     <div className="chat-notification-form">
                         <input
                             type="text"
