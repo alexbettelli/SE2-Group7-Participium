@@ -37,17 +37,7 @@ const createNotification = (message) => {
         });
     });
 };
-/* const getUnreadNotifications = (userId) => {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM notification WHERE receiverId = ? AND isRead = 0`;
-        db.all(query, [userId], async (err, rows) => {
-            if (err) {
-              return reject(err);
-          }
-          resolve(rows.length);
-        });
-    });
-} */
+
 const setNotificationsAsRead = (userId, reportId) => {
     return new Promise((resolve, reject) => {
         const query = `UPDATE notification SET isRead = 1 WHERE reportId = ? AND receiverId = ? AND isRead = 0`;

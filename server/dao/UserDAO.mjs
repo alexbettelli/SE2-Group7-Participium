@@ -72,11 +72,7 @@ const getTechnicalOfficers = () => {
             if (err) {
                 return reject(err);
             }
-            const officers = rows.map(row => ({
-                ...Mapper.mapRowToUser(row),
-                officeName: row.officeName || 'N/A',
-                officeId: row.officeId || null
-            }));
+            const officers = Mapper.mapRowsToEmployees(rows);
             resolve(officers);
         });
     });
@@ -121,6 +117,37 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
         });
     });
 }
+
+const assignOfficerToOffice = (officerId, officeId) => {
+    return new Promise((resolve, reject) => {
+        const insertEmployeeOffice = `
+        INSERT INTO office_employee (officeId, userId)
+        VALUES (?, ?)
+        `;
+        db.run(insertEmployeeOffice, [officeId, officerId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            resolve();
+        });
+    });
+}
+
+const removeOfficerFromOffice = (officerId, officeId) => {
+    return new Promise((resolve, reject) => {
+        const deleteEmployeeOffice = `
+        DELETE FROM office_employee
+        WHERE officeId = ? AND userId = ?
+        `;
+        db.run(deleteEmployeeOffice, [officeId, officerId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            resolve();
+        });
+    });
+}
+
 const deleteEmployeeById = (employeeId) => {
     return new Promise((resolve, reject) => {
         const deleteUserSql = `
@@ -203,6 +230,8 @@ const UserDAO = {
     getUnassignedEmployees,
     getTechnicalOfficers,
     assignEmployeeToOffice,
+    assignOfficerToOffice,
+    removeOfficerFromOffice,
     deleteEmployeeById,
     updateUserProfile,
     getUsernameByTelegramUsername,

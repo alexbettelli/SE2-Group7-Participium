@@ -11,7 +11,7 @@ import {
     loginAsPR,
     logout
 } from '../setup.mjs';
-import path from "path";
+import path from "node:path";
 
 describe('E2E reports routes', () => {
     let agent;
