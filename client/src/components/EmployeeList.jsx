@@ -65,11 +65,11 @@ function EmployeeRow(props) {
     };
 
     const handleOfficeSelection = (officeId) => {
-        setSelectedOffices([...selectedOffices,officeId]);
+        setSelectedOffices(prev => [...prev, officeId]);
     };
 
     const handleOfficeRemoval = (officeId) => {
-        setSelectedOffices(selectedOffices.filter(id => id !== officeId));
+        setSelectedOffices(prev => prev.filter(id => id !== officeId));
     };
 
     return (

@@ -332,6 +332,7 @@
         padding: 1rem 0.5rem;
         border-radius: 16px;
         margin: 0.8rem auto;
+        overflow-x: auto; /* Enable horizontal scrolling */
     }
     
     .employee-list-title {

@@ -260,6 +260,26 @@ const getUnassignedReports = () => {
         });
     });
 };
+
+const getReportsByOfficerAndOffice = (officerId, officeId) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT r.*, u.username, e.username AS employeeUsername, rc.categoryName
+            FROM report r
+            JOIN user u on r.userId = u.id
+            LEFT JOIN user e on r.employeeId = e.id
+            JOIN report_category rc on r.catId = rc.id
+            WHERE r.employeeId = ? AND r.officeId = ? 
+            AND r.statusId != 6
+        `;
+        db.all(query, [officerId, officeId], (err, rows) => {
+            if (err) return reject(err);
+            resolve(rows?.length ? Mapper.mapRowsToReports(rows) : []);
+        });
+    });
+};
+
+
 const assignReportToOfficer = (reportId, categoryId, officeId, officerId, userId) => {
     return new Promise((resolve, reject) => {
         const query = `UPDATE report 
@@ -279,6 +299,20 @@ const assignReportToOfficer = (reportId, categoryId, officeId, officerId, userId
                 if (err) return reject(err);
                 resolve();
             });
+        });
+    });
+};
+
+const reassignReportToOfficer = (reportId, newOfficerId) => {
+    return new Promise((resolve, reject) => {
+        const query = `UPDATE report
+                        SET employeeId = ?,
+                            updatedAt = ?
+                        WHERE id = ?`;
+        const now = dayjs().toString();
+        db.run(query, [newOfficerId, now, reportId], function (err) {
+            if (err) return reject(err);
+            resolve();
         });
     });
 };
@@ -608,8 +642,10 @@ const ReportDAO = {
   addNewReport,
   rejectReport,
   getAssignedReports,
+  getReportsByOfficerAndOffice,
   getUnassignedReports,
   assignReportToOfficer,
+  reassignReportToOfficer,
   assignReportToExternalOffice,
   updateReportStatus,
   getExternalOfficeAssignedReports,

@@ -1,5 +1,6 @@
 import ReportPreview from './ReportPreview.jsx';
 import PropTypes from 'prop-types';
+import '../styles/ReportsTable.css';
 
 export default function ReportsTable(props) {
     const externalOffices = props.externalOffices ?? []; 

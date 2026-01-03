@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import '../styles/OfficeDropdown.css';
 
 
 export default function OfficeDropdown({offices,selectedOffices, onSelect, onDeselect}) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [tempSelected, setTempSelected] = useState([]);
+  const [dropdownStyle, setDropdownStyle] = useState({});
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -13,28 +16,99 @@ export default function OfficeDropdown({offices,selectedOffices, onSelect, onDes
         setIsDropdownOpen(false);
       }
     }
+
+    function handleScrollOrResize() {
+      if (isDropdownOpen) {
+        setIsDropdownOpen(false);
+      }
+    }
+
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
     };
-  }, [dropdownRef]);
+  }, [dropdownRef, isDropdownOpen]);
+
+  useEffect(() => {
+    if (isDropdownOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      
+      setDropdownStyle({
+        position: 'fixed',
+        top: `${rect.bottom + 4}px`,
+        left: `${rect.left}px`,
+        minWidth: `${rect.width}px`,
+        zIndex: 9999,
+        maxWidth: '95vw'
+      });
+
+      setTempSelected(selectedOffices || []);
+    }
+  }, [isDropdownOpen, selectedOffices]);
+
+  const toggleSelection = (officeId) => {
+    if (tempSelected.includes(officeId)) {
+      setTempSelected(tempSelected.filter(id => id !== officeId));
+    } else {
+      setTempSelected([...tempSelected, officeId]);
+    }
+  };
+
+  const handleConfirm = (e) => {
+    e.stopPropagation();
+    const original = selectedOffices || [];
+    
+    tempSelected.forEach(id => {
+      if (!original.includes(id)) {
+        onSelect(id);
+      }
+    });
+    original.forEach(id => {
+      if (!tempSelected.includes(id)) {
+        onDeselect(id);
+      }
+    });
+    setIsDropdownOpen(false);
+  };
 
   return (
     <>
       <fieldset className = "office-dropdown" ref={dropdownRef}>
-        <button onClick = {() => setIsDropdownOpen(!isDropdownOpen)}>
-          -- select offices --
+        <button ref={buttonRef} onClick = {() => setIsDropdownOpen(!isDropdownOpen)}>
+          {selectedOffices?.length > 0 ? `${selectedOffices.length} Selected` : 'Select Offices'}
         </button>
         {isDropdownOpen && (
-          <div className="panel">
+          <div className="panel" style={dropdownStyle}>
             {offices?.map((office) => {
-              const isAssigned = selectedOffices?.some(oId => oId === office.id);
+              const isAssigned = tempSelected.includes(office.id);
               return (
-              <fieldset key={office.id} onClick={() => !isAssigned ? onSelect(office.id) : onDeselect(office.id)} style={{cursor: 'pointer'}}>
+              <fieldset key={office.id} onClick={() => toggleSelection(office.id)} style={{cursor: 'pointer'}}>
                 <input id={office.id} type="checkbox" checked={isAssigned} readOnly style={{pointerEvents: 'none'}} />
                 <label key={office.id} htmlFor={office.id} style={{pointerEvents: 'none'}}>{office.name}</label>
               </fieldset>
             )})}
+            <div style={{ padding: '0.5rem', borderTop: '1px solid #ccc' }}>
+              <button 
+                onClick={handleConfirm}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  backgroundColor: 'var(--color-wine-light)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         )}
       </fieldset>
@@ -48,5 +122,7 @@ OfficeDropdown.propTypes = {
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired
   })).isRequired,
-  onSelect: PropTypes.func.isRequired
+  selectedOffices: PropTypes.arrayOf(PropTypes.number),
+  onSelect: PropTypes.func.isRequired,
+  onDeselect: PropTypes.func.isRequired
 };
