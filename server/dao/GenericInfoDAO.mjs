@@ -65,30 +65,6 @@ const getCategories = () => {
         });
     });
 }
-/* const getCategoryById = (catId) => {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT categoryName FROM report_category WHERE id = ?`;
-        db.get(query, [catId], (err, row) => {
-            if (err) {
-                return reject(err);
-            }
-            const category = Mapper.mapRowToCategory(row)
-            resolve(category);
-        });
-    });
-} */
-/* const getStatusById = (statusId) => {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT statusName FROM report_status WHERE id = ?`;
-        db.get(query, [statusId], (err, row) => {
-            if (err) {
-                return reject(err);
-            }
-            const status = Mapper.mapRowToStatus(row);
-            resolve(status);
-        });
-    });
-} */
 const getReportStatuses = async () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM report_status`;

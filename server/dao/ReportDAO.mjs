@@ -1,6 +1,7 @@
 import db from '../data/db.mjs';
 import dayjs from 'dayjs';
 import Mapper from '../utils/mapper.mjs';
+import { getAsync, runAsync } from '../utils/dbAsyncHelper.mjs';
 
 const getAllReports = () => {
     const query = `
@@ -109,40 +110,50 @@ const getReportsByUserId = async (userId) => {
         })
     })
 }
-const addNewReport = (report) => {
-    return new Promise((resolve, reject) => {
-        db.run('BEGIN TRANSACTION');
+const addNewReport = async (report) => {
+  const now = dayjs().toString();
 
-        const now = dayjs().toString();
+  try {
+    await runAsync('BEGIN TRANSACTION');
 
-        const query1 = 'INSERT INTO Report (title, description, latitude, longitude, address, userId, catId, statusId, createdAt, anonymous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        const params1 = [report.title, report.description, report.latitude, report.longitude, report.address, report.userId, report.catId, 1, now, report.anonymous || 0]
-        db.run(query1, params1, function (err) {
-            if (err) {
-                reject(err);
-                db.run('ROLLBACK');
-            }
-            report.id = this.lastID;
+    const insertReportSql = `
+      INSERT INTO report
+      (title, description, latitude, longitude, address, userId, catId, statusId, createdAt, anonymous)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-            for (let i = 0; i < report.images.length; i++) {
-                const query2 = 'INSERT INTO report_image (reportId, imageUrl, uploadedAt) VALUES (?, ?, ?)'
-                const params2 = [report.id, report.images[i], now]
-                db.run(query2, params2, function (err) {
-                    if (err) {
-                        db.run('ROLLBACK');
-                        reject(err);
-                    }
+    const reportResult = await runAsync(insertReportSql, [
+      report.title,
+      report.description,
+      report.latitude,
+      report.longitude,
+      report.address,
+      report.userId,
+      report.catId,
+      1,
+      now,
+      report.anonymous || 0
+    ]);
 
-                    db.run('COMMIT', function (err) {
-                        if (err) reject(err);
-                        resolve(report);
-                    });
-                })
-            }
-        });
-    });
+    report.id = reportResult.lastID;
 
-}
+    const insertImageSql = `
+      INSERT INTO report_image (reportId, imageUrl, uploadedAt)
+      VALUES (?, ?, ?)
+    `;
+
+    for (const imageUrl of report.images || []) {
+      await runAsync(insertImageSql, [report.id, imageUrl, now]);
+    }
+
+    await runAsync('COMMIT');
+    return report;
+
+  } catch (err) {
+    await runAsync('ROLLBACK');
+    throw err;
+  }
+};
 const rejectReport = (reportId, userId, reason ) => {
     return new Promise((resolve, reject) => {
         const query = `UPDATE report 
@@ -298,57 +309,65 @@ const assignReportToExternalOffice = (reportId, externalOfficeId) => {
     });
 };
 
-const updateReportStatus = (userId, reportId, statusId) => {
-    return new Promise((resolve, reject) => {
-        const query1 = "SELECT * FROM report WHERE id = ? AND employeeId = ?";
-        db.get(query1, [reportId, userId], (err, row) => {
-            if (err) return reject(err);
-            if (row === undefined) {
-                return resolve(false);
-            }
-            const now = dayjs().toString();
-            const query2 = "UPDATE report SET statusId = ?, updatedAt = ? WHERE id = ?";
-            db.run(query2, [statusId, now, reportId], function (err) {
-                if (err) return reject(err);
-                const now = dayjs().toString();
-                const query3 = "INSERT INTO notification (reportId, receiverId, text, sendAt, channelId) VALUES (?, ?, ?, ?, ?)";
-                let message = "Your report ";
-                switch (+statusId) {
-                    case 3:
-                        message += "is being resolved";
-                        break;
-                    case 4:
-                        message += "has been suspended.";
-                        break;
-                    case 6:
-                        message += "has been resolved. Thank you for your contribution!";
-                        break;
-                    default:
-                        reject(new Error(`Unknown statusId: ${statusId}`));
-                }
-                db.run(query3, [reportId, row.userId, message, now, 1], function (err) {
-                    if (err) return reject(err);
-                    const newId = this.lastID;
-                    db.get(`
-                        SELECT n.*, 
-                            c.name as channelName,
-                            sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
-                            receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
-                        FROM notification n
-                        LEFT JOIN channel c ON n.channelId = c.id
-                        LEFT JOIN user sender ON n.senderId = sender.id
-                        LEFT JOIN user receiver ON n.receiverId = receiver.id
-                        WHERE n.id = ?
-                    `, [newId], (err, row) => {
-                        if (err || !row) return reject(err);
-                        const msg = Mapper.mapRowToMessage(row);
-                        resolve(msg);
-                    });
-                });
-            });
-        });
-    });
-}
+const updateReportStatus = async (userId, reportId, statusId) => {
+  const now = dayjs().toString();
+
+  const report = await getAsync(
+    `SELECT userId FROM report WHERE id = ? AND employeeId = ?`,
+    [reportId, userId]
+  );
+
+  if (!report) return false;
+
+  await runAsync(
+    `UPDATE report SET statusId = ?, updatedAt = ? WHERE id = ?`,
+    [statusId, now, reportId]
+  );
+
+  let message = 'Your report ';
+  switch (+statusId) {
+    case 3:
+      message += 'is being resolved';
+      break;
+    case 4:
+      message += 'has been suspended.';
+      break;
+    case 6:
+      message += 'has been resolved. Thank you for your contribution!';
+      break;
+    default:
+      throw new Error(`Unknown statusId: ${statusId}`);
+  }
+
+  const notifResult = await runAsync(
+    `
+    INSERT INTO notification (reportId, receiverId, text, sendAt, channelId)
+    VALUES (?, ?, ?, ?, 1)
+    `,
+    [reportId, report.userId, message, now]
+  );
+
+  const notifRow = await getAsync(
+    `
+    SELECT n.*, 
+           c.name AS channelName,
+           sender.id AS senderId, sender.username AS senderUsername,
+           sender.email AS senderEmail, sender.firstName AS senderFirstName,
+           sender.lastName AS senderLastName, sender.typeId AS senderTypeId,
+           receiver.id AS receiverId, receiver.username AS receiverUsername,
+           receiver.email AS receiverEmail, receiver.firstName AS receiverFirstName,
+           receiver.lastName AS receiverLastName, receiver.typeId AS receiverTypeId
+    FROM notification n
+    LEFT JOIN channel c ON n.channelId = c.id
+    LEFT JOIN user sender ON n.senderId = sender.id
+    LEFT JOIN user receiver ON n.receiverId = receiver.id
+    WHERE n.id = ?
+    `,
+    [notifResult.lastID]
+  );
+
+  return Mapper.mapRowToMessage(notifRow);
+};
 
 
 const getExternalOfficeAssignedReports = (userId) => {
@@ -463,143 +482,150 @@ export const getExternalMaintainerMyReports = (userId) => {
   });
 };
 
-export const updateExternalMaintainerReportStatus = (userId, reportId, statusId) => {
-  return new Promise((resolve, reject) => {
-        const now = dayjs().toString();
+export const updateExternalMaintainerReportStatus = async (userId, reportId, statusId) => {
+  const now = dayjs().toString();
 
-        if (statusId === 'accept') {
-            const acceptSql = `
-                UPDATE report 
-                SET externalMaintainerId = ?, 
-                    statusId = 3,
-                    updatedAt = ?
-                WHERE id = ?
-                AND statusId = 2
-                AND externalOfficeId IN (
-                    SELECT external_officeId FROM external_office_employee WHERE userId = ?
-                )
-            `;
-            db.run(acceptSql, [userId, now, reportId, userId], function (err) {
-                if (err) return reject(err);
-                if (this.changes === 0) return resolve({ ok: false });
+  try {
+    /* ---------- ACCEPT REPORT ---------- */
+    if (statusId === 'accept') {
+      const result = await runAsync(
+        `
+        UPDATE report
+        SET externalMaintainerId = ?, statusId = 3, updatedAt = ?
+        WHERE id = ?
+          AND statusId = 2
+          AND externalOfficeId IN (
+            SELECT external_officeId
+            FROM external_office_employee
+            WHERE userId = ?
+          )
+        `,
+        [userId, now, reportId, userId]
+      );
 
-                db.get(`SELECT employeeId FROM report WHERE id = ?`, [reportId], (err, repRow) => {
-                    if (err) return reject(err);
-                    const sendTime = dayjs().toString();
-                    const message = "The maintainer accepted the report and is starting work";
-                    db.run(
-                        `INSERT INTO comment (reportId, senderId, receiverId, text, sendAt) VALUES (?, NULL, ?, ?, ?)`,
-                        [reportId, repRow?.employeeId || null, message, sendTime],
-                        function (err) {
-                            if (err) return reject(err);
-                            const commId = this.lastID;
-                            db.get(
-                                `SELECT co.*, 
-                                        sender.id as senderId, sender.username as senderUsername,
-                                        receiver.id as receiverId, receiver.username as receiverUsername
-                                 FROM comment co
-                                 LEFT JOIN user sender ON co.senderId = sender.id
-                                 LEFT JOIN user receiver ON co.receiverId = receiver.id
-                                 WHERE co.id = ?`,
-                                [commId],
-                                (err, commRow) => {
-                                    if (err || !commRow) return reject(err);
-                                    const comment = Mapper.mapRowToComment(commRow);
-                                    return resolve({ ok: true, comment });
-                                }
-                            );
-                        }
-                    );
-                });
-            });
-            return;
-        }
+      if (result.changes === 0) return { ok: false };
 
-        const numericStatus = Number(statusId);
-        // can only be In Progress (3) or Resolved (6)
-        if (!(numericStatus === 3 || numericStatus === 6)) {
-            return resolve({ ok: false });
-        }
+      const report = await getAsync(
+        `SELECT employeeId FROM report WHERE id = ?`,
+        [reportId]
+      );
 
-        // Update report status
-        const updateSql = `
-            UPDATE report 
-            SET statusId = ?, updatedAt = ?
-            WHERE id = ?
-                AND externalMaintainerId = ?
-                AND externalOfficeId IN (
-                    SELECT external_officeId FROM external_office_employee WHERE userId = ?
-                )
-        `;
-        db.run(updateSql, [numericStatus, now, reportId, userId, userId], function (err) {
-            if (err) return reject(err);
-            if (this.changes === 0) return resolve({ ok: false });
+      const commentResult = await runAsync(
+        `
+        INSERT INTO comment (reportId, senderId, receiverId, text, sendAt)
+        VALUES (?, NULL, ?, ?, ?)
+        `,
+        [
+          reportId,
+          report?.employeeId || null,
+          'The maintainer accepted the report and is starting work',
+          now
+        ]
+      );
 
-            // Get report receivers
-            db.get(`SELECT id, userId, employeeId FROM report WHERE id = ?`, [reportId], (err, repRow) => {
-                if (err) return reject(err);
-                if (!repRow) return resolve({ ok: false });
+      const commentRow = await getAsync(
+        `
+        SELECT co.*,
+               sender.id AS senderId, sender.username AS senderUsername,
+               receiver.id AS receiverId, receiver.username AS receiverUsername
+        FROM comment co
+        LEFT JOIN user sender ON co.senderId = sender.id
+        LEFT JOIN user receiver ON co.receiverId = receiver.id
+        WHERE co.id = ?
+        `,
+        [commentResult.lastID]
+      );
 
-                // Compose message succinctly
-                const message = numericStatus === 3
-                    ? "The maintainer is working on the report"
-                    : "The report has been resolved by the maintainer!";
+      return { ok: true, comment: Mapper.mapRowToComment(commentRow) };
+    }
 
-                const sendTime = dayjs().toString();
+    /* ---------- UPDATE STATUS (3 or 6) ---------- */
+    const numericStatus = Number(statusId);
+    if (![3, 6].includes(numericStatus)) return { ok: false };
 
-                // Insert notification with senderId NULL to citizen
-                db.run(
-                    `INSERT INTO notification (reportId, receiverId, text, sendAt, channelId) VALUES (?, ?, ?, ?, 1)`,
-                    [reportId, repRow.userId, message, sendTime],
-                    function (err) {
-                        if (err) return reject(err);
-                        const notifId = this.lastID;
-                        db.get(
-                            `SELECT n.*, 
-                                            c.name as channelName,
-                                            sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
-                                            receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
-                             FROM notification n
-                             LEFT JOIN channel c ON n.channelId = c.id
-                             LEFT JOIN user sender ON n.senderId = sender.id
-                             LEFT JOIN user receiver ON n.receiverId = receiver.id
-                             WHERE n.id = ?`,
-                            [notifId],
-                            (err, notifRow) => {
-                                if (err || !notifRow) return reject(err);
-                                const notification = Mapper.mapRowToMessage(notifRow);
+    const updateResult = await runAsync(
+      `
+      UPDATE report
+      SET statusId = ?, updatedAt = ?
+      WHERE id = ?
+        AND externalMaintainerId = ?
+        AND externalOfficeId IN (
+          SELECT external_officeId
+          FROM external_office_employee
+          WHERE userId = ?
+        )
+      `,
+      [numericStatus, now, reportId, userId, userId]
+    );
 
-                                // Insert comment with senderId NULL to employee
-                                db.run(
-                                    `INSERT INTO comment (reportId, receiverId, text, sendAt) VALUES (?, ?, ?, ?)`,
-                                    [reportId, repRow.employeeId || null, message, sendTime],
-                                    function (err) {
-                                        if (err) return reject(err);
-                                        const commId = this.lastID;
-                                        db.get(
-                                            `SELECT co.*, 
-                                                            sender.id as senderId, sender.username as senderUsername, sender.email as senderEmail, sender.firstName as senderFirstName, sender.lastName as senderLastName, sender.typeId as senderTypeId,
-                                                            receiver.id as receiverId, receiver.username as receiverUsername, receiver.email as receiverEmail, receiver.firstName as receiverFirstName, receiver.lastName as receiverLastName, receiver.typeId as receiverTypeId
-                                             FROM comment co
-                                             LEFT JOIN user sender ON co.senderId = sender.id
-                                             LEFT JOIN user receiver ON co.receiverId = receiver.id
-                                             WHERE co.id = ?`,
-                                            [commId],
-                                            (err, commRow) => {
-                                                if (err || !commRow) return reject(err);
-                                                const comment = Mapper.mapRowToComment(commRow);
-                                                return resolve({ ok: true, notification, comment });
-                                            }
-                                        );
-                                    }
-                                );
-                            }
-                        );
-                    }
-                );
-            });
-        });
-  });
+    if (updateResult.changes === 0) return { ok: false };
+
+    const report = await getAsync(
+      `SELECT userId, employeeId FROM report WHERE id = ?`,
+      [reportId]
+    );
+
+    const message =
+      numericStatus === 3
+        ? 'The maintainer is working on the report'
+        : 'The report has been resolved by the maintainer!';
+
+    /* ---------- NOTIFICATION ---------- */
+    const notifResult = await runAsync(
+      `
+      INSERT INTO notification (reportId, receiverId, text, sendAt, channelId)
+      VALUES (?, ?, ?, ?, 1)
+      `,
+      [reportId, report.userId, message, now]
+    );
+
+    const notificationRow = await getAsync(
+      `
+      SELECT n.*,
+             c.name AS channelName,
+             sender.id AS senderId, sender.username AS senderUsername,
+             receiver.id AS receiverId, receiver.username AS receiverUsername
+      FROM notification n
+      LEFT JOIN channel c ON n.channelId = c.id
+      LEFT JOIN user sender ON n.senderId = sender.id
+      LEFT JOIN user receiver ON n.receiverId = receiver.id
+      WHERE n.id = ?
+      `,
+      [notifResult.lastID]
+    );
+
+    /* ---------- COMMENT ---------- */
+    const commentResult = await runAsync(
+      `
+      INSERT INTO comment (reportId, receiverId, text, sendAt)
+      VALUES (?, ?, ?, ?)
+      `,
+      [reportId, report.employeeId || null, message, now]
+    );
+
+    const commentRow = await getAsync(
+      `
+      SELECT co.*,
+             sender.id AS senderId, sender.username AS senderUsername,
+             receiver.id AS receiverId, receiver.username AS receiverUsername
+      FROM comment co
+      LEFT JOIN user sender ON co.senderId = sender.id
+      LEFT JOIN user receiver ON co.receiverId = receiver.id
+      WHERE co.id = ?
+      `,
+      [commentResult.lastID]
+    );
+
+    return {
+      ok: true,
+      notification: Mapper.mapRowToMessage(notificationRow),
+      comment: Mapper.mapRowToComment(commentRow)
+    };
+
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 };
 
 const getReportById = (id) => {

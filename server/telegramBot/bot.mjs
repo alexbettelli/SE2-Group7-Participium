@@ -1,9 +1,9 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Blob } from 'fetch-blob';
 import BOT_API from './API.mjs';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -285,7 +285,7 @@ bot.on('location', (msg) => {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
     }
   }).catch(err => {
-    if(err === 409) {
+    if(err.status === 409) {
       bot.sendMessage(chatId, '❌ The selected location is outside Turin. Please send a location within Turin.');
     } else {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');

@@ -7,11 +7,11 @@ import LocalStrategy from "passport-local";
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import { Validator, ValidationError } from 'express-json-validator-middleware';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import UserDAO from './dao/UserDAO.mjs';
 import GenericInfoDAO from './dao/GenericInfoDAO.mjs';
 import NotificationDAO from './dao/NotificationDAO.mjs';
@@ -26,8 +26,8 @@ import jwt from 'jsonwebtoken';
 
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
-import fsPromises from 'fs/promises';
-import fsSync from 'fs';
+import fsPromises from 'node:fs/promises';
+import fsSync from 'node:fs';
 
 
 
@@ -149,13 +149,14 @@ export const isLogged = (req, res, next) => {
   if (req.isAuthenticated()) 
     return next();
   const authHeader = req.header('Authorization') || req.header('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'change_this_in_prod');
       req.user = decoded; //now the routes have still access to the req.user value
       return next();
     } catch (err) {
+      console.error('JWT verification error: ' + err.message);
       return res.status(401).json(new errors.UnauthorizedError());
     }
   }
@@ -292,7 +293,7 @@ app.post('/users/temporary/verify', async (req, res) => {
 app.post('/employees', isLogged, async (req, res) => {
   try {
 
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -314,11 +315,11 @@ app.post('/employees', isLogged, async (req, res) => {
 
 app.delete('/employees/:id', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
-    const employeeId = req.params.id;
-    if (!employeeId || isNaN(employeeId)) {
+    const employeeId = Number.parseInt(req.params.id);
+    if (!employeeId || Number.isNaN(employeeId)) {
       return res.status(400).json(new errors.BadRequestError("Employee ID is required."));
     }
 
@@ -338,7 +339,7 @@ app.delete('/employees/:id', isLogged, async (req, res) => {
 
 app.get('/employees/unassigned', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -352,7 +353,7 @@ app.get('/employees/unassigned', isLogged, async (req, res) => {
 
 app.get('/employees/technical-officers', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -366,7 +367,7 @@ app.get('/employees/technical-officers', isLogged, async (req, res) => {
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -405,7 +406,7 @@ app.get('/externalOffices', isLogged, async (req, res) => {
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -487,6 +488,7 @@ app.get('/reports/unassigned', isLogged, async (req, res) => {
     const reports = await ReportDAO.getUnassignedReports();
     return res.status(200).json(reports);
   } catch (ex) {
+    console.error(`ERROR /reports/unassigned: ${ex.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -522,6 +524,7 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
     const reports = await ReportDAO.getAssignedReports(req.user.id);
     return res.status(200).json(reports);
   } catch (ex) {
+    console.error(`ERROR /reports/assigned: ${ex.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -531,6 +534,7 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
     const statuses = await GenericInfoDAO.getReportStatuses();
     return res.status(200).json(statuses);
   } catch (e) {
+    console.error(`ERROR /reports/statuses: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -564,6 +568,7 @@ app.post('/reports/assign', isLogged, async (req, res) => {
     
     return res.status(200).json();
   } catch (err) {
+    console.error(`ERROR /reports/assign: ${err.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -575,6 +580,7 @@ app.post('/reports/assignExternal', isLogged, async (req, res) => {
     await ReportDAO.assignReportToExternalOffice(reportId, externalOfficeId);
     return res.status(200).json();
   } catch (err) {
+    console.error(`ERROR /reports/assignExternal: ${err.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -587,6 +593,7 @@ app.post('/reports/reject', isLogged, async (req, res) => {
     return res.status(200).json();
   }
   catch (err) {
+    console.error(`ERROR /reports/reject: ${err.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -622,6 +629,7 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
     }
     return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({ imageUrl: `${BASE_URL}/images/reports/${received.id}/${filename}` })) });
   } catch (e) {
+    console.error(`ERROR: ${e.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 
@@ -713,6 +721,7 @@ app.patch("/reports/:id", isLogged, async (req, res) => {
       return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
     return res.status(200).json({ ok: true, notification });
   } catch (e) {
+    console.error(`ERROR /reports/:id: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -725,7 +734,7 @@ app.post('/notifications', validate({ body: schemas.notification }), async (req,
     const fullMessage = await NotificationDAO.createNotification(message);
     return res.status(201).json(fullMessage);
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /notifications: ${error.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
@@ -741,6 +750,7 @@ app.post('/notifications/read', isLogged, async (req, res) => {
     readNotifications = await NotificationDAO.setNotificationsAsRead(userId, reportId);
     res.status(201).json({ success: true, readNotifications });
   } catch (err) {
+    console.error(`ERROR /notifications/read: ${err.message}`);
     res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -754,7 +764,7 @@ app.post('/comments', isLogged, validate({ body: schemas.comment }),async (req, 
     const fullMessage = await NotificationDAO.createComment(message);
     return res.status(201).json(fullMessage);
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /comments: ${error.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
@@ -770,6 +780,7 @@ app.post('/comments/read', isLogged, async (req, res) => {
     readComments = await NotificationDAO.setCommentsAsRead(userId, reportId);
     res.status(201).json({ success: true, readComments });
   } catch (err) {
+    console.error(`ERROR /comments/read: ${err.message}`);
     res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -786,7 +797,7 @@ app.get('/reports/:id', isLogged, async (req, res) => {
     }
     return res.status(200).json(report);
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /reports/:id: ${error.message}`);
     res.status(503).json({ error: "Unable to fetch report" });
   }
 });
@@ -809,7 +820,7 @@ app.post('/bot/verify/username', async (req, res) => {
     // Ritorna solo i dati necessari (NO password)
     return res.status(200).json({username : username});
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /bot/verify/username: ${error.message}`);
     res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
@@ -843,7 +854,7 @@ app.post('/bot/verify/password', async (req, res) => {
       token
     });
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /bot/verify/password: ${error.message}`);
     res.status(503).json(new errors.ServiceUnvailableError());
   }
 });

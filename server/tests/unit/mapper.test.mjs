@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import Mapper from '../../utils/mapper.mjs';
 
 describe('Mapper', () => {
@@ -423,8 +423,8 @@ describe('Mapper', () => {
                     id: 1,
                     title: 'Test Report',
                     description: 'Description',
-                    latitude: 45.0,
-                    longitude: 7.0,
+                    latitude: 45.2,
+                    longitude: 7.6,
                     address: 'Test Address',
                     userId: 10,
                     username: 'didem',
@@ -465,8 +465,8 @@ describe('Mapper', () => {
                     id: 1,
                     title: 'Test Report',
                     description: 'Description',
-                    latitude: 45.0,
-                    longitude: 7.0,
+                    latitude: 45.3,
+                    longitude: 7.4,
                     address: 'Test Address',
                     userId: 10,
                     username: 'didem',
@@ -523,8 +523,8 @@ describe('Mapper', () => {
                     id: 1,
                     title: 'Test Report',
                     description: 'Description',
-                    latitude: 45.0,
-                    longitude: 7.0,
+                    latitude: 45.9,
+                    longitude: 7.1,
                     address: 'Test Address',
                     userId: 10,
                     username: 'didem',
