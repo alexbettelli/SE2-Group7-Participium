@@ -142,7 +142,10 @@ export default function ReportPreview(props) {
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
                         <div className="wrapper">
                             <span className="report-id-badge">Report #{report.id}</span>
-                            <span className='office-badge' style={{backgroundColor: `${categoryColors[report.office.id]}`}}>Office #{report.office.id}</span>
+                            {
+                                report.office && 
+                                <span className='office-badge' style={{backgroundColor: `${categoryColors[report.office.id]}`}}>Office #{report.office.id}</span>
+                            }
                             <span className={`status-badge ${getStatusClass(report.status.statusName)}`}>{report.status.statusName}</span>
                         </div>
                     </div>
@@ -412,7 +415,7 @@ function ReportView(props) {
                             <div className="field">
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
-                                <p><strong>Office ID: </strong>{report.office.id}</p>
+                                { report.office && <p><strong>Office ID: </strong>{report.office.id}</p> }
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
                                 {report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p>}
                             </div>

@@ -826,6 +826,21 @@ app.post('/comments/read', isLogged, async (req, res) => {
 });
 
 
+app.get('/reports/:id', isLogged, async (req, res) => {
+  try {
+    const report = await ReportDAO.getReportById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+    if (report.user?.id !== req.user.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    return res.status(200).json(report);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json({ error: "Unable to fetch report" });
+  }
+});
 
 
 app.post('/bot/verify/username', async (req, res) => {
