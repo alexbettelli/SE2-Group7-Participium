@@ -116,27 +116,34 @@ const callProtected = async (path, { method = 'GET', body = null, token = null, 
 const coordinatesToAddress = async (latitude, longitude) => {
   return new Promise((resolve, reject) => {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+
     fetch(url)
       .then(response => response.json())
       .then(data => {
-        if(data && data.address) {
-          const address = data.address;
-          const formattedAddress = `${address.road || ''} (${address.house_number || ''}), ${address.postcode || ''} ${address.town || address.city || ''}`;
-          const filters = ['torino', 'turin'];
-          if(!filters.includes(address.city?.toLowerCase()) && !filters.includes(address.town?.toLowerCase())) {
-            reject(409);
-          }
-          resolve(formattedAddress);
-        } else {
-          reject(500);
+        const address = data?.address;
+        if (!address) {
+          return reject(Object.assign(new Error('Invalid response from geocoding API'), { status: 500 }));
         }
+
+        const formattedAddress = `${address.road || ''} (${address.house_number || ''}), ${address.postcode || ''} ${address.town || address.city || ''}`;
+
+        // Filtro città
+        const filters = ['torino', 'turin'];
+        const cityName = (address.city || address.town || '').toLowerCase();
+
+        if (!filters.includes(cityName)) {
+          return reject(Object.assign(new Error('City not allowed'), { status: 409 }));
+        }
+
+        resolve(formattedAddress);
       })
       .catch(error => {
         console.error('Error fetching address:', error);
-        reject(500);
+        reject(Object.assign(new Error('Error fetching address'), { status: 500 }));
       });
   });
 };
+
 
 const getImageBuffer = async imageUrl => {
   return new Promise((resolve, reject) => {

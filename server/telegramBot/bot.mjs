@@ -285,7 +285,7 @@ bot.on('location', (msg) => {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
     }
   }).catch(err => {
-    if(err === 409) {
+    if(err.status === 409) {
       bot.sendMessage(chatId, '❌ The selected location is outside Turin. Please send a location within Turin.');
     } else {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
