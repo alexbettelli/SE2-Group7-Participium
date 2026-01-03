@@ -6,7 +6,6 @@ import {
   cleanupTestUploadDirs,
   setupAgent,
   loginAsUser,
-  loginAsAdmin,
   logout,
   login,
 } from '../setup.mjs';
@@ -31,15 +30,6 @@ describe('E2E User Routes', () => {
     cleanupTestUploadDirs(); // Pulisce i file uploadati durante i test
     await teardownTestDatabase();
   });
-
-  const testUser = {
-    username: 'e2euser',
-    password: 'e2epassword',
-    email: 'e2euser@example.com',
-    firstName: 'E2E',
-    lastName: 'User',
-    typeId: 1
-  };
 
   it('POST /session - wrong username', async () => {
     const res = await login(agent, 'wronguser', 'e2epassword');

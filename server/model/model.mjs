@@ -5,7 +5,7 @@ function Role(id, type){
     this.type = type;
 }
 function User(id, username, email, firstName, lastName, role, allowEmailNotification, telegramUsername, imageUrl){
-    this.id = id,
+    this.id = id;
     this.username = username;
     this.email = email;
     this.firstName = firstName;
@@ -16,7 +16,7 @@ function User(id, username, email, firstName, lastName, role, allowEmailNotifica
     this.imageUrl = imageUrl;
 }
 function Employee({id, username, email, firstName, lastName, role, offices}){
-    this.id = id,
+    this.id = id;
     this.username = username;
     this.email = email; 
     this.firstName = firstName;
