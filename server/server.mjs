@@ -380,6 +380,34 @@ app.post('/employees/assign', isLogged, async (req, res) => {
   }
 });
 
+app.post('/employees/technical-officers/assign', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const { officerId, officeId } = req.body;
+    await UserDAO.assignOfficerToOffice(officerId, officeId);
+    return res.status(200).json({ message: 'Officer assigned successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.delete('/employees/technical-officers/remove', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const { officerId, officeId } = req.body;
+    await UserDAO.removeOfficerFromOffice(officerId, officeId);
+    return res.status(200).json({ message: 'Officer removed successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
 app.get('/offices', isLogged, async (req, res) => {
   try {
     if (!req.user || req.user.role.id !== 2 && req.user.role.id !== 3) {  // typeId 2 = admin, typeId 3 = PR officer
@@ -529,6 +557,18 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
   }
 });
 
+app.get(`/reports/officer/:officerId/office/:officeId`, isLogged, async (req, res) => {
+  if (req.user.role.id !== 2 && req.user.role.id !==3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { officerId, officeId } = req.params;
+    const reports = await ReportDAO.getReportsByOfficerAndOffice(officerId, officeId);
+    return res.status(200).json(reports);
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
 app.get("/reports/statuses", isLogged, async (req, res) => {
   try {
     const statuses = await GenericInfoDAO.getReportStatuses();
@@ -569,6 +609,17 @@ app.post('/reports/assign', isLogged, async (req, res) => {
     return res.status(200).json();
   } catch (err) {
     console.error(`ERROR /reports/assign: ${err.message}`);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.post('/reports/reassign', isLogged, async (req, res) => {
+  if (req.user.role.id !== 2) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { reportId, newOfficerId } = req.body;
+    await ReportDAO.reassignReportToOfficer(reportId, newOfficerId);
+    return res.status(200).json();
+  } catch (err) {
     return res.status(500).json(new errors.InternalServerError());
   }
 });

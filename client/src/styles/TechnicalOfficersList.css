@@ -1,0 +1,9 @@
+.employee-list-container {
+    overflow: visible !important;
+}
+
+@media (max-width: 768px) {
+    .employee-list-container {
+        overflow-x: auto !important;
+    }
+}
