@@ -7,11 +7,11 @@ import LocalStrategy from "passport-local";
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import { Validator, ValidationError } from 'express-json-validator-middleware';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import UserDAO from './dao/UserDAO.mjs';
 import GenericInfoDAO from './dao/GenericInfoDAO.mjs';
 import NotificationDAO from './dao/NotificationDAO.mjs';
@@ -26,8 +26,8 @@ import jwt from 'jsonwebtoken';
 
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
-import fsPromises from 'fs/promises';
-import fsSync from 'fs';
+import fsPromises from 'node:fs/promises';
+import fsSync from 'node:fs';
 
 
 

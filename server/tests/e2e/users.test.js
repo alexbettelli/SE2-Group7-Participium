@@ -9,7 +9,7 @@ import {
   logout,
   login,
 } from '../setup.mjs';
-import path from 'path';
+import path from 'node:path';
 
 describe('E2E User Routes', () => {
 
