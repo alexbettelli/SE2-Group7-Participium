@@ -376,9 +376,10 @@ bot.on('callback_query', callback => {
 
 
   if(session.state === STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    const button = callback.message.reply_markup.inline_keyboard.flat().find(btn => btn.callback_data === callback.data);
     session.reportData.category = {
       id: callback.data,
-      name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+      name: button.text
     };
     console.log('Selected category:', session.reportData.category);
     session.state = STATE.REPORT_CREATION_WAIT_ANONYMOUS;
