@@ -432,6 +432,32 @@ bot.onText(/\/login/, (msg) => {
   );
 });
 
+bot.onText(/\/myreports/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  if (!session || !session.authenticated) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+  BOT_API.callProtected('/users/myreports', { method: 'GET', token: session.token }).then(reports => {
+    if (reports.length === 0) {
+      bot.sendMessage(chatId, 'ℹ️ You have no reports submitted yet.');
+      return;
+    }
+    let message = '📄 *Your Reports:*\n\n'
+    reports.forEach(report => {
+      message += `🆔 *ID:* ${report.id}\n` +
+                 `📌 *Title:* ${report.title}\n` +
+                 `📊 *Status:* ${report.status?.statusName || report.status || 'N/A'}\n`;
+    message += '---------------------------------------------------------------\n';
+    });
+    bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  }).catch(err => {
+    console.error('Error fetching user reports:', err);
+    bot.sendMessage(chatId, '❌ Error retrieving your reports. Please try again later.');
+  });
+});
+
 bot.onText(/\/logout/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
