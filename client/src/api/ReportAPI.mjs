@@ -93,6 +93,23 @@ const getAssignedReports = async () => {
     if (res.ok) return json;
     else return { error: json.error || 'Error fetching assigned reports' };
 };
+
+const getReportsByOfficerInOffice = async (officerId, officeId) => {
+    const res = await fetch(`${SERVER_URL}/reports/officer/${officerId}/office/${officeId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    });
+    if (res.ok) {
+        const reports = await res.json();
+        console.log(reports);
+        return reports;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error fetching reports by officer in office');
+    }
+};
+
 const getUnassignedReports = async () => {
     const res = await fetch(SERVER_URL + '/reports/unassigned', {
         method: 'GET',
@@ -119,6 +136,21 @@ const assignReportToOfficer = async (reportId, userId, categoryId, officeId, off
     } else {
         const errMessage = await res.json();
         throw new Error(errMessage.error || 'Error assigning report to officer');
+    }
+};
+
+const reassignReportToOfficer = async (reportId, newOfficerId) => {
+    const res = await fetch(SERVER_URL + '/reports/reassign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reportId, newOfficerId })
+    });
+    if (res.ok) {
+        return;
+    } else {
+        const errMessage = await res.json();
+        throw new Error(errMessage.error || 'Error reassigning report to officer');
     }
 };
 
@@ -195,8 +227,10 @@ const ReportAPI = {
     getReportStatuses,
     updateReportStatus,
     getAssignedReports,
+    getReportsByOfficerInOffice,
     getUnassignedReports,
     assignReportToOfficer,
+    reassignReportToOfficer,
     getExternalOfficeAssignedReports,
     getExternalMaintainerMyReports,
     updateExternalMaintainerReportStatus,

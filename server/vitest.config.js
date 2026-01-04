@@ -9,6 +9,9 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
+      exclude: [
+        'telegramBot/**',
+      ],
     },
     include: ['tests/**/*.test.js','tests/**/*.test.mjs'],
     env: {

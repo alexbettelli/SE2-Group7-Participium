@@ -1,9 +1,9 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Blob } from 'fetch-blob';
 import BOT_API from './API.mjs';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -285,7 +285,7 @@ bot.on('location', (msg) => {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
     }
   }).catch(err => {
-    if(err === 409) {
+    if(err.status === 409) {
       bot.sendMessage(chatId, '❌ The selected location is outside Turin. Please send a location within Turin.');
     } else {
       bot.sendMessage(chatId, '❌ Error retrieving address from location. Please try again.');
@@ -376,9 +376,10 @@ bot.on('callback_query', callback => {
 
 
   if(session.state === STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    const button = callback.message.reply_markup.inline_keyboard.flat().find(btn => btn.callback_data === callback.data);
     session.reportData.category = {
       id: callback.data,
-      name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+      name: button.text
     };
     console.log('Selected category:', session.reportData.category);
     session.state = STATE.REPORT_CREATION_WAIT_ANONYMOUS;
@@ -500,9 +501,26 @@ bot.onText(/\/cancel/, (msg) => {
     bot.sendMessage(chatId, 'ℹ️ No operations in progress.');
     return;
   }
+  if (isAuthenticated(chatId)) {
+    session.state = STATE.IDLE;
+    if(session.reportData){
+      delete session.reportData;
+      delete session.reportStep;
+      delete session.reportState;
+    }   
+    
+    bot.sendMessage(
+      chatId, 
+      '✅ Operation cancelled successfully.\n\n' +
+      `You are still logged in as *${session.user.username}*.`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+  else{
+    deleteSession(chatId);
+    bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
+  }
   
-  deleteSession(chatId);
-  bot.sendMessage(chatId, '✅ Operation cancelled successfully.');
 });
 
 bot.onText(/\/newreport/, async msg => {

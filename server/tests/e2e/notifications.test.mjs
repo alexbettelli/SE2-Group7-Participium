@@ -16,7 +16,6 @@ import {
 describe('E2E notifications routes', () => {
   let agent;
   let userId;
-  let notificationToReadId;
   const reportId = 1;
   beforeAll(async () => {
     await setupTestDatabase();
@@ -59,7 +58,6 @@ describe('E2E notifications routes', () => {
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('id');
       expect(res.body.text).toBe("Another test notification");
-      notificationToReadId = res.body.id;
     });
     it('should fail with 400 if data is invalid', async () => {
       await loginAsOfficer(agent);
