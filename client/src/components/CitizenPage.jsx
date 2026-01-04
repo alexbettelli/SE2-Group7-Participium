@@ -678,6 +678,13 @@ export default function CitizenPage(props) {
 
                         {activeTab === 'form' && (
                           (() => {
+                            if (!user) {
+                              return (
+                                <div className="error-message" style={{ padding: '2rem', textAlign: 'center' }}>
+                                  Register or log in to submit a new report.
+                                </div>
+                              )
+                            }
                             if (submittedReport) {
                               return (
                                 <ReportOverview
