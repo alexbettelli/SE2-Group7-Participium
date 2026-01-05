@@ -291,82 +291,6 @@ export default function ReportPreview(props) {
     )
 }
 
-ReportPreview.propTypes = {
-  report: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    address: PropTypes.string,
-    createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
-    updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
-    images: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.number,
-        imageUrl: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-    user: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      username: PropTypes.string,
-    }).isRequired,
-    category: PropTypes.shape({
-      id: PropTypes.number,
-      categoryName: PropTypes.string,
-    }).isRequired,
-    status: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      statusName: PropTypes.string.isRequired,
-    }).isRequired,
-    latitude: PropTypes.number,
-    longitude: PropTypes.number,
-    externalOffice: PropTypes.shape({
-      id: PropTypes.number,
-      name: PropTypes.string,
-    }),
-    office: PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-    }),
-    anonymous: PropTypes.bool,
-    isAnonymous: PropTypes.bool,
-    unreadNotifications: PropTypes.number,
-    unreadComments: PropTypes.number,
-    rejectReason: PropTypes.string,
-    notifications: PropTypes.array,
-    comments: PropTypes.array,
-  }).isRequired,
-
-  externalOffices: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string,
-      category: PropTypes.shape({
-        id: PropTypes.number,
-        categoryName: PropTypes.string,
-      }),
-    })
-  ),
-  user: PropTypes.shape({
-    id: PropTypes.number,
-    role: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-    }).isRequired,
-  }).isRequired,
-  setSelectedReport: PropTypes.func.isRequired,
-  updateReports: PropTypes.func,
-  isExternalMaintainer: PropTypes.bool,
-  showAcceptButton: PropTypes.bool,
-  onAcceptReport: PropTypes.func,
-  setChatWith: PropTypes.func.isRequired
-};
-
-ReportPreview.defaultProps = {
-  externalOffices: [],
-  updateReports: () => {},
-  isExternalMaintainer: false,
-  showAcceptButton: false,
-  onAcceptReport: () => {},
-};
 
 function ReportView(props) {
     const report = props.report;
@@ -440,6 +364,84 @@ function ReportView(props) {
     )
 }
 
+
+ReportPreview.propTypes = {
+    report: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        description: PropTypes.string,
+        address: PropTypes.string,
+        createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+        updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+        images: PropTypes.arrayOf(
+            PropTypes.shape({
+                id: PropTypes.number,
+                imageUrl: PropTypes.string.isRequired,
+            })
+        ).isRequired,
+        user: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            username: PropTypes.string,
+        }).isRequired,
+        anonymous: PropTypes.bool,
+        isAnonymous: PropTypes.bool,
+        office: PropTypes.shape({
+            id: PropTypes.number,
+            name: PropTypes.string,
+        }),
+        category: PropTypes.shape({
+            id: PropTypes.number,
+            categoryName: PropTypes.string,
+        }).isRequired,
+        status: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            statusName: PropTypes.string.isRequired,
+        }).isRequired,
+        latitude: PropTypes.number,
+        longitude: PropTypes.number,
+        externalOffice: PropTypes.shape({
+            id: PropTypes.number,
+            name: PropTypes.string,
+        }),
+        unreadNotifications: PropTypes.number,
+        unreadComments: PropTypes.number,
+        rejectReason: PropTypes.string,
+        notifications: PropTypes.array,
+        comments: PropTypes.array,
+    }).isRequired,
+
+    externalOffices: PropTypes.arrayOf(
+        PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            name: PropTypes.string,
+            category: PropTypes.shape({
+                id: PropTypes.number,
+                categoryName: PropTypes.string,
+            }),
+        })
+    ),
+    user: PropTypes.shape({
+        id: PropTypes.number,
+        role: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+        }).isRequired,
+    }).isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    updateReports: PropTypes.func,
+    isExternalMaintainer: PropTypes.bool,
+    showAcceptButton: PropTypes.bool,
+    onAcceptReport: PropTypes.func,
+    setChatWith: PropTypes.func.isRequired
+};
+
+ReportPreview.defaultProps = {
+  externalOffices: [],
+  updateReports: () => {},
+  isExternalMaintainer: false,
+  showAcceptButton: false,
+  onAcceptReport: () => {},
+};
+
 ReportView.propTypes = {
   report: PropTypes.shape({
     id: PropTypes.number.isRequired,
@@ -450,6 +452,12 @@ ReportView.propTypes = {
         imageUrl: PropTypes.string.isRequired,
       })
     ).isRequired,
+    anonymous: PropTypes.bool,
+    isAnonymous: PropTypes.bool,
+    office: PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+    }),
     category: PropTypes.shape({
       categoryName: PropTypes.string,
     }).isRequired,
