@@ -376,9 +376,10 @@ bot.on('callback_query', callback => {
 
 
   if(session.state === STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    const button = callback.message.reply_markup.inline_keyboard.flat().find(btn => btn.callback_data === callback.data);
     session.reportData.category = {
       id: callback.data,
-      name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+      name: button.text
     };
     console.log('Selected category:', session.reportData.category);
     session.state = STATE.REPORT_CREATION_WAIT_ANONYMOUS;
@@ -430,6 +431,32 @@ bot.onText(/\/login/, (msg) => {
     `Use /cancel to stop in progress operations.`,
     { parse_mode: 'Markdown' }
   );
+});
+
+bot.onText(/\/myreports/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  if (!session || !session.authenticated) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+  BOT_API.callProtected('/users/myreports', { method: 'GET', token: session.token }).then(reports => {
+    if (reports.length === 0) {
+      bot.sendMessage(chatId, 'ℹ️ You have no reports submitted yet.');
+      return;
+    }
+    let message = '📄 *Your Reports:*\n\n'
+    reports.forEach(report => {
+      message += `🆔 *ID:* ${report.id}\n` +
+                 `📌 *Title:* ${report.title}\n` +
+                 `📊 *Status:* ${report.status?.statusName || report.status || 'N/A'}\n`;
+    message += '---------------------------------------------------------------\n';
+    });
+    bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  }).catch(err => {
+    console.error('Error fetching user reports:', err);
+    bot.sendMessage(chatId, '❌ Error retrieving your reports. Please try again later.');
+  });
 });
 
 bot.onText(/\/logout/, (msg) => {
