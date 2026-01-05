@@ -323,6 +323,12 @@ ReportPreview.propTypes = {
       id: PropTypes.number,
       name: PropTypes.string,
     }),
+    office: PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+    }),
+    anonymous: PropTypes.bool,
+    isAnonymous: PropTypes.bool,
     unreadNotifications: PropTypes.number,
     unreadComments: PropTypes.number,
     rejectReason: PropTypes.string,

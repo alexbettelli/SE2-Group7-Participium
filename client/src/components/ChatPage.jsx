@@ -110,8 +110,6 @@ export default function ChatPage(props) {
                 <div className="chat-messages-scroll" ref={chatScrollRef}>
                     {messages.length === 0 ? (
                         (() => {
-                            console.log(report);
-                            console.log(user);
                             const placeholderText = (chatWith === "user")
                                 ? (!report.employee ? (
                                         <span>
@@ -193,16 +191,22 @@ export default function ChatPage(props) {
     );
 }
 
+// Props validation for ChatPage
 ChatPage.propTypes = {
     report: PropTypes.shape({
         id: PropTypes.number.isRequired,
         title: PropTypes.string.isRequired,
         notifications: PropTypes.arrayOf(PropTypes.object).isRequired,
+        comments: PropTypes.arrayOf(PropTypes.object),
         user: PropTypes.shape({
             id: PropTypes.number.isRequired,
             username: PropTypes.string.isRequired
         }).isRequired,
         employee: PropTypes.shape({
+            id: PropTypes.number,
+            username: PropTypes.string
+        }),
+        externalMaintainer: PropTypes.shape({
             id: PropTypes.number,
             username: PropTypes.string
         })
@@ -213,30 +217,6 @@ ChatPage.propTypes = {
             id: PropTypes.number.isRequired
         }).isRequired
     }).isRequired,
-    unreadNotifications: PropTypes.number.isRequired,
-    setUnreadNotifications: PropTypes.func.isRequired
-};
-ChatPage.propTypes = {
-    report: PropTypes.shape({
-        id: PropTypes.number.isRequired,
-        title: PropTypes.string.isRequired,
-        notifications: PropTypes.arrayOf(PropTypes.object).isRequired,
-        user: PropTypes.shape({
-            id: PropTypes.number.isRequired,
-            username: PropTypes.string.isRequired
-        }).isRequired,
-        employee: PropTypes.shape({
-            id: PropTypes.number,
-            username: PropTypes.string
-        })
-    }).isRequired,
-    user: PropTypes.shape({
-        id: PropTypes.number.isRequired,
-        role: PropTypes.shape({
-            id: PropTypes.number.isRequired
-        }).isRequired
-    }).isRequired,
-    unreadNotifications: PropTypes.number.isRequired,
     setUnreadNotifications: PropTypes.func.isRequired,
     chatWith: PropTypes.oneOf(['user', 'maintainer']).isRequired
 };

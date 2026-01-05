@@ -89,7 +89,6 @@ const updateReportStatus = async (reportId, statusId) => {
 const getAssignedReports = async () => {
     const res = await fetch(`${SERVER_URL}/reports/assigned`, { credentials: 'include' });
     const json = await res.json();
-    console.log(json);
     if (res.ok) return json;
     else return { error: json.error || 'Error fetching assigned reports' };
 };
@@ -102,7 +101,6 @@ const getReportsByOfficerInOffice = async (officerId, officeId) => {
     });
     if (res.ok) {
         const reports = await res.json();
-        console.log(reports);
         return reports;
     } else {
         const errMessage = await res.json();
