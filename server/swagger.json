@@ -47,6 +47,10 @@
         {
             "name": "Statistics",
             "description": "Operations for statistics retrieval"
+        },
+        {
+            "name": "Telegram Bot",
+            "description": "Operations for Telegram Bot integration"
         }
         
     ],
@@ -905,6 +909,71 @@
                 }
             }
         },
+        "/reports/reassign": {
+            "post": {
+                "tags": ["Reports"],
+                "summary": "Reassign a report to a different employee",
+                "description": "This endpoint allows to reassign a report to a different employee. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reportId": { "type": "integer" },
+                                    "newOfficerId": { "type": "integer" }
+                                },
+                                "required": [ "reportId", "newOfficerId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        },
         "/reports/assignExternal": {
             "post": {
                 "tags": [ "Reports" ],
@@ -1165,6 +1234,82 @@
                     }
                 }
             }
+        },
+        "/reports/officers/{officerId}/office/{officeId}": {
+            "get": {
+                "tags": [ "Reports" ],
+                "summary": "Retrieve reports assigned to a specific officer and office",
+                "description": "This endpoint retrieves all reports assigned to a specific officer and office. This operation requires authentication and can only be performed by admin and municipal officers.",
+                "security": [ { "cookieAuth": [] } ],
+                "parameters": [
+                    {
+                        "name": "officerId",
+                        "description": "The ID of the officer",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    },
+                    {
+                        "name": "officeId",
+                        "description": "The ID of the office",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/report"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         },
 
 
@@ -1446,6 +1591,226 @@
                             "application/json": {
                                 "example": {
                                     "message": "Employee assigned successfully."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/techincal-officers": {
+            "get": {
+                "tags": ["Employees"],
+                "summary": "Retrieve technical office employees",
+                "description": "This endpoint retrieves all employees assigned to the technical office. This operation requires authentication and can only be performed by admin.",
+                "security": [ { "cookieAuth": [] } ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                       "type": "object",
+                                       "properties": {
+                                            "id": { "type": "integer" },
+                                            "firstName": { "type": "string" },
+                                            "lastName": { "type": "string" },
+                                            "email": { "type": "string", "format": "email" },
+                                            "username": { "type": "string" },
+                                            "role": { "type": "object",
+                                                "properties": {
+                                                    "id": { "type": "integer" },
+                                                    "type": { "type": "string" }
+                                                }
+                                            },
+                                            "offices": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "id": { "type": "integer" },
+                                                        "name": { "type": "string" }
+                                                    }
+                                                }
+                                            }
+
+                                       } 
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/technical-officers/assign": {
+            "post": {
+                "tags": [ "Employees" ],
+                "summary": "Assign a technical office employee to an office",
+                "description": "This endpoint allows to assign a technical office employee to an office. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "officerId": { "type": "integer" },
+                                    "officeId": { "type": "integer" }
+                                },
+                                "required": [ "officerId", "officeId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Technical officer assigned successfully."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You are not authenticated."
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "You do not have permission to perform this action."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/tecnhnical-officers/remove": {
+            "delete": {
+                "tags": [ "Employees" ],
+                "summary": "Remove a technical office employee from an office",
+                "description": "This endpoint allows to remove a technical office employee from an office. This operation requires authentication and can only be performed by admin",
+                "security": [ { "cookieAuth": [] } ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "officerId": { "type": "integer" },
+                                    "officeId": { "type": "integer" }
+                                },
+                                "required": [ "officerId", "officeId" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Technical officer removed successfully."
                                 }
                             }
                         }
@@ -1972,6 +2337,163 @@
                                 },
                                 "example": {
                                     "message": "An unexpected error occurred."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
+        "/bot/verify/username": {
+            "post": {
+                "tags": ["Telegram Bot"],
+                "summary": "Verify if a Telegram username is associated with a user",
+                "description": "This endpoint verifies if a given Telegram username is associated with a user in the system.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "telegramUsername": { "type": "string" }
+                                },
+                                "required": [ "telegramUsername" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "username": { "type": "string" }
+                                    }
+                                },
+                                "example": {
+                                    "username": "user123"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid Telegram username provided."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Telegram username not found."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
+                                }
+                            }
+                    }
+                    }
+                }
+            }
+        },
+        "/bot/verify/password": {
+            "post": {
+                "tags": ["Telegram Bot"],
+                "summary": "Verify user's password",
+                "description": "This endpoint verifies if the provided password matches the user's password in the system.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": { "type": "string" },
+                                    "password": { "type": "string" }
+                                },
+                                "required": [ "username", "password" ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "valid": { "type": "boolean", "default": true },
+                                        "user": { "$ref": "#/components/schemas/user" },
+                                        "token": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Invalid username or password provided."
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Incorrect password."
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                },
+                                "example": {
+                                    "message": "Service is temporarily unavailable."
                                 }
                             }
                         }
