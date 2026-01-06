@@ -1,7 +1,7 @@
 import { describe, it, beforeAll, afterAll, expect, vi } from 'vitest';
-import bcrypt from 'bcrypt';
-import UserDAO from '../../dao/UserDAO.mjs';
 import db from '../../data/db.mjs';
+import UserDAO from '../../dao/UserDAO.mjs';
+import bcrypt from 'bcrypt';
 import {
     setupTestDatabase,
     teardownTestDatabase
@@ -246,4 +246,82 @@ describe('UserDAO', () => {
             dbRunMock.mockRestore();
         });
     });
+});
+describe('UserDAO - error branches', () => {
+  it('getTechnicalOfficers should reject when db.all errors', async () => {
+    const dbAllSpy = vi.spyOn(db, 'all').mockImplementation((sql, params, cb) => {
+      // simulate DB error
+      cb(new Error('simulated db.all failure'), null);
+    });
+
+    await expect(UserDAO.getTechnicalOfficers()).rejects.toThrow(/simulated db\.all failure/);
+
+    dbAllSpy.mockRestore();
+  });
+});
+describe('UserDAO - assignEmployeeToOffice external office branch', () => {
+  it('rejects when inserting into external_office_employee fails', async () => {
+    const dbRunMock = vi.spyOn(db, 'run').mockImplementation((sql, params, cb) => {
+      // simulate update success, external insert failure
+      if (/UPDATE\s+user/i.test(String(sql))) {
+        if (typeof cb === 'function') cb(null);
+      } else if (/external_office_employee/i.test(String(sql))) {
+        if (typeof cb === 'function') cb(new Error('simulated external insert failure'));
+      } else {
+        if (typeof cb === 'function') cb(null);
+      }
+    });
+
+    await expect(UserDAO.assignEmployeeToOffice(12, 5, 6)).rejects.toThrow(/simulated external insert failure/);
+
+    dbRunMock.mockRestore();
+  });
+
+  it('resolves when external_office_employee insert succeeds', async () => {
+    const dbRunMock = vi.spyOn(db, 'run').mockImplementation((sql, params, cb) => {
+      // always succeed
+      if (typeof cb === 'function') cb(null);
+    });
+
+    await expect(UserDAO.assignEmployeeToOffice(13, 6, 6)).resolves.toBeUndefined();
+
+    dbRunMock.mockRestore();
+  });
+});
+describe('UserDAO - assignOfficerToOffice error branch', () => {
+  it('should reject when inserting into office_employee fails (covers return reject(err) in assignOfficerToOffice)', async () => {
+    // mock db.run to fail when inserting into office_employee
+    const dbRunMock = vi.spyOn(db, 'run').mockImplementation((sql, params, cb) => {
+      if (/INSERT\s+INTO\s+office_employee/i.test(String(sql))) {
+        if (typeof cb === 'function') cb(new Error('simulated insert office_employee failure'));
+      } else {
+        if (typeof cb === 'function') cb(null);
+      }
+    });
+
+    await expect(UserDAO.assignOfficerToOffice(42, 7)).rejects.toThrow(/simulated insert office_employee failure/);
+
+    dbRunMock.mockRestore();
+  });
+});
+
+describe('UserDAO - updateUserProfile error propagation', () => {
+  it('should reject when getUserById fails (covers .catch in updateUserProfile)', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const runMock = vi.spyOn(db, 'run').mockImplementation((sql, params, cb) => {
+      if (typeof cb === 'function') cb(null);
+    });
+    // make db.get fail so getUserById rejects
+    const getMock = vi.spyOn(db, 'get').mockImplementation((sql, params, cb) => {
+      if (typeof cb === 'function') cb(new Error('simulated db.get failure'), null);
+    });
+
+    await expect(UserDAO.updateUserProfile(1, '@tg', 1, 'img.png')).rejects.toThrow(/simulated db\.get failure/);
+
+    expect(consoleSpy).toHaveBeenCalled();
+
+    runMock.mockRestore();
+    getMock.mockRestore();
+    consoleSpy.mockRestore();
+  });
 });
