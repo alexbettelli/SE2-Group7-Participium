@@ -415,8 +415,33 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     chatId,
     `I am the official bot of Group 7 Participium App, a platform for reporting and managing urban issues of the Municipality of Turin.\n\n` +    
-    `Use the /login command to connect your Participium account and get started!`
+    `Use the /login command to connect your Participium account and get started!\n\n` +
+    `Use /help to see all available commands.`
   );
+});
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  const helpMessage = 
+    `📖 *Available Commands*\n\n` +
+    `*General Commands:*\n` +
+    `• /start - Welcome message and bot introduction\n` +
+    `• /help - Show this help message\n` +
+    `• /faq - Frequently asked questions\n` +
+    `• /contact - Contact information for support\n\n` +
+    `*Authentication:*\n` +
+    `• /login - Login to your Participium account\n` +
+    `• /logout - Logout from your account\n` +
+    `• /cancel - Cancel current operation\n\n` +
+    `*Report Management:*\n` +
+    `• /newreport - Create a new report\n` +
+    `• /myreports - View all your submitted reports\n` +
+    `• /reportstatus <id> - View details of a specific report\n` +
+    `• /done - Complete report creation after uploading photos\n\n` +
+    `*Note:* Some commands require authentication. Use /login first.`;
+  
+  bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
 });
 
 bot.onText(/\/login/, (msg) => {
