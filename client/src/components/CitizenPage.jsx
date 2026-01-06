@@ -509,8 +509,8 @@ export default function CitizenPage(props) {
                 return;
             }
 
-            const lat = parseFloat(data[0].lat);
-            const lng = parseFloat(data[0].lon);
+            const lat = Number.parseFloat(data[0].lat);
+            const lng = Number.parseFloat(data[0].lon);
             
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();

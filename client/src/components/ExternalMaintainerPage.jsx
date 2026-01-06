@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ReportAPI from '../api/ReportAPI.mjs';
 import ReportsTable from './ReportsTable.jsx';
 import '../styles/ExternalMaintainerPage.css';
+import PropTypes from 'prop-types';
 
 export default function ExternalMaintainerPage(props) {
     const [assignedReports, setAssignedReports] = useState([]);
@@ -75,4 +76,14 @@ export default function ExternalMaintainerPage(props) {
             </div>
         </div>
     );
+}
+
+ExternalMaintainerPage.propTypes = {
+    user: PropTypes.shape({
+        id: PropTypes.number,
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired
+    }).isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    setChatWith: PropTypes.func
 }

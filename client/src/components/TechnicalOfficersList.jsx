@@ -195,5 +195,39 @@ TechnicalOfficersTable.propTypes = {
     officeName: PropTypes.string,
     officeId: PropTypes.number
   })).isRequired
+  ,
+  offices: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired
+  })).isRequired,
+  updateOfficers: PropTypes.func.isRequired
 }; 
+
+
+TechnicalOfficerRow.propTypes = {
+  officer: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    username: PropTypes.string.isRequired,
+    firstName: PropTypes.string.isRequired,
+    lastName: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    offices: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string
+    }))
+  }).isRequired,
+  allOfficers: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    username: PropTypes.string,
+    firstName: PropTypes.string,
+    lastName: PropTypes.string,
+    email: PropTypes.string,
+    offices: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.number, name: PropTypes.string }))
+  })).isRequired,
+  offices: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired
+  })).isRequired,
+  updateOfficers: PropTypes.func.isRequired
+};
 

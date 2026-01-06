@@ -61,5 +61,6 @@ TechnicalOfficeStaffMemberPage.propTypes = {
         firstName: PropTypes.string.isRequired,
         lastName: PropTypes.string.isRequired
     }).isRequired,
-    setSelectedReport: PropTypes.func.isRequired
+    setSelectedReport: PropTypes.func.isRequired,
+    setChatWith: PropTypes.func.isRequired
 };
