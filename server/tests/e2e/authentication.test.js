@@ -57,6 +57,17 @@ describe('E2E Authentication Routes', () => {
       const res = await agent.post('/users/temporary').send(newUser);
       expect(res.statusCode).toBe(400);
     });
+
+    it('503 Bad Request', async () => {
+      const invalidUser = {
+        email: 'invalidemail',
+        firstName: '',
+        lastName: '',
+        typeId: 1
+      };
+      const res = await agent.post('/users/temporary').send(invalidUser);
+      expect(res.statusCode).toBe(503);
+    });
   });
 
   describe('POST /otp/resend', () => {
