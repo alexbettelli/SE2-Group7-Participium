@@ -120,6 +120,43 @@ describe('E2E Authentication Routes', () => {
       const res = await agent.post('/users/temporary/verify').send({ otp: 'wrongotp' });
       expect(res.statusCode).toBe(400);
     });
+
+    it('201 Created when OTP valid and user saved', async () => {
+      const compareSpy = vi.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      const addSpy = vi.spyOn(UserDAO, 'addNewUser').mockResolvedValue({ id: 777 });
+      await agent.post('/users/temporary').send(verifyUser);
+
+      const res = await agent.post('/users/temporary/verify').send({ otp: 'anyotp' });
+
+      // assert
+      expect(res.statusCode).toBe(201);
+      expect(res.body).toHaveProperty('id', 777);
+
+      // cleanup
+      addSpy.mockRestore();
+      compareSpy.mockRestore();
+    });
+
+    it('503 Service Unavailable and logs error when addNewUser throws', async () => {
+      const compareSpy = vi.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      const addSpy = vi.spyOn(UserDAO, 'addNewUser').mockRejectedValue(new Error('simulated add failure'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      // prepare session
+      await agent.post('/users/temporary').send(verifyUser);
+
+      const res = await agent.post('/users/temporary/verify').send({ otp: 'anyotp' });
+
+      expect(res.statusCode).toBe(503);
+      expect(consoleSpy).toHaveBeenCalled();
+      const calledWith = consoleSpy.mock.calls.map(c => String(c[0])).join(' ');
+      expect(calledWith).toMatch(/simulated add failure/);
+
+      addSpy.mockRestore();
+      compareSpy.mockRestore();
+      consoleSpy.mockRestore();
+    });
+
   });
 
   describe('Bot verification endpoints', () => {
