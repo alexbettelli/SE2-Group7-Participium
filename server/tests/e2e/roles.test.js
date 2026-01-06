@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, beforeEach, vi } from 'vitest';
 import {
     setupTestDatabase,
     teardownTestDatabase,
@@ -7,6 +7,7 @@ import {
     loginAsAdmin,
     logout
 } from '../setup.mjs';
+import GenericInfoDAO from '../../dao/GenericInfoDAO.mjs';
 
 describe('GET /roles', () => {
 
@@ -47,5 +48,17 @@ describe('GET /roles', () => {
         await loginAsUser(agent);
         const result = await agent.get('/roles');
         expect(result.status).toBe(403);
+    });
+
+    it('503 Service Unavailable', async () => {
+        // Mock the DAO method to throw an error
+        const getRolesMock = vi.spyOn(GenericInfoDAO, 'getRoles').mockImplementation(() => {
+            throw new Error('Database error');
+        });
+        await loginAsAdmin(agent);
+        const result = await agent.get('/roles');
+        expect(result.status).toBe(503);
+        // Restore the original method
+        getRolesMock.mockRestore();
     });
 });
