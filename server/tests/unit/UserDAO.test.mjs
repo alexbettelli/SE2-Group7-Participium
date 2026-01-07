@@ -164,6 +164,25 @@ describe('UserDAO', () => {
             expect(result).toBeNull();
         });
     });
+    describe('getUsernameByTelegramUsername', () => {
+        it('returns username for existing telegram username set by updateUserProfile', async () => {
+            // `updateUserProfile` test above sets user 1 telegramUsername to 'new_telegram'
+            const username = await UserDAO.getUsernameByTelegramUsername('new_telegram');
+            expect(username).toBe('user');
+        });
+
+        it('returns username after setting telegram username for another user', async () => {
+            // set telegram username for user id 4 (userOfficer)
+            await UserDAO.updateUserProfile(4, 'tg_officer', 0, null);
+            const username = await UserDAO.getUsernameByTelegramUsername('tg_officer');
+            expect(username).toBe('userOfficer');
+        });
+
+        it('returns null when telegram username not found', async () => {
+            const username = await UserDAO.getUsernameByTelegramUsername('this_does_not_exist');
+            expect(username).toBeNull();
+        });
+    });
     describe('deleteEmployeeById', () => {
         it('should delete employee successfully', async () => {
             const employeeId = await UserDAO.addNewUser({
