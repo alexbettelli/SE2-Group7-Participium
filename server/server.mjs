@@ -446,7 +446,7 @@ app.get('/roles', isLogged, async (req, res) => {
   }
 });
 
-app.get('/categories', isLogged, async (req, res) => {
+app.get('/categories', async (req, res) => {
   try {
     const categories = await GenericInfoDAO.getCategories();
     return res.status(200).json(categories);
@@ -488,7 +488,7 @@ app.delete('/sessions/current', (req, res) => {
 
 
 // REPORTS
-app.get('/reports', isLogged, async (req, res) => {
+app.get('/reports', async (req, res) => {
   try {
     const reports = await ReportDAO.getAllReports();
     return res.status(200).json(reports);
