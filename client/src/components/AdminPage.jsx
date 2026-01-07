@@ -29,6 +29,7 @@ export default function AdminPage({ user }) {
     const fetchTechnicalOfficers = async () => {
       try {
         const officers = await UserAPI.getTechnicalOfficers();
+        officers.sort((a, b) => a.username.toLowerCase().localeCompare(b.username.toLowerCase()));
         setTechnicalOfficers(officers);
       } catch (error) {
         console.error("Error fetching technical officers:", error);
@@ -74,6 +75,7 @@ export default function AdminPage({ user }) {
       const unassignedEmployees = await UserAPI.getUnassignedEmployees();
       setEmployees(unassignedEmployees);
       const officers = await UserAPI.getTechnicalOfficers();
+      officers.sort((a, b) => a.username.toLowerCase().localeCompare(b.username.toLowerCase()));
       setTechnicalOfficers(officers);
     } catch (error) {
       console.error("Error updating employee list:", error);
@@ -83,6 +85,7 @@ export default function AdminPage({ user }) {
   const updateTechnicalOfficers = async () => {
     try {
       const officers = await UserAPI.getTechnicalOfficers();
+      officers.sort((a, b) => a.username.toLowerCase().localeCompare(b.username.toLowerCase()));
       setTechnicalOfficers(officers);
     } catch (error) {
       console.error("Error updating technical officers list:", error);
