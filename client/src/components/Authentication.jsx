@@ -79,7 +79,7 @@ AuthenticationScreen.propTypes = {
 };
 
 function LogInForm(props) {
-    const [state, formAction, isPending] = useActionState(login,{ username: '', password: '' });
+    const [state, formAction] = useActionState(login,{ username: '', password: '' });
 
     async function login(prevState, formData) {
         const credentials = {
@@ -149,7 +149,8 @@ function RegistrationForm(props) {
             props.redirectVerify();
             return { success: true }
         } catch (error) {
-            return { error: 'Username already in use. Please choose another username or log in if you already have an account.' }
+            console.error(error);
+            return { error: 'This user already exists. Please log in if you already have an account.' }
         }
     }
 
@@ -230,7 +231,6 @@ function OTPForm(props) {
 
     const [state, formAction, isPending] = useActionState(verifyOTP, { "otp1":  "", "otp2":  "", "otp3":  "", "otp4":  "", "otp5":  "", "otp6":  "" });
     const inputsRef = useRef([]);
-    const [error, setError] = useState(null);
     const [timer, setTimer] = useState(60);
     const [date, setDate] = useState(props.date);
     const [resending, setResending] = useState(false);
@@ -255,7 +255,6 @@ function OTPForm(props) {
 
     const resendOTP = async () => {
         if(dayjs().diff(date, 'minute') < 1) {
-            setError('Please wait at least 1 minute before requesting a new OTP.');
             console.log('Please wait at least 1 minute before requesting a new OTP.');
             return;
         }
@@ -265,12 +264,11 @@ function OTPForm(props) {
             await LoggingAPI.resendOTP();
             setTimer(60);
             setDate(dayjs());
-            setError(null);
             inputsRef.current[0].focus();
             setResending(false);
         } catch(error) {
             inputsRef.current[0].focus();
-            setError(error.message || 'OTP resend failed!');
+            console.error(error);
             setResending(false);
         }
     }

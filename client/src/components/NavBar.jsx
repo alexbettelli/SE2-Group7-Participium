@@ -9,12 +9,17 @@ function NavHeader(props) {
   const { user, handleLogout, unreadNotifications, setUnreadNotifications } = props;
   const navigate = useNavigate();
   const [profilePhoto, setProfilePhoto] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false); 
 
   const handleHomeClick = () => {
     navigate('/');
     setExpanded(false);
   };
+
+  const handleLoginClick = () => {
+    navigate('/auth');
+    setExpanded(false);
+  }
 
   const handleLogoutClick = async () => {
     if (handleLogout) {
@@ -149,6 +154,15 @@ useEffect(() => {
                 onClick={handleLogoutClick}
               >
                 Logout
+              </button>
+            )}
+
+            {!user &&  handleLoginClick && (
+              <button
+                className="nav-home-btn"
+                onClick={handleLoginClick}
+              >
+                Login
               </button>
             )}
           </Nav>

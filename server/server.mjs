@@ -7,11 +7,11 @@ import LocalStrategy from "passport-local";
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import { Validator, ValidationError } from 'express-json-validator-middleware';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import UserDAO from './dao/UserDAO.mjs';
 import GenericInfoDAO from './dao/GenericInfoDAO.mjs';
 import NotificationDAO from './dao/NotificationDAO.mjs';
@@ -21,11 +21,15 @@ import dayjs from 'dayjs';
 import nodemailer from 'nodemailer';
 import juice from 'juice';
 import Handlebars from 'handlebars';
+import './telegramBot/bot.mjs';
+import jwt from 'jsonwebtoken';
 
 import * as errors from './model/error.mjs';
 import addFormats from 'ajv-formats'
-import fsPromises from 'fs/promises';
-import fsSync from 'fs';
+import fsPromises from 'node:fs/promises';
+import fsSync from 'node:fs';
+
+
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +49,9 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || `http://localhost:5173`;
 const OTP_EXPIRATION_MINUTES = process.env.OTP_EXPIRATION_MINUTES || 30;
 const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change_this_in_prod';
+const JWT_EXPIRES_IN = '1h'; 
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -139,8 +146,22 @@ passport.deserializeUser(async function (user, cb) {
 app.use(passport.authenticate('session'));
 
 export const isLogged = (req, res, next) => {
-  if (req.isAuthenticated()) return next();
-  else return res.status(401).json(new errors.UnauthorizedError());
+  if (req.isAuthenticated()) 
+    return next();
+  const authHeader = req.header('Authorization') || req.header('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'change_this_in_prod');
+      req.user = decoded; //now the routes have still access to the req.user value
+      return next();
+    } catch (err) {
+      console.error('JWT verification error: ' + err.message);
+      return res.status(401).json(new errors.UnauthorizedError());
+    }
+  }
+
+  return res.status(401).json(new errors.UnauthorizedError());
 }
 
 //middleware to check if the user is a citizen (typeId === 1)
@@ -223,8 +244,8 @@ app.post("/users/temporary", async (req, res, next) => {
 
   try {
     const data = req.body;
-    const user = await UserDAO.getUserByUsername(data.username);
-    if (user) return res.status(409).json(new errors.ConflictError("This username already exists."));
+    const found = await UserDAO.checkUserExists(data.username, data.email);
+    if (found) return res.status(409).json(new errors.ConflictError("This user already exists."));
     const hashedPassword = await bcrypt.hash(data.password, 8);
     data.password = hashedPassword;
     req.session.tempUser = data;
@@ -272,7 +293,7 @@ app.post('/users/temporary/verify', async (req, res) => {
 app.post('/employees', isLogged, async (req, res) => {
   try {
 
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -294,11 +315,11 @@ app.post('/employees', isLogged, async (req, res) => {
 
 app.delete('/employees/:id', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
-    const employeeId = req.params.id;
-    if (!employeeId || isNaN(employeeId)) {
+    const employeeId = Number.parseInt(req.params.id);
+    if (!employeeId || Number.isNaN(employeeId)) {
       return res.status(400).json(new errors.BadRequestError("Employee ID is required."));
     }
 
@@ -318,7 +339,7 @@ app.delete('/employees/:id', isLogged, async (req, res) => {
 
 app.get('/employees/unassigned', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -330,16 +351,57 @@ app.get('/employees/unassigned', isLogged, async (req, res) => {
   }
 });
 
+app.get('/employees/technical-officers', isLogged, async (req, res) => {
+  try {
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+
+    const officers = await UserDAO.getTechnicalOfficers();
+    return res.status(200).json(officers);
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
 
 app.post('/employees/assign', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
     const { employeeId, officeId, roleId } = req.body;
     await UserDAO.assignEmployeeToOffice(employeeId, officeId, roleId);
     return res.status(200).json({ message: 'Employee assigned successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.post('/employees/technical-officers/assign', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const { officerId, officeId } = req.body;
+    await UserDAO.assignOfficerToOffice(officerId, officeId);
+    return res.status(200).json({ message: 'Officer assigned successfully' });
+  } catch (error) {
+    console.error(`ERROR: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.delete('/employees/technical-officers/remove', isLogged, async (req, res) => {
+  try {
+    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+      return res.status(403).json(new errors.ForbiddenError());
+    }
+    const { officerId, officeId } = req.body;
+    await UserDAO.removeOfficerFromOffice(officerId, officeId);
+    return res.status(200).json({ message: 'Officer removed successfully' });
   } catch (error) {
     console.error(`ERROR: ${error.message}`);
     res.status(503).json(new errors.ServiceUnvailableError());
@@ -372,7 +434,7 @@ app.get('/externalOffices', isLogged, async (req, res) => {
 
 app.get('/roles', isLogged, async (req, res) => {
   try {
-    if (!req.user || req.user.role.id !== 2) {  // typeId 2 = admin
+    if (req.user?.role?.id !== 2) {  // typeId 2 = admin
       return res.status(403).json(new errors.ForbiddenError());
     }
 
@@ -384,7 +446,7 @@ app.get('/roles', isLogged, async (req, res) => {
   }
 });
 
-app.get('/categories', isLogged, async (req, res) => {
+app.get('/categories', async (req, res) => {
   try {
     const categories = await GenericInfoDAO.getCategories();
     return res.status(200).json(categories);
@@ -426,8 +488,7 @@ app.delete('/sessions/current', (req, res) => {
 
 
 // REPORTS
-
-app.get('/reports', isLogged, async (req, res) => {
+app.get('/reports', async (req, res) => {
   try {
     const reports = await ReportDAO.getAllReports();
     return res.status(200).json(reports);
@@ -455,6 +516,7 @@ app.get('/reports/unassigned', isLogged, async (req, res) => {
     const reports = await ReportDAO.getUnassignedReports();
     return res.status(200).json(reports);
   } catch (ex) {
+    console.error(`ERROR /reports/unassigned: ${ex.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -490,6 +552,19 @@ app.get("/reports/assigned", isLogged, async (req, res) => {
     const reports = await ReportDAO.getAssignedReports(req.user.id);
     return res.status(200).json(reports);
   } catch (ex) {
+    console.error(`ERROR /reports/assigned: ${ex.message}`);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.get(`/reports/officer/:officerId/office/:officeId`, isLogged, async (req, res) => {
+  if (req.user.role.id !== 2 && req.user.role.id !==3) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { officerId, officeId } = req.params;
+    const reports = await ReportDAO.getReportsByOfficerAndOffice(officerId, officeId);
+    return res.status(200).json(reports);
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -499,6 +574,7 @@ app.get("/reports/statuses", isLogged, async (req, res) => {
     const statuses = await GenericInfoDAO.getReportStatuses();
     return res.status(200).json(statuses);
   } catch (e) {
+    console.error(`ERROR /reports/statuses: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -532,6 +608,18 @@ app.post('/reports/assign', isLogged, async (req, res) => {
     
     return res.status(200).json();
   } catch (err) {
+    console.error(`ERROR /reports/assign: ${err.message}`);
+    return res.status(500).json(new errors.InternalServerError());
+  }
+});
+
+app.post('/reports/reassign', isLogged, async (req, res) => {
+  if (req.user.role.id !== 2) return res.status(403).json(new errors.ForbiddenError());
+  try {
+    const { reportId, newOfficerId } = req.body;
+    await ReportDAO.reassignReportToOfficer(reportId, newOfficerId);
+    return res.status(200).json();
+  } catch (err) {
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -543,6 +631,7 @@ app.post('/reports/assignExternal', isLogged, async (req, res) => {
     await ReportDAO.assignReportToExternalOffice(reportId, externalOfficeId);
     return res.status(200).json();
   } catch (err) {
+    console.error(`ERROR /reports/assignExternal: ${err.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -555,6 +644,7 @@ app.post('/reports/reject', isLogged, async (req, res) => {
     return res.status(200).json();
   }
   catch (err) {
+    console.error(`ERROR /reports/reject: ${err.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -590,6 +680,7 @@ app.post('/users/reports', isLogged, upload.array('images', 3), validate({ body:
     }
     return res.status(201).json({ reportId: received.id, createdAt: received.createdAt, images: uuids.map(filename => ({ imageUrl: `${BASE_URL}/images/reports/${received.id}/${filename}` })) });
   } catch (e) {
+    console.error(`ERROR: ${e.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 
@@ -681,6 +772,7 @@ app.patch("/reports/:id", isLogged, async (req, res) => {
       return res.status(404).json(new errors.NotFoundError("Report not found or not assigned to you."));
     return res.status(200).json({ ok: true, notification });
   } catch (e) {
+    console.error(`ERROR /reports/:id: ${e.message}`);
     return res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -693,7 +785,7 @@ app.post('/notifications', validate({ body: schemas.notification }), async (req,
     const fullMessage = await NotificationDAO.createNotification(message);
     return res.status(201).json(fullMessage);
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /notifications: ${error.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
@@ -709,6 +801,7 @@ app.post('/notifications/read', isLogged, async (req, res) => {
     readNotifications = await NotificationDAO.setNotificationsAsRead(userId, reportId);
     res.status(201).json({ success: true, readNotifications });
   } catch (err) {
+    console.error(`ERROR /notifications/read: ${err.message}`);
     res.status(500).json(new errors.InternalServerError());
   }
 });
@@ -722,7 +815,7 @@ app.post('/comments', isLogged, validate({ body: schemas.comment }),async (req, 
     const fullMessage = await NotificationDAO.createComment(message);
     return res.status(201).json(fullMessage);
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    console.error(`ERROR /comments: ${error.message}`);
     return res.status(503).json(new errors.ServiceUnvailableError());
   }
 });
@@ -738,10 +831,84 @@ app.post('/comments/read', isLogged, async (req, res) => {
     readComments = await NotificationDAO.setCommentsAsRead(userId, reportId);
     res.status(201).json({ success: true, readComments });
   } catch (err) {
+    console.error(`ERROR /comments/read: ${err.message}`);
     res.status(500).json(new errors.InternalServerError());
   }
 });
 
+
+app.get('/reports/:id', isLogged, async (req, res) => {
+  try {
+    const report = await ReportDAO.getReportById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+    if (report.user?.id !== req.user.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    return res.status(200).json(report);
+  } catch (error) {
+    console.error(`ERROR /reports/:id: ${error.message}`);
+    res.status(503).json({ error: "Unable to fetch report" });
+  }
+});
+
+
+app.post('/bot/verify/username', async (req, res) => {
+  try {
+    const { telegramUsername } = req.body;
+    
+    if (!telegramUsername) {
+      return res.status(400).json(new errors.BadRequestError("Telegram username is required"));
+    }
+
+    const username = await UserDAO.getUsernameByTelegramUsername(telegramUsername);
+    
+    if (!username) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Ritorna solo i dati necessari (NO password)
+    return res.status(200).json({username : username});
+  } catch (error) {
+    console.error(`ERROR /bot/verify/username: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
+
+app.post('/bot/verify/password', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json(new errors.BadRequestError("Username and password are required"));
+    }
+
+    const userInfo = await UserDAO.getUserByUsername(username);
+    
+    if (!userInfo) {
+      return res.status(401).json({ valid: false });
+    }
+
+    const match = await bcrypt.compare(password, userInfo.password);
+    
+    if (!match) {
+      return res.status(401).json({ valid: false });
+    }
+
+    const payload = { id: userInfo.user.id, username: userInfo.user.username, role: userInfo.user.role };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN }); //generates the JWT 
+
+    return res.status(200).json({
+      valid: true,
+      user: userInfo.user,
+      token
+    });
+  } catch (error) {
+    console.error(`ERROR /bot/verify/password: ${error.message}`);
+    res.status(503).json(new errors.ServiceUnvailableError());
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server listening at ${BASE_URL}`);
   console.log(`Swagger documentation is available at ${BASE_URL}/api-docs`);

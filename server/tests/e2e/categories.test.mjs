@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, beforeEach, vi} from 'vitest';
 import {
   setupTestDatabase,
   teardownTestDatabase,
@@ -6,7 +6,7 @@ import {
   loginAsAdmin,
   logout
 } from '../setup.mjs';
-
+import GenericInfoDAO from '../../dao/GenericInfoDAO.mjs';
 
 describe('E2E getCategories', () => {
   let agent;
@@ -23,9 +23,9 @@ describe('E2E getCategories', () => {
   afterAll(async () => {
     await teardownTestDatabase();
   });
-  it('GET /categories - unauthorized', async () => {
+  it('GET /categories - ok with no auth', async () => {
     const res = await agent.get('/categories');
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(200);
   });
   it('GET /categories - success', async () => {
     await loginAsAdmin(agent);
@@ -35,4 +35,15 @@ describe('E2E getCategories', () => {
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
   });  
+  it('503 Service Unavailable', async () => {
+    // Mock the DAO method to throw an error
+    const getCategoriesMock = vi.spyOn(GenericInfoDAO, 'getCategories').mockImplementation(() => {
+      throw new Error('Database error');
+    });
+    await loginAsAdmin(agent);
+    const result = await agent.get('/categories');
+    expect(result.status).toBe(503);
+    // Restore the original method
+    getCategoriesMock.mockRestore();
+  });
 });

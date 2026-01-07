@@ -10,6 +10,8 @@ import {
   loginAsUser,
   logout
 } from '../setup.mjs';
+import GenericInfoDAO from '../../dao/GenericInfoDAO.mjs';
+import ReportDAO from '../../dao/ReportDAO.mjs';
 
 describe('E2E external maintainer routes', () => {
   let agent;
@@ -68,6 +70,41 @@ describe('E2E external maintainer routes', () => {
     return { report, externalOffice };
   };
 
+  it('GET /externalOffices -503 on DB error', async () => {
+    // Mock the DAO method to throw an error
+    const getExternalOfficesMock = vi.spyOn(GenericInfoDAO, 'getExternalOffices').mockImplementation(() => {
+      throw new Error('Database error');
+    });
+    await loginAsOfficer(agent);
+    const result = await agent.get('/externalOffices');
+    expect(result.status).toBe(503);
+    // Restore the original method
+    getExternalOfficesMock.mockRestore();
+  });
+
+  it('GET /reports/assignExternal — 200 for officer, 403 for other roles', async () => {
+    await loginAsOfficer(agent);
+    const res = await agent.post('/reports/assignExternal').send({ reportId: 1, externalOfficeId: 1 });
+    expect(res.status).toBe(200);
+    await logout(agent);
+    await loginAsPR(agent);
+    const forbiddenRes = await agent.post('/reports/assignExternal').send({ reportId: 1, externalOfficeId: 1 });
+    expect(forbiddenRes.status).toBe(403);
+  });
+
+  it('GET /reports/assignExternal - 500 on DB error', async () => {
+    // Mock the DAO method to throw an error
+    const getReportsMock = vi.spyOn(ReportDAO, 'assignReportToExternalOffice').mockImplementation(() => {
+      throw new Error('Database error');
+    });
+    await loginAsOfficer(agent);
+    const result = await agent.post('/reports/assignExternal').send({ reportId: 1, externalOfficeId: 1 });
+    expect(result.status).toBe(500);
+    // Restore the original method
+    getReportsMock.mockRestore();
+  });
+
+
   it('GET /reports/external-office-assigned — 200 for maintainer, 403 for other roles', async () => {
     const { report, externalOffice } = await prepareAssignedReport();
 
@@ -86,6 +123,18 @@ describe('E2E external maintainer routes', () => {
     await loginAsUser(agent);
     const forbiddenRes = await agent.get('/reports/external-office-assigned');
     expect(forbiddenRes.status).toBe(403);
+  });
+
+  it('GET /reports/external-office-assigned — 500 on DB error', async () => {
+    // Mock the DAO method to throw an error
+    const getReportsMock = vi.spyOn(ReportDAO, 'getExternalOfficeAssignedReports').mockImplementation(() => {
+      throw new Error('Database error');
+    });
+    await login(agent, 'externalMaintainer', 'externalpassword');
+    const result = await agent.get('/reports/external-office-assigned');
+    expect(result.status).toBe(500);
+    // Restore the original method
+    getReportsMock.mockRestore();
   });
 
   it('GET /reports/external-maintainer-my — 200 and returns only the maintainer’s reports; 403 for other roles', async () => {
@@ -112,6 +161,18 @@ describe('E2E external maintainer routes', () => {
     await loginAsUser(agent);
     const forbiddenRes = await agent.get('/reports/external-maintainer-my');
     expect(forbiddenRes.status).toBe(403);
+  });
+
+  it('Get /reports/external-maintainer-my — 503 on DB error', async () => {
+    // Mock the DAO method to throw an error
+    const getReportsMock = vi.spyOn(ReportDAO, 'getExternalMaintainerMyReports').mockImplementation(() => {
+      throw new Error('Database error');
+    });
+    await login(agent, 'externalMaintainer', 'externalpassword');
+    const result = await agent.get('/reports/external-maintainer-my');
+    expect(result.status).toBe(500);
+    // Restore the original method
+    getReportsMock.mockRestore();
   });
 
   it('PATCH /reports/external-maintainer/:id — cases: accept (state unchanged), invalid status (404/200), report not belonging to their office (404/403), non-maintainer user (403)', async () => {
@@ -164,5 +225,16 @@ describe('E2E external maintainer routes', () => {
       // Document current behavior
       expect(acceptRes.status).toBe(500);
     }
+  });
+  it('PATCH /reports/external-maintainer/:id — 500 on DB error', async () => {
+    // Mock the DAO method to throw an error
+    const updateStatusMock = vi.spyOn(ReportDAO, 'updateExternalMaintainerReportStatus').mockImplementation(() => {
+      throw new Error('Database error');
+    });
+    await login(agent, 'externalMaintainer', 'externalpassword');
+    const result = await agent.patch('/reports/external-maintainer/1').query({ statusId: 3 });
+    expect(result.status).toBe(500);
+    // Restore the original method
+    updateStatusMock.mockRestore();
   });
 });

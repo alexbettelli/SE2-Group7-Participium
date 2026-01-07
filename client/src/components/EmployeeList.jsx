@@ -2,11 +2,14 @@ import { Table, Form } from 'react-bootstrap';
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import '../styles/EmployeeList.css';
+import OfficeDropdown from './OfficeDropdown.jsx';
 
 export default function UnassignedEmployeeList(props) {
     return (
         <div className="employee-list-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <h2 className="employee-list-title" style={{ textAlign: 'center', width: '100%' }}>Unassigned Employees {props.employees.length === 0 ? " - None" : ` - ${props.employees.length}`}</h2>
+            <p className="employee-count" style={{ textAlign: 'center', width: '100%', color: 'var(--color-wine-light)', fontWeight: 600, marginBottom: '1rem' }}>
+                Total: {props.employees.length}
+            </p>
             <Table className="employee-list-table" hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
                 <thead>
                     <tr style={{ textAlign: 'center' }}>
@@ -37,14 +40,14 @@ export default function UnassignedEmployeeList(props) {
 function EmployeeRow(props) {
     const { employee, roles, offices, externalOffices, onAssign } = props;
     const [selectedRole, setSelectedRole] = useState('');
-    const [selectedOffice, setSelectedOffice] = useState('');
+    const [selectedOffices, setSelectedOffices] = useState([]);
 
     // Reset office when role is set to default
     const handleRoleChange = (e) => {
         const value = e.target.value;
         setSelectedRole(value);
         if (value === '') {
-            setSelectedOffice('');
+            setSelectedOffices([]);
         }
     };
 
@@ -52,12 +55,21 @@ function EmployeeRow(props) {
         if (!selectedRole) return;
         try {
             // support async onAssign
-            await onAssign?.(employee.id, selectedOffice, selectedRole);
-            setSelectedOffice('');
+            await onAssign?.(employee.id, selectedOffices, selectedRole);
+            setSelectedOffices([]);
             setSelectedRole('');
+
         } catch (e) {
             console.error('Assign failed', e);
         }
+    };
+
+    const handleOfficeSelection = (officeId) => {
+        setSelectedOffices(prev => [...prev, officeId]);
+    };
+
+    const handleOfficeRemoval = (officeId) => {
+        setSelectedOffices(prev => prev.filter(id => id !== officeId));
     };
 
     return (
@@ -87,26 +99,21 @@ function EmployeeRow(props) {
             )}
             {selectedRole === '4' && (
                 <td style={{ minWidth: 240 }}>
-                    <Form.Select
-                        size="sm"
-                        value={selectedOffice}
-                        onChange={(e) => setSelectedOffice(e.target.value)}
-                        className={selectedOffice === '' ? 'employee-select-unselected' : 'employee-select'}
-                    >
-                        <option value="">-- choose office --</option>
-                        {offices.map(o => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                        ))}
-                    </Form.Select>
+                    <OfficeDropdown 
+                        offices = {offices}
+                        selectedOffices={selectedOffices}
+                        onSelect = {handleOfficeSelection} 
+                        onDeselect ={handleOfficeRemoval}
+                    />
                 </td>
             )}
             {selectedRole === '6' && (
                 <td style={{ minWidth: 240 }}>
                     <Form.Select
                         size="sm"
-                        value={selectedOffice}
-                        onChange={(e) => setSelectedOffice(e.target.value)}
-                        className={selectedOffice === '' ? 'employee-select-unselected' : 'employee-select'}
+                        value={selectedOffices[0] || ''}
+                        onChange={(e) => setSelectedOffices([e.target.value])}
+                        className={selectedOffices[0] === '' ? 'employee-select-unselected' : 'employee-select'}
                     >
                         <option value="">-- choose company --</option>
                         {externalOffices.map(eo => (
@@ -127,7 +134,8 @@ function EmployeeRow(props) {
                     onClick={handleAssign}
                     disabled={
                         !selectedRole ||
-                        (selectedRole !== '3' && !selectedOffice) 
+                        (selectedRole !== '3' && !selectedOffices.length) ||
+                        (selectedRole === '6' && !selectedOffices[0])
                     }
                 >
                     Assign

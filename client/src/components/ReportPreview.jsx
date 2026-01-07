@@ -70,6 +70,17 @@ export default function ReportPreview(props) {
     }, []);
 
     useEffect(() => {
+        console.log(props.report);
+    }, [])
+
+    const officesName = {
+        1: 'Road Maintenance',
+        2: 'Waste Management',
+        3: 'Urban Green Management',
+        4: 'Public Transportation'
+    }
+
+    useEffect(() => {
         const updateReportStatus = async () => {
             try {
                 let result;
@@ -112,6 +123,13 @@ export default function ReportPreview(props) {
         setExpanded(!expanded);
     };
 
+    const categoryColors = {
+        1: "lightblue",
+        2: "black",
+        3: "darkred",
+        4: "purple"
+    };
+
     return (
         <>
             <div className='report-preview-card' onClick={toggleExpanded}>
@@ -131,6 +149,11 @@ export default function ReportPreview(props) {
                         <h5>{report.address.split(", Piemonte")[0].split(", Turin")[0]}</h5>
                         <div className="wrapper">
                             <span className="report-id-badge">Report #{report.id}</span>
+                            {
+                                report.office && 
+                                officesName.hasOwnProperty(report.office.id) &&
+                                <span className='office-badge' style={{backgroundColor: `${categoryColors[report.office.id]}`}}>{officesName[report.office.id]}</span>
+                            }
                             <span className={`status-badge ${getStatusClass(report.status.statusName)}`}>{report.status.statusName}</span>
                         </div>
                     </div>
@@ -156,7 +179,7 @@ export default function ReportPreview(props) {
                     
                     {showAcceptButton && report.status.id === 2 && (
             <button className="btn-accept" type="button" onClick={(e) => { e.stopPropagation(); onAcceptReport(report.id); }}>
-              <i className="bi bi-check-circle"></i>{' '}Accept Report
+              <i className="bi bi-check-circle"></i>{'Take in Charge '}
             </button>
           )}
 
@@ -203,7 +226,7 @@ export default function ReportPreview(props) {
           )}
                 </div>
             </div>
-            {expanded && <ReportView onClose={toggleExpanded} report={report} />}
+            {expanded && <ReportView onClose={toggleExpanded} report={report} officeName={officesName.hasOwnProperty(report.office.id) && officesName[report.office.id]} />}
 
             <Modal 
                 show={showStatusModal} 
@@ -276,73 +299,6 @@ export default function ReportPreview(props) {
     )
 }
 
-ReportPreview.propTypes = {
-  report: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    address: PropTypes.string,
-    createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
-    updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
-    images: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.number,
-        imageUrl: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-    user: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      username: PropTypes.string,
-    }).isRequired,
-    category: PropTypes.shape({
-      id: PropTypes.number,
-      categoryName: PropTypes.string,
-    }).isRequired,
-    status: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      statusName: PropTypes.string.isRequired,
-    }).isRequired,
-    latitude: PropTypes.number,
-    longitude: PropTypes.number,
-    externalOffice: PropTypes.shape({
-      id: PropTypes.number,
-      name: PropTypes.string,
-    }),
-    unreadNotifications: PropTypes.number,
-    rejectReason: PropTypes.string,
-    notifications: PropTypes.array,
-  }).isRequired,
-
-  externalOffices: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string,
-      category: PropTypes.shape({
-        id: PropTypes.number,
-        categoryName: PropTypes.string,
-      }),
-    })
-  ),
-  user: PropTypes.shape({
-    id: PropTypes.number,
-    role: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-    }).isRequired,
-  }).isRequired,
-  setSelectedReport: PropTypes.func.isRequired,
-  updateReports: PropTypes.func,
-  isExternalMaintainer: PropTypes.bool,
-  showAcceptButton: PropTypes.bool,
-  onAcceptReport: PropTypes.func,
-};
-
-ReportPreview.defaultProps = {
-  externalOffices: [],
-  updateReports: () => {},
-  isExternalMaintainer: false,
-  showAcceptButton: false,
-  onAcceptReport: () => {},
-};
 
 function ReportView(props) {
     const report = props.report;
@@ -383,8 +339,10 @@ function ReportView(props) {
                         <div className="fields">
                             <div className="field user-field">
                                 <h3>Reported by</h3>
-                                <p><strong>User id: </strong>{report.user.id}</p>
-                                <p><strong>Username: </strong>{report.user.username}</p>
+                                <p><strong>User id: </strong>{(report.anonymous || report.isAnonymous) ? 'Anonymous' : (report.user.id || 'Unknown')}</p>
+                                <p><strong>Username: </strong>
+                                    {(report.anonymous || report.isAnonymous) ? 'Anonymous' : (report.user.username || 'Unknown')}
+                                </p>
                             </div>
                             <div className="field">
                                 <h3>Reported on</h3>
@@ -398,6 +356,7 @@ function ReportView(props) {
                             <div className="field">
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
+                                { report.office && props.officeName && <p><strong>Office: </strong>{props.officeName}</p> }
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
                                 {report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p>}
                             </div>
@@ -413,6 +372,84 @@ function ReportView(props) {
     )
 }
 
+
+ReportPreview.propTypes = {
+    report: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        description: PropTypes.string,
+        address: PropTypes.string,
+        createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+        updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+        images: PropTypes.arrayOf(
+            PropTypes.shape({
+                id: PropTypes.number,
+                imageUrl: PropTypes.string.isRequired,
+            })
+        ).isRequired,
+        user: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            username: PropTypes.string,
+        }).isRequired,
+        anonymous: PropTypes.bool,
+        isAnonymous: PropTypes.bool,
+        office: PropTypes.shape({
+            id: PropTypes.number,
+            name: PropTypes.string,
+        }),
+        category: PropTypes.shape({
+            id: PropTypes.number,
+            categoryName: PropTypes.string,
+        }).isRequired,
+        status: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            statusName: PropTypes.string.isRequired,
+        }).isRequired,
+        latitude: PropTypes.number,
+        longitude: PropTypes.number,
+        externalOffice: PropTypes.shape({
+            id: PropTypes.number,
+            name: PropTypes.string,
+        }),
+        unreadNotifications: PropTypes.number,
+        unreadComments: PropTypes.number,
+        rejectReason: PropTypes.string,
+        notifications: PropTypes.array,
+        comments: PropTypes.array,
+    }).isRequired,
+
+    externalOffices: PropTypes.arrayOf(
+        PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            name: PropTypes.string,
+            category: PropTypes.shape({
+                id: PropTypes.number,
+                categoryName: PropTypes.string,
+            }),
+        })
+    ),
+    user: PropTypes.shape({
+        id: PropTypes.number,
+        role: PropTypes.shape({
+            id: PropTypes.number.isRequired,
+        }).isRequired,
+    }).isRequired,
+    setSelectedReport: PropTypes.func.isRequired,
+    updateReports: PropTypes.func,
+    isExternalMaintainer: PropTypes.bool,
+    showAcceptButton: PropTypes.bool,
+    onAcceptReport: PropTypes.func,
+    setChatWith: PropTypes.func.isRequired
+};
+
+ReportPreview.defaultProps = {
+  externalOffices: [],
+  updateReports: () => {},
+  isExternalMaintainer: false,
+  showAcceptButton: false,
+  onAcceptReport: () => {},
+};
+
 ReportView.propTypes = {
   report: PropTypes.shape({
     id: PropTypes.number.isRequired,
@@ -423,6 +460,12 @@ ReportView.propTypes = {
         imageUrl: PropTypes.string.isRequired,
       })
     ).isRequired,
+    anonymous: PropTypes.bool,
+    isAnonymous: PropTypes.bool,
+    office: PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+    }),
     category: PropTypes.shape({
       categoryName: PropTypes.string,
     }).isRequired,

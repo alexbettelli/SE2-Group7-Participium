@@ -1,0 +1,55 @@
+.office-dropdown {
+  position: relative;
+  border: none;
+  display: inline-block;
+}
+
+.office-dropdown button {
+  background: var(--color-wine-light);
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  white-space: nowrap;
+}
+
+.panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  color: black;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  min-width: 100%;
+  width: max-content;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.panel fieldset {
+  display: flex;
+  align-items: center;
+  border: none;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  margin: 0;
+}
+
+.panel fieldset:hover {
+  background-color: rgba(0,0,0,0.05);
+}
+
+.panel label {
+  cursor: pointer;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}

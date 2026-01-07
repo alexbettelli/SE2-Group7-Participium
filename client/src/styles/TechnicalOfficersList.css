@@ -1,0 +1,15 @@
+.employee-list-container {
+    overflow: visible !important;
+}
+
+@media (max-width: 768px) {
+    .employee-list-container {
+        overflow-x: auto !important;
+    }
+}
+
+.employee-list-table th,
+.employee-list-table td {
+    text-align: center !important;
+    vertical-align: middle !important;
+}

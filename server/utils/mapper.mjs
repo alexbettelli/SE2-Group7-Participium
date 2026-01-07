@@ -1,4 +1,4 @@
-import { User, Report, Message, Office, Role, Status, Image, Category, Channel, Comment } from '../model/model.mjs';
+import { User, Employee, Report, Message, Office, Role, Status, Image, Category, Channel, Comment } from '../model/model.mjs';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
@@ -28,6 +28,38 @@ function mapRowToUser(row) {
 const mapRowsToUsers = (rows) => {
     return rows.map(mapRowToUser);
 }
+
+const mapRowsToEmployee = (rows) => {
+    return mapRowsToEmployees(rows)[0];
+}
+const mapRowsToEmployees = (rows) => { 
+
+    const grouped = rows.reduce((acc, row) => {
+        if (!acc[row.id]) {
+            acc[row.id] = {
+                id : row.id,
+                username : row.username,
+                email : row.email,
+                firstName : row.firstName,
+                lastName : row.lastName,
+                role : new Role( row.typeId, row.type ),
+                offices : []            
+            };
+        }
+
+        const employee = acc[row.id];
+
+        // add office if it not exists
+        if (row.officeId && !employee.offices.some(office => office.id === row.officeId)) {
+            employee.offices.push(new Office(row.officeId, row.officeName));
+        }     
+
+        return acc;
+    }, {});
+
+    return Object.values(grouped).map(r => new Employee({ ...r }));
+}
+
 
 //map a single office
 const mapRowToOffice = (rows) => {
@@ -100,75 +132,12 @@ const mapRowsToStatus = (rows) => {
 //map multiple reports
 const mapRowsToReports = (rows) => {
     const grouped = rows.reduce((acc, row) => {
-        if (!acc[row.id]) {
-            acc[row.id] = {
-                id: row.id,
-                title: row.title,
-                description: row.description,
-                latitude: row.latitude,
-                longitude: row.longitude,
-                address: row.address,
-                user: new User(row.userId, row.username),
-                employee: row.employeeId ? new User(row.employeeId, row.employeeUsername) : null,
-                category: new Category(row.catId, row.categoryName),
-                status: new Status(row.statusId, row.statusName),
-                office: row.officeId ? new Office(row.officeId, row.officeName) : null,
-                externalOffice: row.externalOfficeId ? new Office(row.externalOfficeId, row.externalOfficeName) : null,
-                externalMaintainer: row.externalMaintainerId ? new User(row.externalMaintainerId, row.externalMaintainerUsername) : null,
-                createdAt: row.createdAt,
-                updatedAt: row.updatedAt,
-                rejectReason: row.rejectReason,
-                anonymous: row.anonymous,
-                images: [],
-                notifications: [],
-                unreadNotifications: row.unreadNotifications || 0,
-                unreadComments: row.unreadComments || 0,
-                comments: []
-            };
-        }
+        acc[row.id] ??= initReport(row);
 
         const report = acc[row.id];
-
-        // add image if it not exists
-        if (row.imageId && !report.images.some(img => img.id === row.imageId)) {
-            report.images.push(new Image(row.imageId, `${IMAGE_BASE_URL}/reports/${report.id}/${row.imageUrl}`));
-        }
-
-        // add message if it not exists
-        if (row.messageId && !report.notifications.some(msg => msg.id === row.messageId)) {
-            const sender = row.notificationSenderId
-                ? new User(row.notificationSenderId, row.notificationSenderUsername)
-                : (row.senderId ? new User(row.senderId, row.senderUsername) : null);
-            const receiver = row.notificationReceiverId
-                ? new User(row.notificationReceiverId, row.notificationReceiverUsername)
-                : new User(row.receiverId, row.receiverUsername);
-            const message = new Message({
-                id: row.messageId,
-                reportId: row.id,
-                sender,
-                receiver,
-                text: row.notificationText ?? row.text,
-                channel: row.channelId || 1,
-                sendAt: row.notificationSendAt ?? row.sendAt,
-                isRead: !!(row.notificationIsRead ?? row.isRead)
-            });
-            report.notifications.push(message);
-        }
-        // add comment if it not exists
-        if (row.commentId && !report.comments.some(comm => comm.id === row.commentId)) {
-            const sender = row.commentSenderId ? new User(row.commentSenderId, row.commentSenderUsername) : (row.senderId ? new User(row.senderId, row.senderUsername) : null);
-            const receiver = row.commentReceiverId ? new User(row.commentReceiverId, row.commentReceiverUsername) : (row.receiverId ? new User(row.receiverId, row.receiverUsername) : null);
-            const comment = new Comment(
-                row.commentId,
-                row.id,
-                sender,
-                receiver,
-                row.commentText ?? row.text,
-                row.commentSendAt ?? row.sendAt,
-                row.commentIsRead ?? row.isRead
-            );
-            report.comments.push(comment);
-        }
+        addImage(report, row);
+        addNotification(report, row);
+        addComment(report, row);
 
         return acc;
     }, {});
@@ -254,6 +223,8 @@ const mapRowsToComments = (rows) => {
 const Mapper = {
     mapRowToUser,
     mapRowsToUsers,
+    mapRowsToEmployee,
+    mapRowsToEmployees, 
     mapRowToRole,
     mapRowsToRoles,
     mapRowToCategory,
@@ -269,6 +240,102 @@ const Mapper = {
     mapRowToComment,
     mapRowsToComments
 }
+
+const createUser = (id, username) => id ? new User(id, username) : null;
+
+const initReport = (row) => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    address: row.address,
+    user: createUser(row.userId, row.username),
+    employee: createUser(row.employeeId, row.employeeUsername),
+    category: new Category(row.catId, row.categoryName),
+    status: new Status(row.statusId, row.statusName),
+    office: row.officeId ? new Office(row.officeId, row.officeName) : null,
+    externalOffice: row.externalOfficeId ? new Office(row.externalOfficeId, row.externalOfficeName) : null,
+    externalMaintainer: createUser( row.externalMaintainerId, row.externalMaintainerUsername),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    rejectReason: row.rejectReason,
+    anonymous: row.anonymous,
+    images: [],
+    notifications: [],
+    comments: [],
+    unreadNotifications: row.unreadNotifications || 0,
+    unreadComments: row.unreadComments || 0
+});
+
+const addImage = (report, row) => {
+    if (!row.imageId) return;
+
+    const exists = report.images.some(img => img.id === row.imageId);
+    if (!exists) {
+        report.images.push(
+            new Image(
+                row.imageId,
+                `${IMAGE_BASE_URL}/reports/${report.id}/${row.imageUrl}`
+            )
+        );
+    }
+};
+
+const addNotification = (report, row) => {
+    if (!row.messageId) return;
+
+    const exists = report.notifications.some(msg => msg.id === row.messageId);
+    if (exists) return;
+
+    const sender =
+        createUser(row.notificationSenderId, row.notificationSenderUsername) ||
+        createUser(row.senderId, row.senderUsername);
+
+    const receiver =
+        createUser(row.notificationReceiverId, row.notificationReceiverUsername) ||
+        createUser(row.receiverId, row.receiverUsername);
+
+    report.notifications.push(
+        new Message({
+            id: row.messageId,
+            reportId: row.id,
+            sender,
+            receiver,
+            text: row.notificationText ?? row.text,
+            channel: row.channelId || 1,
+            sendAt: row.notificationSendAt ?? row.sendAt,
+            isRead: !!(row.notificationIsRead ?? row.isRead)
+        })
+    );
+};
+
+const addComment = (report, row) => {
+    if (!row.commentId) return;
+
+    const exists = report.comments.some(comm => comm.id === row.commentId);
+    if (exists) return;
+
+    const sender =
+        createUser(row.commentSenderId, row.commentSenderUsername) ||
+        createUser(row.senderId, row.senderUsername);
+
+    const receiver =
+        createUser(row.commentReceiverId, row.commentReceiverUsername) ||
+        createUser(row.receiverId, row.receiverUsername);
+
+    report.comments.push(
+        new Comment(
+            row.commentId,
+            row.id,
+            sender,
+            receiver,
+            row.commentText ?? row.text,
+            row.commentSendAt ?? row.sendAt,
+            row.commentIsRead ?? row.isRead
+        )
+    );
+};
 
 
 export default Mapper;

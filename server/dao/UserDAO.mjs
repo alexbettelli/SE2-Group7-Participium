@@ -35,6 +35,17 @@ const getUserByUsername = (username) => {
         });
     });
 }
+
+const checkUserExists = (username, email) => {
+    return new Promise((res, rej) => {
+        const query = `SELECT COUNT(*) as total FROM user WHERE username = ? OR email = ?`;
+        db.get(query, [username, email], (err, row) => {
+            if(err) rej(err);
+            res(row['total'] > 0);
+        });
+    });
+}
+
 const getUnassignedEmployees = () => {
     return new Promise((resolve, reject) => {
         const query = `SELECT * FROM user WHERE typeId = 5`; // typeId 5 = unassigned employee
@@ -44,6 +55,25 @@ const getUnassignedEmployees = () => {
             }
             const employees = Mapper.mapRowsToUsers(rows);
             resolve(employees);
+        });
+    });
+}
+
+const getTechnicalOfficers = () => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT u.*, o.name as officeName, o.id as officeId
+            FROM user u
+            LEFT JOIN office_employee oe ON u.id = oe.userId
+            LEFT JOIN office o ON oe.officeId = o.id
+            WHERE u.typeId = 4
+        `; // typeId 4 = Technical Office Staff Member
+        db.all(query, [], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+            const officers = Mapper.mapRowsToEmployees(rows);
+            resolve(officers);
         });
     });
 }
@@ -88,6 +118,35 @@ const assignEmployeeToOffice = (employeeId, officeId, roleId) => {
     });
 }
 
+const assignOfficerToOffice = (officerId, officeId) => {
+    return new Promise((resolve, reject) => {
+        const insertEmployeeOffice = `
+        INSERT INTO office_employee (officeId, userId)
+        VALUES (?, ?)
+        `;
+        db.run(insertEmployeeOffice, [officeId, officerId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            resolve();
+        });
+    });
+}
+
+const removeOfficerFromOffice = (officerId, officeId) => {
+    return new Promise((resolve, reject) => {
+        const deleteEmployeeOffice = `
+        DELETE FROM office_employee
+        WHERE officeId = ? AND userId = ?
+        `;
+        db.run(deleteEmployeeOffice, [officeId, officerId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+            resolve();
+        });
+    });
+}
 
 const deleteEmployeeById = (employeeId) => {
     return new Promise((resolve, reject) => {
@@ -151,24 +210,31 @@ const getUserById = (userId) => {
         });
     });
 };
-/* const getUsernameByUserId = (userId) => {    
+const getUsernameByTelegramUsername = (telegramUsername) => {
     return new Promise((resolve, reject) => {
-        const query = `SELECT username FROM user WHERE id = ?`;
-        db.get(query, [userId], (err, row) => {
+        const query = `SELECT username FROM user WHERE telegramUsername = ?`;
+        db.get(query, [telegramUsername], (err, row) => {
             if (err) return reject(err);
             if (!row) return resolve(null);
-            resolve(row.username);
+            
+            const username = row.username;
+            resolve(username);
         });
     });
-}; */
+};
 
 const UserDAO = {
     addNewUser,
     getUserByUsername,
     getUserById,
     getUnassignedEmployees,
+    getTechnicalOfficers,
     assignEmployeeToOffice,
+    assignOfficerToOffice,
+    removeOfficerFromOffice,
     deleteEmployeeById,
-    updateUserProfile
+    updateUserProfile,
+    getUsernameByTelegramUsername,
+    checkUserExists
 };
 export default UserDAO;

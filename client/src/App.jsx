@@ -54,8 +54,9 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout user={user} handleLogout={handleLogout} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} />}>
-        <Route path="/" index element={loggedIn ? <HomePage user={user} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/> : <AuthenticationScreen handleLogin={handleLogin} loginError={loginError} />} />
+        <Route path="/" index element={<HomePage user={loggedIn ? user : null} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/>} />
         <Route path="/report-overview" element={loggedIn ? <ReportOverviewPage user={user} /> : <Navigate to="/" />} />
+        <Route path="/auth" element={loggedIn ? <Navigate to="/" /> : <AuthenticationScreen handleLogin={handleLogin} loginError={loginError} />} />
         <Route path="/profile" element={user && user.role?.id === 1 ? (<ProfilePage user={user} setUser={setUser} />) : (<Navigate to="/" replace />)} />
         <Route path="/myreports" element={loggedIn ? <MyReportsPage user={user} setSelectedReport={setSelectedReport} setChatWith={setChatWith}/> : <Navigate to="/" />} />
         <Route path="/chat" element={loggedIn ? <ChatPage user={user} report={selectedReport} unreadNotifications={unreadNotifications} setUnreadNotifications={setUnreadNotifications} chatWith={chatWith}/> : <Navigate to="/" />} />

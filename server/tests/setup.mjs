@@ -282,6 +282,7 @@ export const setupTestUploadDirs = () => {
         }
         console.log('Test upload directories created successfully');
     } catch (error) {
+        console.error('Error setting up test upload directories:', error);
         throw error;
     }
 };
@@ -309,6 +310,7 @@ export const cleanupTestUploadDirs = () => {
         }
         console.log('Test upload directories cleaned successfully');
     } catch (error) {
+        console.error('Error cleaning up test upload directories:', error);
         throw error;
     }
 };
