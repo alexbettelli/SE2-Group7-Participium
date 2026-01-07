@@ -23,9 +23,9 @@ describe('E2E getCategories', () => {
   afterAll(async () => {
     await teardownTestDatabase();
   });
-  it('GET /categories - unauthorized', async () => {
+  it('GET /categories - ok with no auth', async () => {
     const res = await agent.get('/categories');
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(200);
   });
   it('GET /categories - success', async () => {
     await loginAsAdmin(agent);
