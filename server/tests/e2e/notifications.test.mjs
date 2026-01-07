@@ -7,7 +7,7 @@ import {
   loginAsOfficer,
   logout
 } from '../setup.mjs';
-
+import NotificationDAO from '../../dao/NotificationDAO.mjs';
 
 
 
@@ -64,6 +64,24 @@ describe('E2E notifications routes', () => {
       const res = await agent.post('/notifications').send({});
       expect(res.status).toBe(400);
     });
+    it('should fail with 503 on database error', async () => {
+      // Mock the DAO method to throw an error
+      const createNotificationMock = vi.spyOn(NotificationDAO, 'createNotification').mockImplementation(() => {
+        throw new Error('Database error');
+      });
+      await loginAsOfficer(agent);
+      const res = await agent.post('/notifications').send({
+        reportId,
+        senderId: userId,
+        receiverId: 1,
+        text: "Another test notification",
+        channelId: 1
+      });
+      expect(res.status).toBe(503);
+      // Restore the original method
+      createNotificationMock.mockRestore();
+    });
+
   });
 
   describe('E2E /notifications/read', () => {   
@@ -91,6 +109,18 @@ describe('E2E notifications routes', () => {
       await loginAsUser(agent);
       const res = await agent.post('/notifications/read').send({});
       expect(res.status).toBe(400);
+    });
+    it('should fail with 500 on database error', async () => {
+      // Mock the DAO method to throw an error
+
+      const markNotificationsAsReadMock = vi.spyOn(NotificationDAO, 'setNotificationsAsRead').mockImplementation(() => {
+        throw new Error('Database error');
+      });
+      await loginAsUser(agent);
+      const res = await agent.post('/notifications/read').send({ reportId });
+      expect(res.status).toBe(500);
+      // Restore the original method
+      markNotificationsAsReadMock.mockRestore();
     });
   });
 });

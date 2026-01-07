@@ -97,5 +97,7 @@ OfficeDropdown.propTypes = {
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired
   })).isRequired,
-  onSelect: PropTypes.func.isRequired
+  selectedOffices: PropTypes.arrayOf(PropTypes.number),
+  onSelect: PropTypes.func.isRequired,
+  onDeselect: PropTypes.func.isRequired
 };

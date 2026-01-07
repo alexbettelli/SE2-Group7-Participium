@@ -9,7 +9,7 @@ import ExternalMaintainerPage from './ExternalMaintainerPage';
 import NotFound from './NotFound';
 
 export default function HomePage(props) {
-  if (!props.user) return <Navigate to="/" replace />; //back to login
+  if (!props.user) return <CitizenPage user={null} setChatWith={props.setChatWith}/>; //back to login
 
   switch (props.user.role.id) {
     case 1:

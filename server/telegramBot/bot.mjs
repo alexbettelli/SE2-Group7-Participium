@@ -369,16 +369,33 @@ bot.on('callback_query', callback => {
   const chatId = callback.message.chat.id;
   const session = getSession(chatId);
 
+  // Handle FAQ button clicks
+  if(callback.data && callback.data.startsWith('faq_')) {
+    const faqKey = callback.data.replace('faq_', '');
+    const faq = FAQ_DATA[faqKey];
+    
+    if(faq) {
+      bot.answerCallbackQuery(callback.id);
+      bot.sendMessage(
+        chatId,
+        `*${faq.question}*\n\n${faq.answer}`,
+        { parse_mode: 'Markdown' }
+      );
+      return;
+    }
+  }
+
+  // Handle report creation callbacks
   if(!session || (session.state !== STATE.REPORT_CREATION_WAIT_CATEGORY && session.state !== STATE.REPORT_CREATION_WAIT_ANONYMOUS)) {
     bot.answerCallbackQuery(callback.id, { text: '⚠️ No selection in progress.' });
     return;
   }
 
-
   if(session.state === STATE.REPORT_CREATION_WAIT_CATEGORY) {
+    const button = callback.message.reply_markup.inline_keyboard.flat().find(btn => btn.callback_data === callback.data);
     session.reportData.category = {
       id: callback.data,
-      name: callback.message.reply_markup.inline_keyboard[callback.data][0].text
+      name: button.text
     };
     console.log('Selected category:', session.reportData.category);
     session.state = STATE.REPORT_CREATION_WAIT_ANONYMOUS;
@@ -398,8 +415,33 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     chatId,
     `I am the official bot of Group 7 Participium App, a platform for reporting and managing urban issues of the Municipality of Turin.\n\n` +    
-    `Use the /login command to connect your Participium account and get started!`
+    `Use the /login command to connect your Participium account and get started!\n\n` +
+    `Use /help to see all available commands.`
   );
+});
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  const helpMessage = 
+    `📖 *Available Commands*\n\n` +
+    `*General Commands:*\n` +
+    `• /start - Welcome message and bot introduction\n` +
+    `• /help - Show this help message\n` +
+    `• /faq - Frequently asked questions\n` +
+    `• /contact - Contact information for support\n\n` +
+    `*Authentication:*\n` +
+    `• /login - Login to your Participium account\n` +
+    `• /logout - Logout from your account\n` +
+    `• /cancel - Cancel current operation\n\n` +
+    `*Report Management:*\n` +
+    `• /newreport - Create a new report\n` +
+    `• /myreports - View all your submitted reports\n` +
+    `• /reportstatus <id> - View details of a specific report\n` +
+    `• /done - Complete report creation after uploading photos\n\n` +
+    `*Note:* Some commands require authentication. Use /login first.`;
+  
+  bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
 });
 
 bot.onText(/\/login/, (msg) => {
@@ -430,6 +472,32 @@ bot.onText(/\/login/, (msg) => {
     `Use /cancel to stop in progress operations.`,
     { parse_mode: 'Markdown' }
   );
+});
+
+bot.onText(/\/myreports/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  if (!session || !session.authenticated) {
+    sendAuthRequiredMessage(chatId);
+    return;
+  }
+  BOT_API.callProtected('/users/myreports', { method: 'GET', token: session.token }).then(reports => {
+    if (reports.length === 0) {
+      bot.sendMessage(chatId, 'ℹ️ You have no reports submitted yet.');
+      return;
+    }
+    let message = '📄 *Your Reports:*\n\n'
+    reports.forEach(report => {
+      message += `🆔 *ID:* ${report.id}\n` +
+                 `📌 *Title:* ${report.title}\n` +
+                 `📊 *Status:* ${report.status?.statusName || report.status || 'N/A'}\n`;
+    message += '---------------------------------------------------------------\n';
+    });
+    bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  }).catch(err => {
+    console.error('Error fetching user reports:', err);
+    bot.sendMessage(chatId, '❌ Error retrieving your reports. Please try again later.');
+  });
 });
 
 bot.onText(/\/logout/, (msg) => {
@@ -465,6 +533,56 @@ bot.onText(/\/contact/, (msg) => {
   bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
 });
 
+const FAQ_DATA = {
+  'what_is': {
+    question: 'What is Participium?',
+    answer: 'Participium is a platform for reporting and managing urban issues in the Municipality of Turin.'
+  },
+  'how_report': {
+    question: 'How do I report an issue?',
+    answer: 'You can report issues through the web application by selecting a location on the map and filling out the report form. You can also use /newreport command in this bot.'
+  },
+  'what_types': {
+    question: 'What types of issues can I report?',
+    answer: 'You can report issues related to:\n• Roads and Infrastructure\n• Waste and Cleanliness\n• Green Areas and Public Parks\n• Public Transport and Mobility'
+  },
+  'how_track': {
+    question: 'How do I track my reports?',
+    answer: 'Log in to the web application and check the "My Reports" section. You can also use /myreports command in this bot.'
+  },
+  'need_account': {
+    question: 'Do I need to create an account?',
+    answer: 'Yes, you need to register an account to submit reports. You can also submit anonymous reports, but tracking requires an account.'
+  },
+  'how_login': {
+    question: 'How do I login to the bot?',
+    answer: 'Use /login command. You\'ll need your Telegram username (set in your profile) and your Participium password.'
+  }
+};
+
+bot.onText(/\/faq/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  const keyboard = {
+    inline_keyboard: [
+      [{ text: 'What is Participium?', callback_data: 'faq_what_is' }],
+      [{ text: 'How do I report an issue?', callback_data: 'faq_how_report' }],
+      [{ text: 'What types of issues can I report?', callback_data: 'faq_what_types' }],
+      [{ text: 'How do I track my reports?', callback_data: 'faq_how_track' }],
+      [{ text: 'Do I need to create an account?', callback_data: 'faq_need_account' }],
+      [{ text: 'How do I login to the bot?', callback_data: 'faq_how_login' }]
+    ]
+  };
+  
+  bot.sendMessage(
+    chatId,
+    `📋 *Frequently Asked Questions*\n\nSelect a question to see the answer:`,
+    { 
+      parse_mode: 'Markdown',
+      reply_markup: keyboard
+    }
+  );
+});
 
 bot.onText(/\/cancel/, (msg) => {
   const chatId = msg.chat.id;

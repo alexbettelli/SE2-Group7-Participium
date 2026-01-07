@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, afterAll, expect, beforeEach } from 'vitest';
+import { describe, it, beforeAll, afterAll, expect, beforeEach, vi } from 'vitest';
 import {
     setupTestDatabase,
     teardownTestDatabase,
@@ -7,6 +7,7 @@ import {
     logout,
     loginAsUser
 } from '../setup.mjs';
+import GenericInfoDAO from '../../dao/GenericInfoDAO.mjs';
 
 
 describe('GET /offices', () => {
@@ -45,5 +46,18 @@ describe('GET /offices', () => {
         const result = await agent.get('/offices');
 
         expect(result.status).toBe(403);
+    });
+
+    it('500 Internal Server Error', async () => {
+        // Mock the DAO method to throw an error
+        const getAllOfficesMock = vi.spyOn(GenericInfoDAO, 'getOffices').mockImplementation(() => {
+            throw new Error('Database error');
+        });
+        await loginAsAdmin(agent);
+        const result = await agent.get('/offices');
+        expect(result.status).toBe(503);
+
+        // Restore the original method
+        getAllOfficesMock.mockRestore();
     });
 });
