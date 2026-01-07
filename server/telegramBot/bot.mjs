@@ -8,6 +8,10 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const UPLOADS_BASE_PATH = process.env.NODE_ENV === 'production' 
+  ? path.join('/app', 'uploads')  // Path in Docker
+  : path.join(__dirname, '..', '..','server', 'uploads');  // Path in development
+
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8542311077:AAHdhD6LwBjjj2XW8sIc00ltb7wLQ7MBLB8';
 const PASSWORD_ERRORS_LIMIT = 3;
 const SESSION_EXPIRED_TIME = 15 * 60 * 1000;
@@ -701,7 +705,7 @@ bot.onText(/^\/reportstatus(?:@[\w_]+)? (\d+)$/, async (msg, match) => {
       return;
     }
 
-    let text = `📝 *Report #${report.id}*\n`;
+    let text = `🔍 *Report #${report.id}*\n`;
     text += `📌 *Title:* ${report.title}\n`;
     text += `📊 *Status:* ${report.status?.statusName || report.status || 'N/A'}\n`;
     text += `🏷️ *Category:* ${report.category?.categoryName || report.category || 'N/A'}\n`;
@@ -711,19 +715,36 @@ bot.onText(/^\/reportstatus(?:@[\w_]+)? (\d+)$/, async (msg, match) => {
 
     await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
 
-    for (const img of report.images) {
-      if (img.imageUrl) {
-        const fileName = path.basename(img.imageUrl);
-        const localPath = path.join(
-          __dirname, '..', '..', 'server', 'uploads', 'reports', String(report.id), fileName
-        );
-        if (fs.existsSync(localPath)) {
+    // Invia tutte le foto in parallelo invece che in sequenza
+    const photoPromises = report.images.map(async (img) => {
+      if (!img.imageUrl) return;
+      
+      const fileName = path.basename(img.imageUrl);
+      const localPath = path.join(
+        UPLOADS_BASE_PATH,
+        'reports',
+        String(report.id),
+        fileName
+      );
+
+      console.log(`Attempting to load image from: ${localPath}`);
+
+      if (fs.existsSync(localPath)) {
+        try {
           await bot.sendPhoto(chatId, fs.createReadStream(localPath));
-        } else {
-          await bot.sendMessage(chatId, "⚠️ Image not found on the server.");
+        } catch (err) {
+          console.error(`Error sending photo ${fileName}:`, err);
+          await bot.sendMessage(chatId, `⚠️ Error sending image ${fileName}`);
         }
+      } else {
+        console.error(`Image not found: ${localPath}`);
+        await bot.sendMessage(chatId, `⚠️ Image not found: ${fileName}`);
       }
-    }
+    });
+
+    // Attendi che tutte le foto siano inviate
+    await Promise.all(photoPromises);
+
   } catch (err) {
     console.error('Error fetching report:', err);
     bot.sendMessage(chatId, "❌ Error: Unable to fetch report. Make sure the ID is correct and you are logged in.");
