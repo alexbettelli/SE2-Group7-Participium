@@ -52,6 +52,25 @@ describe('NotificationDAO', () => {
             expect(result.reportId).toBe(message.reportId);
             expect(result.senderId).toBeUndefined();
         });
+        it('creates a notification from citizen to employee', async () => {
+            const message = {
+                reportId: 1,
+                senderId: 1, // citizen
+                receiverId: 4, // employee
+                text: 'Citizen message to employee',
+                channelId: 1
+            };
+            const now = new dayjs().toString();
+            const result = await NotificationDAO.createNotification(message);
+
+            expect(result.reportId).toBe(message.reportId);
+            expect(result.sender.id).toBe(message.senderId);
+            expect(result.receiver.id).toBe(message.receiverId);
+            expect(result.text).toBe(message.text);
+            expect(result.channel.id).toBe(message.channelId);
+            expect(result.isRead).toBe(false);
+            expect(result.sendAt.toString()).toBe(now);
+        });
     });
 
     
