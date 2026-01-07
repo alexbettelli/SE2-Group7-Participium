@@ -7,16 +7,20 @@ import {
     teardownTestDatabase
 } from '../setup.mjs';
 
+beforeAll(async () => {
+    await setupTestDatabase();
+});
+
+afterAll(async () => {
+    await teardownTestDatabase();
+});
+
+// restore mocks after each test globally
+afterEach(() => {
+    vi.restoreAllMocks();
+});
+
 describe('UserDAO', () => {
-
-    beforeAll(async () => {
-        await setupTestDatabase();
-    });
-
-    // Cleanup after all tests
-    afterAll(async () => {
-        await teardownTestDatabase();
-    });
 
     describe('getUserByUsername', () => {
         it('returns user info when user exists', async () => {
@@ -342,5 +346,106 @@ describe('UserDAO - updateUserProfile error propagation', () => {
     runMock.mockRestore();
     getMock.mockRestore();
     consoleSpy.mockRestore();
+  });
+});
+
+describe('assignEmployeeToOffice & removeOfficerFromOffice', () => {
+  it('assignEmployeeToOffice (roleId 4) writes to office_employee ', async () => {
+    const hashed = await bcrypt.hash('pwd_assign_hp', 8);
+    const user = {
+      username: 'assign_hp_user',
+      password: hashed,
+      email: 'assign_hp@example.com',
+      firstName: 'Assign',
+      lastName: 'Happy',
+      typeId: 5
+    };
+    const id = await UserDAO.addNewUser(user);
+
+    await expect(UserDAO.assignEmployeeToOffice(id, 2, 4)).resolves.toBeUndefined();
+
+    const row = await new Promise((res, rej) =>
+      db.get('SELECT * FROM office_employee WHERE userId = ?', [id], (err, r) => (err ? rej(err) : res(r)))
+    );
+
+    expect(row).toBeTruthy();
+    expect(row.userId).toBe(id);
+    expect(row.officeId).toBe(2);
+  });
+
+  it('assignEmployeeToOffice rejects when INSERT into office_employee fails )', async () => {
+    const hashed = await bcrypt.hash('pwd_assign_err', 8);
+    const user = {
+      username: 'assign_err_user',
+      password: hashed,
+      email: 'assign_err@example.com',
+      firstName: 'Assign',
+      lastName: 'Error',
+      typeId: 5
+    };
+    const id = await UserDAO.addNewUser(user);
+
+    vi.spyOn(db, 'run').mockImplementation((sql, params, cb) => {
+      if (/INSERT\s+INTO\s+office_employee/i.test(String(sql))) {
+        if (typeof cb === 'function') cb(new Error('simulated insert office_employee failure'));
+      } else {
+        if (typeof cb === 'function') cb(null);
+      }
+    });
+
+    await expect(UserDAO.assignEmployeeToOffice(id, 3, 4)).rejects.toThrow(/simulated insert office_employee failure/);
+  });
+
+  it('removeOfficerFromOffice removes assignment (happy path)', async () => {
+    const hashed = await bcrypt.hash('pwd_remove_hp', 8);
+    const user = {
+      username: 'remove_hp_user',
+      password: hashed,
+      email: 'remove_hp@example.com',
+      firstName: 'Remove',
+      lastName: 'Happy',
+      typeId: 3
+    };
+    const id = await UserDAO.addNewUser(user);
+
+    // create assignment
+    await new Promise((res, rej) =>
+      db.run('INSERT INTO office_employee (officeId, userId) VALUES (?, ?)', [5, id], (e) => (e ? rej(e) : res()))
+    );
+
+    await expect(UserDAO.removeOfficerFromOffice(id, 5)).resolves.toBeUndefined();
+
+    const row = await new Promise((res, rej) =>
+      db.get('SELECT * FROM office_employee WHERE userId = ? AND officeId = ?', [id, 5], (err, r) => (err ? rej(err) : res(r)))
+    );
+    expect(row).toBeFalsy();
+  });
+
+  it('removeOfficerFromOffice rejects when DELETE fails (covers return reject(err))', async () => {
+    const hashed = await bcrypt.hash('pwd_remove_err', 8);
+    const user = {
+      username: 'remove_err_user',
+      password: hashed,
+      email: 'remove_err@example.com',
+      firstName: 'Remove',
+      lastName: 'Error',
+      typeId: 3
+    };
+    const id = await UserDAO.addNewUser(user);
+
+    // create assignment
+    await new Promise((res, rej) =>
+      db.run('INSERT INTO office_employee (officeId, userId) VALUES (?, ?)', [6, id], (e) => (e ? rej(e) : res()))
+    );
+
+    vi.spyOn(db, 'run').mockImplementation((sql, params, cb) => {
+      if (/DELETE\s+FROM\s+office_employee/i.test(String(sql))) {
+        if (typeof cb === 'function') cb(new Error('simulated delete office_employee failure'));
+      } else {
+        if (typeof cb === 'function') cb(null);
+      }
+    });
+
+    await expect(UserDAO.removeOfficerFromOffice(id, 6)).rejects.toThrow(/simulated delete office_employee failure/);
   });
 });
