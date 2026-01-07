@@ -11,6 +11,8 @@ services:
       - NODE_ENV=production
       - BASE_URL=${BASE_URL:-http://localhost:3001}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-8542311077:AAHdhD6LwBjjj2XW8sIc00ltb7wLQ7MBLB8}
+      - JWT_SECRET=${JWT_SECRET:-g7ParticipiumSecretKeySE2}
     restart: unless-stopped
 
   client:
