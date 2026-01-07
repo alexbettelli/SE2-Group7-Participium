@@ -16,7 +16,7 @@ export default function TechnicalOfficersTable({ officers, offices, updateOffice
       </p>
       <Table className="employee-list-table" hover style={{ tableLayout: 'fixed', margin: '0 auto' }}>
         <thead>
-          <tr style={{ textAlign: 'center' }}>
+          <tr style={{ textAlign: 'center', verticalAlign: 'middle' }}>
             <th>Username</th>
             <th>First Name</th>
             <th>Last Name</th>
@@ -118,7 +118,7 @@ function TechnicalOfficerRow({ officer, allOfficers, offices, updateOfficers }) 
   
   return (
     <>
-      <tr key={officer.id}>
+      <tr key={officer.id} style={{ textAlign: 'center', verticalAlign: 'middle' }}>
         <td>{officer.username}</td>
         <td>{officer.firstName}</td>
         <td>{officer.lastName}</td>
