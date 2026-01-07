@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Blob } from 'fetch-blob';
+import { Blob as FetchBlob } from 'fetch-blob';
 import BOT_API from './API.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,6 +28,10 @@ const STATE = {
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 const userSessions = new Map();
+
+// Ensure we use the runtime's native Blob when available (undici requires native Blob
+// instances for FormData). Fallback to fetch-blob if native Blob is not present.
+const NativeBlob = (typeof globalThis !== 'undefined' && globalThis.Blob) ? globalThis.Blob : FetchBlob;
 
 // ========== Sessions management ==========
 const getSession = (chatId) => {
@@ -243,13 +247,15 @@ function handleReportTitleInput(chatId, text) {
 async function handleReportDescriptionInput(chatId, text) {
   const session = getSession(chatId);
   
-  if(text.trim().length === 0) {
-    bot.sendMessage(chatId, '⚠️ Description cannot be empty. Please provide a valid description.');
+  const trimmed = text.trim();
+  if (trimmed.length < 10) {
+    bot.sendMessage(chatId, '⚠️ Description must be at least 10 characters. Please provide a longer description.');
+    session.state = STATE.REPORT_CREATION_WAIT_DESCRIPTION;
     return;
   }
-  
+
   session.state = STATE.REPORT_CREATION_WAIT_CATEGORY;
-  session.reportData.description = text.trim();
+  session.reportData.description = trimmed;
 
   try {
     const categories = await BOT_API.callProtected('/categories', { method: 'GET', token: session.token });
@@ -655,7 +661,9 @@ bot.onText(/\/done/, async msg => {
 
   for (let i = 0; i < session.reportData.photos.length; i++) {
     const photo = session.reportData.photos[i];
-    form.append('images', new Blob([photo], { type: 'image/jpg' }), `photo${i + 1}.jpg`);
+
+    const uint8 = photo instanceof Uint8Array ? photo : new Uint8Array(photo);
+    form.append('images', new NativeBlob([uint8], { type: 'image/jpeg' }), `photo${i + 1}.jpg`);
   }
 
   BOT_API.callProtected('/users/reports', { method: 'POST', body: form, token: session.token }).then(response => {
