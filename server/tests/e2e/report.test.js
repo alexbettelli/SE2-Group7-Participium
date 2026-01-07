@@ -115,9 +115,9 @@ describe('E2E reports routes', () => {
         });
     });
     describe('GET /reports', () => {
-        it('401 Unauthorized when not logged in', async () => {
-            const res = await agent.get('/users/myreports');
-            expect(res.statusCode).toBe(401);
+        it('200 OK when not logged in', async () => {
+            const res = await agent.get('/reports');
+            expect(res.statusCode).toBe(200);
         });
 
         it('200 OK and returns an array for logged in citizen', async () => {
