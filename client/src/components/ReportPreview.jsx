@@ -73,6 +73,13 @@ export default function ReportPreview(props) {
         console.log(props.report);
     }, [])
 
+    const officesName = {
+        1: 'Road Maintenance',
+        2: 'Waste Management',
+        3: 'Urban Green Management',
+        4: 'Public Transportation'
+    }
+
     useEffect(() => {
         const updateReportStatus = async () => {
             try {
@@ -144,7 +151,8 @@ export default function ReportPreview(props) {
                             <span className="report-id-badge">Report #{report.id}</span>
                             {
                                 report.office && 
-                                <span className='office-badge' style={{backgroundColor: `${categoryColors[report.office.id]}`}}>Office #{report.office.id}</span>
+                                officesName.hasOwnProperty(report.office.id) &&
+                                <span className='office-badge' style={{backgroundColor: `${categoryColors[report.office.id]}`}}>{officesName[report.office.id]}</span>
                             }
                             <span className={`status-badge ${getStatusClass(report.status.statusName)}`}>{report.status.statusName}</span>
                         </div>
@@ -218,7 +226,7 @@ export default function ReportPreview(props) {
           )}
                 </div>
             </div>
-            {expanded && <ReportView onClose={toggleExpanded} report={report} />}
+            {expanded && <ReportView onClose={toggleExpanded} report={report} officeName={officesName.hasOwnProperty(report.office.id) && officesName[report.office.id]} />}
 
             <Modal 
                 show={showStatusModal} 
@@ -348,7 +356,7 @@ function ReportView(props) {
                             <div className="field">
                                 <h3>Report details</h3>
                                 <p><strong>Report ID: </strong>{report.id}</p>
-                                { report.office && <p><strong>Office ID: </strong>{report.office.id}</p> }
+                                { report.office && props.officeName && <p><strong>Office: </strong>{props.officeName}</p> }
                                 <p><strong>Status: </strong>{report.status.statusName}</p>
                                 {report.rejectReason && report.status.id === 5 && <p><strong>Rejection reason: </strong>{report.rejectReason}</p>}
                             </div>
