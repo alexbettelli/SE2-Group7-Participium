@@ -12,7 +12,7 @@ const UPLOADS_BASE_PATH = process.env.NODE_ENV === 'production'
   ? path.join('/app', 'uploads')  // Path in Docker
   : path.join(__dirname, '..', '..','server', 'uploads');  // Path in development
 
-const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8542311077:AAHdhD6LwBjjj2XW8sIc00ltb7wLQ7MBLB8';
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || 'use_your_token_here';
 const PASSWORD_ERRORS_LIMIT = 3;
 const SESSION_EXPIRED_TIME = 15 * 60 * 1000;
 const CLEAN_INTERVAL = 10 * 60 * 1000;
